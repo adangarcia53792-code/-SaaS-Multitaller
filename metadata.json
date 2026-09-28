@@ -1,0 +1,6 @@
+{
+  "name": "Taller Mecánico",
+  "description": "Sistema de gestión para talleres mecánicos",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
