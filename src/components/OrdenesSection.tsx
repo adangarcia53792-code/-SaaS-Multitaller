@@ -9,6 +9,10 @@ import {
   ServicioCatalogo,
   Refaccion,
   RefaccionUtilizadaOrden,
+  ConfiguracionTaller,
+  Empleado,
+  Usuario,
+  SesionUsuario,
 } from '../types';
 import {
   Search,
@@ -38,6 +42,7 @@ interface OrdenesSectionProps {
   vehiculos: Vehiculo[];
   servicios: ServicioCatalogo[];
   refacciones: Refaccion[];
+  configuracion?: ConfiguracionTaller;
   onSaveOrden: (orden: OrdenTrabajo) => void;
   onSaveCotizacion: (cot: Cotizacion) => void;
   onLinkOrdenAndCotizacion: (ordenId: string, cotizacionId: string) => void;
@@ -49,6 +54,9 @@ interface OrdenesSectionProps {
     cantidadDevolver: number,
     motivo?: string
   ) => void;
+  currentUser?: SesionUsuario;
+  usuarios?: Usuario[];
+  empleados?: Empleado[];
 }
 
 type EstadoFilter = 'todas' | EstadoOrden;
@@ -60,12 +68,16 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   vehiculos,
   servicios,
   refacciones,
+  configuracion,
   onSaveOrden,
   onSaveCotizacion,
   onLinkOrdenAndCotizacion,
   onCreateCotizacionForOrden,
   onUseRefaccionInOrden,
   onReturnRefaccionFromOrden,
+  currentUser,
+  usuarios = [],
+  empleados = [],
 }) => {
   const [filter, setFilter] = useState<EstadoFilter>('todas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,7 +143,29 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [formRevisionFinal, setFormRevisionFinal] = useState(false);
   const [formEntregado, setFormEntregado] = useState(false);
   const [formFechaHoraEntrega, setFormFechaHoraEntrega] = useState<string | undefined>(undefined);
+  const [formMecanicoId, setFormMecanicoId] = useState('');
+  const [formMecanicoNombre, setFormMecanicoNombre] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const isMecanico = currentUser?.rol === 'Mecánico';
+  const isRecepcion = currentUser?.rol === 'Recepción';
+
+  const availableMecanicos = useMemo(() => {
+    const list: { id: string; nombre: string }[] = [];
+    usuarios
+      .filter((u) => u.rol === 'Mecánico' && u.activo)
+      .forEach((u) => {
+        list.push({ id: u.id, nombre: u.nombre });
+      });
+    empleados
+      .filter((e) => e.activo && (e.puesto.toLowerCase().includes('mecánic') || e.puesto.toLowerCase().includes('taller')))
+      .forEach((e) => {
+        if (!list.some((m) => m.nombre === e.nombre)) {
+          list.push({ id: e.id, nombre: e.nombre });
+        }
+      });
+    return list;
+  }, [usuarios, empleados]);
 
   // View / Print modal state
   const [printingOrden, setPrintingOrden] = useState<OrdenTrabajo | null>(null);
@@ -358,6 +392,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setFormRevisionFinal(false);
     setFormEntregado(false);
     setFormFechaHoraEntrega(undefined);
+    setFormMecanicoId('');
+    setFormMecanicoNombre('');
 
     setOpenRecepcion(true);
     setOpenTrabajo(false);
@@ -382,6 +418,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setFormRevisionFinal(Boolean(orden.revisionFinal));
     setFormEntregado(Boolean(orden.entregado));
     setFormFechaHoraEntrega(orden.fechaHoraEntrega);
+    setFormMecanicoId(orden.mecanicoId || '');
+    setFormMecanicoNombre(orden.mecanicoNombre || '');
 
     setOpenRecepcion(Boolean(orden.kilometraje || orden.dañosVisibles));
     setOpenTrabajo(Boolean(orden.diagnostico || orden.observacionesMecanico || orden.observaciones));
@@ -482,20 +520,22 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
         ? editingOrden.id
         : `ord-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       folio,
-      clienteId: formClientId,
-      vehiculoId: formVehiculoId,
+      clienteId: isMecanico && editingOrden ? editingOrden.clienteId : formClientId,
+      vehiculoId: isMecanico && editingOrden ? editingOrden.vehiculoId : formVehiculoId,
       cotizacionId: editingOrden?.cotizacionId,
-      servicio: formServicio.trim(),
+      servicio: isMecanico && editingOrden ? editingOrden.servicio : formServicio.trim(),
       estado: formEstado,
       kilometraje: formKm.trim() || undefined,
       dañosVisibles: formDaños.trim() || undefined,
-      diagnostico: formDiagnostico.trim() || undefined,
-      observacionesMecanico: formObsMecanico.trim() || undefined,
-      trabajoTerminado: formTrabajoTerminado,
-      revisionFinal: formRevisionFinal,
+      diagnostico: isRecepcion && editingOrden ? editingOrden.diagnostico : (formDiagnostico.trim() || undefined),
+      observacionesMecanico: isRecepcion && editingOrden ? editingOrden.observacionesMecanico : (formObsMecanico.trim() || undefined),
+      trabajoTerminado: isRecepcion && editingOrden ? editingOrden.trabajoTerminado : formTrabajoTerminado,
+      revisionFinal: isRecepcion && editingOrden ? editingOrden.revisionFinal : formRevisionFinal,
       entregado: formEntregado,
       fechaHoraEntrega: finalFechaHoraEntrega,
       refaccionesUtilizadas: editingOrden?.refaccionesUtilizadas,
+      mecanicoId: isMecanico && editingOrden ? editingOrden.mecanicoId : (formMecanicoId || undefined),
+      mecanicoNombre: isMecanico && editingOrden ? editingOrden.mecanicoNombre : (formMecanicoNombre || undefined),
       creadoEn: editingOrden ? editingOrden.creadoEn : new Date().toISOString(),
     };
 
@@ -673,6 +713,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   // Handler: Confirmar uso de refacción en la orden (ETAPA 9)
   const handleConfirmUseRefaccion = (orden: OrdenTrabajo) => {
     if (!orden || isActionProcessing) return;
+    if (isRecepcion) {
+      setRefaccionError('Recepción no tiene autorización para registrar refacciones utilizadas.');
+      return;
+    }
     if (!selectedRefaccionId) {
       setRefaccionError('Seleccione una refacción del catálogo.');
       return;
@@ -737,6 +781,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   // Handler: Confirmar devolución de refacción desde la orden (ETAPA 9)
   const handleConfirmReturnRefaccion = (orden: OrdenTrabajo, item: RefaccionUtilizadaOrden) => {
     if (!orden || isActionProcessing) return;
+    if (isRecepcion) {
+      setReturningError('Recepción no tiene autorización para devolver refacciones.');
+      return;
+    }
     const qty = parseInt(returningCantidad, 10);
     if (isNaN(qty) || qty <= 0) {
       setReturningError('La cantidad a devolver debe ser un número entero mayor a 0.');
@@ -777,11 +825,21 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setIsActionProcessing(false);
   };
 
+  const assignedOrdenes = useMemo(() => {
+    if (!isMecanico) return ordenes;
+    return ordenes.filter(
+      (ord) =>
+        ord.mecanicoId === currentUser?.usuarioId ||
+        ord.mecanicoId === currentUser?.empleadoId ||
+        ord.mecanicoNombre === currentUser?.nombre
+    );
+  }, [ordenes, isMecanico, currentUser]);
+
   // Filter & Search
   const filteredOrdenes = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
-    return ordenes.filter((ord) => {
+    return assignedOrdenes.filter((ord) => {
       if (filter !== 'todas' && ord.estado !== filter) {
         return false;
       }
@@ -795,28 +853,44 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       }
       return true;
     });
-  }, [ordenes, filter, searchQuery, clienteMap, vehiculoMap]);
+  }, [assignedOrdenes, filter, searchQuery, clienteMap, vehiculoMap]);
 
   return (
     <section className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Órdenes de trabajo
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+              {isMecanico ? 'Órdenes asignadas' : 'Órdenes de trabajo'}
+            </h2>
+            {isMecanico && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                Mecánico
+              </span>
+            )}
+            {isRecepcion && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                Recepción
+              </span>
+            )}
+          </div>
           <p className="text-sm md:text-base text-slate-500 mt-1">
-            Control de recepción, diagnóstico, progreso y entrega de vehículos.
+            {isMecanico
+              ? `Órdenes asignadas a ${currentUser?.nombre}. Registra diagnóstico, observaciones, refacciones utilizadas y finaliza trabajos.`
+              : 'Control de recepción, diagnóstico, progreso y entrega de vehículos.'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nueva orden</span>
-        </button>
+        {!isMecanico && (
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nueva orden</span>
+          </button>
+        )}
       </div>
 
       {/* Controls: Search & Tabs */}
@@ -936,14 +1010,26 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         </div>
                       </td>
 
-                      {/* Trabajo solicitado */}
+                      {/* Trabajo solicitado y Mecánico */}
                       <td className="py-3.5 px-5 text-slate-700 max-w-xs">
                         <span className="line-clamp-2">{ord.servicio}</span>
-                        {ord.kilometraje && (
-                          <div className="text-[11px] text-slate-400 mt-0.5">
-                            Km: {ord.kilometraje}
-                          </div>
-                        )}
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          {ord.kilometraje && (
+                            <span className="text-[11px] text-slate-400">
+                              Km: {ord.kilometraje}
+                            </span>
+                          )}
+                          {ord.mecanicoNombre ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">
+                              <Wrench className="w-3 h-3 text-amber-600" />
+                              <span>{ord.mecanicoNombre}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">
+                              Sin mecánico asignado
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Estado */}
@@ -979,17 +1065,28 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         </div>
                       </td>
 
-                      {/* Acciones: Botón principal CONTINUAR + Más opciones (Editar e Imprimir) */}
+                      {/* Acciones: Botón principal CONTINUAR o REGISTRAR TRABAJO */}
                       <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
                         <div className="inline-flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenContinuar(ord)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0d5c58] hover:bg-[#0a4845] rounded-md shadow-xs transition-colors"
-                          >
-                            <span>Continuar</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
+                          {isMecanico ? (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEdit(ord)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0d5c58] hover:bg-[#0a4845] rounded-md shadow-xs transition-colors"
+                            >
+                              <Wrench className="w-3.5 h-3.5" />
+                              <span>Registrar trabajo</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenContinuar(ord)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0d5c58] hover:bg-[#0a4845] rounded-md shadow-xs transition-colors"
+                            >
+                              <span>Continuar</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          )}
 
                           <div className="relative">
                             <button
@@ -2376,8 +2473,14 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               <div className="flex justify-between items-start border-b border-slate-200 pb-5">
                 <div>
                   <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    Taller mecánico
+                    {configuracion?.nombre || 'Taller mecánico'}
                   </h1>
+                  {configuracion?.telefono && (
+                    <p className="text-xs text-slate-500">Tel: {configuracion.telefono}</p>
+                  )}
+                  {configuracion?.direccion && (
+                    <p className="text-xs text-slate-500">{configuracion.direccion}</p>
+                  )}
                   <p className="text-xs uppercase tracking-widest text-[#0d5c58] font-bold mt-1">
                     Documento de demostración
                   </p>

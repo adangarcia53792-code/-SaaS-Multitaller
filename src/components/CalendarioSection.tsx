@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Cliente, Vehiculo, Cita, ServicioCatalogo } from '../types';
+import { Cliente, Vehiculo, Cita, ServicioCatalogo, Seguimiento } from '../types';
 import {
   CalendarDays,
   ChevronLeft,
@@ -13,6 +13,7 @@ import {
   Phone,
   AlertCircle,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 interface CalendarioSectionProps {
@@ -20,7 +21,14 @@ interface CalendarioSectionProps {
   clientes: Cliente[];
   vehiculos: Vehiculo[];
   servicios: ServicioCatalogo[];
+  seguimientos?: Seguimiento[];
   onSaveCita: (cita: Cita) => void;
+  onUpdateSeguimientoEstado?: (
+    id: string,
+    nuevoEstado: 'Pendiente' | 'Realizado' | 'Cancelado',
+    newDate?: string,
+    newTime?: string
+  ) => void;
 }
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -40,13 +48,23 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
   clientes,
   vehiculos,
   servicios,
+  seguimientos = [],
   onSaveCita,
+  onUpdateSeguimientoEstado,
 }) => {
   // Current view date (year & month) in local time
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
   // Selected appointment for detail modal
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
+
+  // Selected seguimiento for detail modal
+  const [selectedSeguimiento, setSelectedSeguimiento] = useState<Seguimiento | null>(null);
+
+  // Inline reschedule state in detail modal
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [newSegDate, setNewSegDate] = useState('');
+  const [newSegTime, setNewSegTime] = useState('10:00');
 
   // Selected day for "Ver más" modal (when > 2 appointments on desktop)
   const [dayModalDate, setDayModalDate] = useState<string | null>(null);
@@ -92,6 +110,11 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
     return citas.filter((c) => c.estado !== 'Cancelada');
   }, [citas]);
 
+  // Active seguimientos (excluye cancelados)
+  const activeSeguimientos = useMemo(() => {
+    return (seguimientos || []).filter((s) => s.estado !== 'Cancelado');
+  }, [seguimientos]);
+
   // Calendar dates math (Local browser time)
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth(); // 0-indexed
@@ -135,11 +158,30 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
     return map;
   }, [activeCitas]);
 
+  // Group seguimientos by date string
+  const segsByDate = useMemo(() => {
+    const map = new Map<string, Seguimiento[]>();
+    activeSeguimientos.forEach((s) => {
+      const list = map.get(s.fecha) || [];
+      list.push(s);
+      map.set(s.fecha, list);
+    });
+    map.forEach((list) => {
+      list.sort((a, b) => a.hora.localeCompare(b.hora));
+    });
+    return map;
+  }, [activeSeguimientos]);
+
   // Number of appointments in currently displayed month
   const monthCitasCount = useMemo(() => {
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
     return activeCitas.filter((c) => c.fecha.startsWith(prefix)).length;
   }, [activeCitas, year, month]);
+
+  const monthSeguimientosCount = useMemo(() => {
+    const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+    return activeSeguimientos.filter((s) => s.fecha.startsWith(prefix)).length;
+  }, [activeSeguimientos, year, month]);
 
   // Monthly calendar grid days calculation
   const calendarCells = useMemo(() => {
@@ -203,27 +245,24 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
     return cells;
   }, [year, month, todayStr]);
 
-  // Mobile list: appointments for current month grouped by date
+  // Mobile list: appointments and seguimientos for current month grouped by date
   const mobileMonthGroups = useMemo(() => {
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
-    const monthCitas = activeCitas
-      .filter((c) => c.fecha.startsWith(prefix))
-      .sort((a, b) => {
-        const cmp = a.fecha.localeCompare(b.fecha);
-        return cmp !== 0 ? cmp : a.hora.localeCompare(b.hora);
-      });
-
-    const groups: { fecha: string; citas: Cita[] }[] = [];
-    monthCitas.forEach((c) => {
-      const last = groups[groups.length - 1];
-      if (last && last.fecha === c.fecha) {
-        last.citas.push(c);
-      } else {
-        groups.push({ fecha: c.fecha, citas: [c] });
-      }
+    const datesSet = new Set<string>();
+    activeCitas.forEach((c) => {
+      if (c.fecha.startsWith(prefix)) datesSet.add(c.fecha);
     });
-    return groups;
-  }, [activeCitas, year, month]);
+    activeSeguimientos.forEach((s) => {
+      if (s.fecha.startsWith(prefix)) datesSet.add(s.fecha);
+    });
+
+    const sortedDates = Array.from(datesSet).sort();
+    return sortedDates.map((fecha) => ({
+      fecha,
+      citas: citasByDate.get(fecha) || [],
+      seguimientos: segsByDate.get(fecha) || [],
+    }));
+  }, [activeCitas, activeSeguimientos, citasByDate, segsByDate, year, month]);
 
   // Form Handlers
   const handleOpenAdd = (prefilledDate?: string) => {
@@ -394,9 +433,17 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
           <h3 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
             {monthTitle}
           </h3>
-          <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 font-medium text-slate-600 border border-slate-200">
-            {monthCitasCount} {monthCitasCount === 1 ? 'cita' : 'citas'}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 font-medium text-slate-600 border border-slate-200">
+              {monthCitasCount} {monthCitasCount === 1 ? 'cita' : 'citas'}
+            </span>
+            {monthSeguimientosCount > 0 && (
+              <span className="text-xs px-2 py-1 rounded-full bg-amber-50 font-medium text-amber-800 border border-amber-200 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-600" />
+                <span>{monthSeguimientosCount} {monthSeguimientosCount === 1 ? 'seguimiento' : 'seguimientos'}</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -460,40 +507,108 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
                   )}
                 </div>
 
-                {/* Day Appointments (up to 2) */}
+                {/* Day Appointments & Seguimientos (up to 2 total) */}
                 <div className="space-y-1 my-1.5 flex-1">
-                  {dayCitas.slice(0, 2).map((c) => {
-                    const client = clienteMap.get(c.clienteId);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedCita(c);
-                        }}
-                        className="w-full text-left px-2 py-1 bg-teal-50 hover:bg-teal-100 text-[#0d5c58] border border-teal-200/70 rounded text-[11px] font-medium truncate flex items-center gap-1.5 transition-colors shadow-2xs"
-                      >
-                        <span className="font-bold text-[10px] shrink-0 font-mono text-teal-800 bg-teal-100/90 px-1 rounded">
-                          {c.hora}
-                        </span>
-                        <span className="truncate">{client ? client.nombre : 'Cliente'}</span>
-                      </button>
-                    );
-                  })}
+                  {(() => {
+                    const daySegs = cell.isCurrentMonth ? segsByDate.get(cell.dateStr) || [] : [];
+                    const combinedItems = [
+                      ...dayCitas.map((c) => ({ type: 'cita' as const, data: c, hora: c.hora })),
+                      ...daySegs.map((s) => ({ type: 'seguimiento' as const, data: s, hora: s.hora })),
+                    ].sort((a, b) => a.hora.localeCompare(b.hora));
 
-                  {hasMore && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDayModalDate(cell.dateStr);
-                      }}
-                      className="w-full text-left text-[11px] font-semibold text-[#0d5c58] hover:text-[#0a4845] hover:underline px-1 py-0.5"
-                    >
-                      + Ver más ({dayCitas.length - 2})
-                    </button>
-                  )}
+                    const visibleItems = combinedItems.slice(0, 2);
+                    const totalCount = combinedItems.length;
+                    const hasMoreItems = totalCount > 2;
+
+                    return (
+                      <>
+                        {visibleItems.map((item) => {
+                          if (item.type === 'cita') {
+                            const c = item.data as Cita;
+                            const client = clienteMap.get(c.clienteId);
+                            return (
+                              <button
+                                key={`c-${c.id}`}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCita(c);
+                                }}
+                                className="w-full text-left px-2 py-1 bg-teal-50 hover:bg-teal-100 text-[#0d5c58] border border-teal-200/70 rounded text-[11px] font-medium truncate flex items-center gap-1.5 transition-colors shadow-2xs"
+                              >
+                                <span className="font-bold text-[10px] shrink-0 font-mono text-teal-800 bg-teal-100/90 px-1 rounded">
+                                  {c.hora}
+                                </span>
+                                <span className="truncate">{client ? client.nombre : 'Cliente'}</span>
+                              </button>
+                            );
+                          } else {
+                            const s = item.data as Seguimiento;
+                            const isProspecto =
+                              s.registroTipo === 'prospecto' || Boolean(s.prospectoId);
+                            const client = clienteMap.get(s.clienteId);
+                            const displayName = isProspecto
+                              ? s.prospectoNombre || 'Prospecto'
+                              : client
+                              ? client.nombre
+                              : 'Cliente';
+
+                            return (
+                              <button
+                                key={`s-${s.id}`}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedSeguimiento(s);
+                                  setIsRescheduling(false);
+                                  setNewSegDate(s.fecha);
+                                  setNewSegTime(s.hora);
+                                }}
+                                className={`w-full text-left px-2 py-1 rounded text-[11px] font-medium truncate flex items-center gap-1.5 transition-colors shadow-2xs border ${
+                                  isProspecto
+                                    ? 'bg-purple-50 hover:bg-purple-100 text-purple-900 border-purple-200/80'
+                                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200/80'
+                                }`}
+                              >
+                                <span
+                                  className={`font-bold text-[10px] shrink-0 font-mono px-1 rounded ${
+                                    isProspecto
+                                      ? 'text-purple-800 bg-purple-100'
+                                      : 'text-amber-800 bg-amber-100'
+                                  }`}
+                                >
+                                  {s.hora}
+                                </span>
+                                <span className="truncate flex items-center gap-1">
+                                  {isProspecto ? (
+                                    <span className="text-[9px] font-bold uppercase tracking-wider px-1 bg-purple-200 text-purple-800 rounded shrink-0">
+                                      Prospecto
+                                    </span>
+                                  ) : (
+                                    <Sparkles className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                                  )}
+                                  <span>{displayName}</span>
+                                </span>
+                              </button>
+                            );
+                          }
+                        })}
+
+                        {hasMoreItems && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDayModalDate(cell.dateStr);
+                            }}
+                            className="w-full text-left text-[11px] font-semibold text-[#0d5c58] hover:text-[#0a4845] hover:underline px-1 py-0.5"
+                          >
+                            + Ver más ({totalCount - 2})
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Bottom space placeholder */}
@@ -540,7 +655,7 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
                   </button>
                 </div>
 
-                {/* Appointments list for this date */}
+                {/* Appointments and Seguimientos list for this date */}
                 <div className="divide-y divide-slate-100">
                   {group.citas.map((c) => {
                     const client = clienteMap.get(c.clienteId);
@@ -548,7 +663,7 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
 
                     return (
                       <div
-                        key={c.id}
+                        key={`mob-c-${c.id}`}
                         onClick={() => setSelectedCita(c)}
                         className="p-4 hover:bg-slate-50 transition-colors cursor-pointer space-y-1.5"
                       >
@@ -580,6 +695,80 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
 
                         <p className="text-xs text-slate-700 line-clamp-2 pt-0.5">
                           {c.servicio}
+                        </p>
+                      </div>
+                    );
+                  })}
+
+                  {group.seguimientos.map((s) => {
+                    const isProspecto =
+                      s.registroTipo === 'prospecto' || Boolean(s.prospectoId);
+                    const client = clienteMap.get(s.clienteId);
+                    const veh = s.vehiculoId ? vehiculoMap.get(s.vehiculoId) : null;
+                    const displayName = isProspecto
+                      ? s.prospectoNombre || 'Prospecto comercial'
+                      : client
+                      ? client.nombre
+                      : 'Cliente no encontrado';
+
+                    return (
+                      <div
+                        key={`mob-s-${s.id}`}
+                        onClick={() => {
+                          setSelectedSeguimiento(s);
+                          setIsRescheduling(false);
+                          setNewSegDate(s.fecha);
+                          setNewSegTime(s.hora);
+                        }}
+                        className={`p-4 transition-colors cursor-pointer space-y-1.5 ${
+                          isProspecto
+                            ? 'bg-purple-50/40 hover:bg-purple-50/70'
+                            : 'bg-amber-50/40 hover:bg-amber-50/70'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-1 font-mono text-xs font-bold border px-2 py-0.5 rounded ${
+                                isProspecto
+                                  ? 'bg-purple-100 text-purple-900 border-purple-200'
+                                  : 'bg-amber-100 text-amber-800 border-amber-200'
+                              }`}
+                            >
+                              {isProspecto ? (
+                                <span className="text-[10px] font-bold">P</span>
+                              ) : (
+                                <Sparkles className="w-3 h-3 text-amber-600" />
+                              )}
+                              <span>{s.hora}</span>
+                            </span>
+                            <span className="font-semibold text-sm text-slate-900">
+                              {displayName}
+                            </span>
+                          </div>
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
+                              isProspecto
+                                ? 'text-purple-800 bg-purple-100/80 border-purple-200'
+                                : 'text-amber-800 bg-amber-100/70 border-amber-200'
+                            }`}
+                          >
+                            {isProspecto ? 'Prospecto' : 'Seguimiento'}
+                          </span>
+                        </div>
+
+                        <div className="text-xs text-slate-600 flex items-center gap-2">
+                          <span className="font-medium text-slate-800">{s.motivoLabel}</span>
+                          {s.registroRef && (
+                            <span className="text-slate-500">• {s.registroRef}</span>
+                          )}
+                          {veh && (
+                            <span className="text-slate-500">• {veh.marca} {veh.modelo}</span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-slate-700 line-clamp-2 pt-0.5 italic">
+                          "{s.mensaje}"
                         </p>
                       </div>
                     );
@@ -738,6 +927,234 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
       )}
 
       {/* ======================================================== */}
+      {/* MODAL: DETALLE DE SEGUIMIENTO SELECCIONADO */}
+      {/* ======================================================== */}
+      {selectedSeguimiento && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-300" />
+                <h3 className="text-base font-bold text-white">Detalle del seguimiento</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedSeguimiento(null)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs text-slate-700">
+              {/* Fecha y hora */}
+              <div className="p-3 bg-amber-50/70 rounded-lg border border-amber-200/80 space-y-1">
+                <span className="font-semibold text-amber-800 uppercase tracking-wider text-[10px] block">
+                  Fecha y hora programada
+                </span>
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                  <Clock className="w-4 h-4 text-amber-600" />
+                  <span>{selectedSeguimiento.hora} hrs</span>
+                  <span className="text-slate-400">•</span>
+                  <span>{formatFechaLong(selectedSeguimiento.fecha)}</span>
+                </div>
+              </div>
+
+              {/* Cliente o Prospecto */}
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px] block mb-1">
+                  {selectedSeguimiento.registroTipo === 'prospecto' || selectedSeguimiento.prospectoId
+                    ? 'Prospecto comercial'
+                    : 'Cliente'}
+                </span>
+                {(() => {
+                  const isPros =
+                    selectedSeguimiento.registroTipo === 'prospecto' ||
+                    Boolean(selectedSeguimiento.prospectoId);
+                  if (isPros) {
+                    return (
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-slate-900">
+                          {selectedSeguimiento.prospectoNombre || 'Prospecto comercial'}
+                        </p>
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200 inline-block">
+                          Seguimiento de prospecto
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  const c = clienteMap.get(selectedSeguimiento.clienteId);
+                  return c ? (
+                    <div className="space-y-0.5">
+                      <p className="font-bold text-slate-900">{c.nombre}</p>
+                      <p className="text-slate-500 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span>{c.telefono}</span>
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 italic">Cliente no encontrado</p>
+                  );
+                })()}
+              </div>
+
+              {/* Motivo y referencia */}
+              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <div>
+                  <span className="font-semibold text-slate-500 uppercase tracking-wider text-[10px] block">
+                    Motivo
+                  </span>
+                  <span className="font-bold text-slate-900">{selectedSeguimiento.motivoLabel}</span>
+                </div>
+                {selectedSeguimiento.registroRef && (
+                  <span className="px-2 py-0.5 rounded bg-teal-50 text-[#0d5c58] font-medium border border-teal-200/50">
+                    {selectedSeguimiento.registroRef}
+                  </span>
+                )}
+              </div>
+
+              {/* Mensaje preparado */}
+              <div>
+                <span className="font-semibold text-slate-600 block mb-1">
+                  Mensaje o nota preparada:
+                </span>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 leading-relaxed font-normal italic">
+                  "{selectedSeguimiento.mensaje}"
+                </div>
+              </div>
+
+              {/* Estado */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="font-semibold text-slate-600">Estado del seguimiento:</span>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full ${
+                  selectedSeguimiento.estado === 'Pendiente'
+                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                    : selectedSeguimiento.estado === 'Realizado'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{selectedSeguimiento.estado}</span>
+                </span>
+              </div>
+
+              {/* Reprogramar formulario inline */}
+              {isRescheduling && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 mt-2">
+                  <span className="font-semibold text-slate-700 block text-xs">
+                    Selecciona nueva fecha y hora:
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="date"
+                      value={newSegDate}
+                      onChange={(e) => setNewSegDate(e.target.value)}
+                      className="px-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-800"
+                    />
+                    <input
+                      type="time"
+                      value={newSegTime}
+                      onChange={(e) => setNewSegTime(e.target.value)}
+                      className="px-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-800"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsRescheduling(false)}
+                      className="px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newSegDate && onUpdateSeguimientoEstado) {
+                          onUpdateSeguimientoEstado(
+                            selectedSeguimiento.id,
+                            'Pendiente',
+                            newSegDate,
+                            newSegTime
+                          );
+                          setSelectedSeguimiento({
+                            ...selectedSeguimiento,
+                            fecha: newSegDate,
+                            hora: newSegTime,
+                          });
+                          setIsRescheduling(false);
+                        }
+                      }}
+                      className="px-3 py-1 text-xs font-semibold bg-[#0d5c58] text-white rounded hover:bg-[#0a4845]"
+                    >
+                      Confirmar reprogramación
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {onUpdateSeguimientoEstado && selectedSeguimiento.estado === 'Pendiente' && !isRescheduling && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onUpdateSeguimientoEstado(selectedSeguimiento.id, 'Realizado');
+                        setSelectedSeguimiento({
+                          ...selectedSeguimiento,
+                          estado: 'Realizado',
+                        });
+                      }}
+                      className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      Marcar realizado
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onUpdateSeguimientoEstado(selectedSeguimiento.id, 'Cancelado');
+                        setSelectedSeguimiento({
+                          ...selectedSeguimiento,
+                          estado: 'Cancelado',
+                        });
+                      }}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewSegDate(selectedSeguimiento.fecha);
+                        setNewSegTime(selectedSeguimiento.hora);
+                        setIsRescheduling(true);
+                      }}
+                      className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#0d5c58] border border-teal-200 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      Reprogramar
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedSeguimiento(null);
+                  setIsRescheduling(false);
+                }}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold transition-colors ml-auto"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
       {/* MODAL: VER MÁS CITAS DE UN DÍA ESPECÍFICO (Desktop) */}
       {/* ======================================================== */}
       {dayModalDate && (
@@ -768,7 +1185,7 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
 
                 return (
                   <div
-                    key={c.id}
+                    key={`modal-c-${c.id}`}
                     onClick={() => {
                       setDayModalDate(null);
                       setSelectedCita(c);
@@ -797,6 +1214,76 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
 
                     <p className="text-slate-700 line-clamp-2">
                       {c.servicio}
+                    </p>
+                  </div>
+                );
+              })}
+
+              {(segsByDate.get(dayModalDate) || []).map((s) => {
+                const isPros = s.registroTipo === 'prospecto' || Boolean(s.prospectoId);
+                const client = clienteMap.get(s.clienteId);
+                const veh = s.vehiculoId ? vehiculoMap.get(s.vehiculoId) : null;
+                const displayName = isPros
+                  ? s.prospectoNombre || 'Prospecto comercial'
+                  : client
+                  ? client.nombre
+                  : 'Cliente';
+
+                return (
+                  <div
+                    key={`modal-s-${s.id}`}
+                    onClick={() => {
+                      setDayModalDate(null);
+                      setSelectedSeguimiento(s);
+                      setIsRescheduling(false);
+                      setNewSegDate(s.fecha);
+                      setNewSegTime(s.hora);
+                    }}
+                    className={`p-3.5 rounded-lg border transition-colors cursor-pointer space-y-1.5 ${
+                      isPros
+                        ? 'border-purple-200 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-300'
+                        : 'border-amber-200 bg-amber-50/50 hover:bg-amber-50 hover:border-amber-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-mono text-xs font-bold border px-2 py-0.5 rounded flex items-center gap-1 ${
+                            isPros
+                              ? 'bg-purple-100 text-purple-900 border-purple-200'
+                              : 'bg-amber-100 text-amber-900 border-amber-200'
+                          }`}
+                        >
+                          {isPros ? (
+                            <span className="text-[10px] font-bold">P</span>
+                          ) : (
+                            <Sparkles className="w-3 h-3 text-amber-600" />
+                          )}
+                          <span>{s.hora} hrs</span>
+                        </span>
+                        <span className="font-bold text-slate-900 text-sm">
+                          {displayName}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[11px] font-semibold border px-2 py-0.5 rounded-full ${
+                          isPros
+                            ? 'text-purple-900 bg-purple-100 border-purple-200'
+                            : 'text-amber-900 bg-amber-100 border-amber-200'
+                        }`}
+                      >
+                        {isPros ? 'Prospecto' : s.motivoLabel}
+                      </span>
+                    </div>
+
+                    {veh && (
+                      <p className="text-slate-500 text-[11px]">
+                        {veh.marca} {veh.modelo} • Placas: {veh.placas}
+                      </p>
+                    )}
+
+                    <p className="text-slate-700 line-clamp-2 italic">
+                      "{s.mensaje}"
                     </p>
                   </div>
                 );

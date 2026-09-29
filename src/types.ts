@@ -8,7 +8,190 @@ export type SectionId =
   | 'cotizaciones'
   | 'calendario'
   | 'servicios'
-  | 'inventario';
+  | 'inventario'
+  | 'facturacion'
+  | 'personal-asistencia'
+  | 'atencion-asistida'
+  | 'reportes'
+  | 'prospectos'
+  | 'configuracion';
+
+export type MotivoAtencion =
+  | 'consulta_servicio'
+  | 'seguimiento_cotizacion'
+  | 'recordatorio_cita'
+  | 'avance_reparacion'
+  | 'proximo_mantenimiento';
+
+export type EstadoSeguimiento = 'Pendiente' | 'Realizado' | 'Cancelado';
+
+export interface Seguimiento {
+  id: string;
+  clienteId: string;
+  vehiculoId?: string;
+  prospectoId?: string;
+  prospectoNombre?: string;
+  motivo: MotivoAtencion | string;
+  motivoLabel: string;
+  registroTipo?: 'servicio' | 'cotizacion' | 'cita' | 'orden' | 'mantenimiento' | 'prospecto';
+  registroId?: string;
+  registroRef?: string;
+  mensaje: string;
+  fecha: string; // YYYY-MM-DD
+  hora: string; // HH:MM
+  estado: EstadoSeguimiento;
+  creadoEn: string;
+}
+
+export type EstadoProspecto =
+  | 'Nuevo'
+  | 'Contactado'
+  | 'Sin respuesta'
+  | 'Cita agendada'
+  | 'No interesado'
+  | 'Convertido en cliente';
+
+export type OrigenProspecto =
+  | 'Recomendación'
+  | 'Redes sociales'
+  | 'Llamada'
+  | 'Visita'
+  | 'Otro';
+
+export interface HistorialProspectoItem {
+  id: string;
+  fechaHora: string;
+  tipo: 'creacion' | 'estado' | 'nota' | 'seguimiento' | 'conversion';
+  descripcion: string;
+}
+
+export interface Prospecto {
+  id: string;
+  nombre: string;
+  telefono: string;
+  correo?: string;
+  servicioInteres?: string;
+  origen: OrigenProspecto;
+  estado: EstadoProspecto;
+  notas?: string;
+  fechaContacto: string; // YYYY-MM-DD
+  proximaAccionFecha?: string; // YYYY-MM-DD
+  proximaAccionHora?: string; // HH:MM
+  proximaAccionNota?: string;
+  clienteId?: string;
+  seguimientoId?: string;
+  historial: HistorialProspectoItem[];
+  creadoEn: string;
+}
+
+export interface RespuestaSesion {
+  id: string;
+  clienteId: string;
+  clienteNombre: string;
+  motivo: string;
+  texto: string;
+  fechaHora: string;
+  registroRef?: string;
+}
+
+export interface ConfiguracionTaller {
+  nombre: string;
+  telefono?: string;
+  direccion?: string;
+}
+
+export type RolUsuario = 'Administrador' | 'Recepción' | 'Mecánico';
+
+export interface Usuario {
+  id: string;
+  nombre: string;
+  usuario: string; // Correo o nombre de usuario
+  password?: string; // Contraseña demo local
+  rol: RolUsuario;
+  activo: boolean;
+  empleadoId?: string; // Vinculación opcional con Empleado (Mecánico)
+  creadoEn: string;
+}
+
+export interface SesionUsuario {
+  usuarioId: string;
+  nombre: string;
+  usuario: string;
+  rol: RolUsuario;
+  empleadoId?: string;
+  recordar: boolean;
+  inicioEn: string;
+}
+
+export interface Empleado {
+  id: string;
+  codigoQr: string;
+  nombre: string;
+  puesto: string;
+  activo: boolean; // Activo o Inactivo
+  fechaAlta: string;
+}
+
+export type TipoAsistencia = 'Entrada' | 'Salida';
+
+export interface RegistroAsistencia {
+  id: string;
+  empleadoId: string;
+  fecha: string; // YYYY-MM-DD
+  hora: string; // HH:MM
+  tipo: TipoAsistencia;
+  fechaHora: string;
+}
+
+export type EstadoFactura = 'Pendiente' | 'Pagada' | 'Cancelada';
+
+export interface PagoFactura {
+  metodoPago: string;
+  fechaPago: string;
+  notas?: string;
+}
+
+export interface Factura {
+  id: string;
+  folio: string;
+  cotizacionId: string;
+  cotizacionFolio: string;
+  clienteId: string;
+  clienteNombre: string;
+  clienteTelefono?: string;
+  clienteCorreo?: string;
+  vehiculoId: string;
+  vehiculoDesc: string;
+  vehiculoPlacas: string;
+  descripcion: string;
+  importeRefacciones: number;
+  importeManoObra: number;
+  total: number;
+  estado: EstadoFactura;
+  fechaCreacion: string;
+  pago?: PagoFactura;
+  motivoCancelacion?: string;
+  fechaCancelacion?: string;
+}
+
+export interface RespaldoDemo {
+  version: string;
+  fechaExportacion: string;
+  configuracion: ConfiguracionTaller;
+  clientes: Cliente[];
+  vehiculos: Vehiculo[];
+  citas: Cita[];
+  cotizaciones: Cotizacion[];
+  ordenes: OrdenTrabajo[];
+  servicios: ServicioCatalogo[];
+  refacciones: Refaccion[];
+  movimientos: MovimientoInventario[];
+  facturas?: Factura[];
+  empleados?: Empleado[];
+  asistencias?: RegistroAsistencia[];
+  seguimientos?: Seguimiento[];
+  prospectos?: Prospecto[];
+}
 
 export type TipoMovimiento = 'Entrada' | 'Salida';
 
@@ -121,5 +304,7 @@ export interface OrdenTrabajo {
   observaciones?: string;
   refaccionesUtilizadas?: RefaccionUtilizadaOrden[];
   estado: EstadoOrden;
+  mecanicoId?: string;
+  mecanicoNombre?: string;
   creadoEn: string;
 }

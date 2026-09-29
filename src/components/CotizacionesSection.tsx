@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Cliente, Vehiculo, Cotizacion, OrdenTrabajo, ServicioCatalogo } from '../types';
+import { Cliente, Vehiculo, Cotizacion, OrdenTrabajo, ServicioCatalogo, ConfiguracionTaller } from '../types';
 import {
   Search,
   Plus,
@@ -21,6 +21,7 @@ interface CotizacionesSectionProps {
   clientes: Cliente[];
   vehiculos: Vehiculo[];
   servicios: ServicioCatalogo[];
+  configuracion?: ConfiguracionTaller;
   onSaveCotizacion: (cot: Cotizacion) => void;
   onUpdateEstado: (id: string, nuevoEstado: 'Aprobada' | 'Rechazada') => void;
   onLinkCotizacionToOrden: (cotizacionId: string, ordenId: string) => void;
@@ -36,6 +37,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   clientes,
   vehiculos,
   servicios,
+  configuracion,
   onSaveCotizacion,
   onUpdateEstado,
   onLinkCotizacionToOrden,
@@ -1079,8 +1081,14 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <div className="flex justify-between items-start border-b border-slate-200 pb-5">
                 <div>
                   <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    Taller mecánico
+                    {configuracion?.nombre || 'Taller mecánico'}
                   </h1>
+                  {configuracion?.telefono && (
+                    <p className="text-xs text-slate-500">Tel: {configuracion.telefono}</p>
+                  )}
+                  {configuracion?.direccion && (
+                    <p className="text-xs text-slate-500">{configuracion.direccion}</p>
+                  )}
                   <p className="text-xs uppercase tracking-widest text-[#0d5c58] font-bold mt-1">
                     Documento de demostración
                   </p>

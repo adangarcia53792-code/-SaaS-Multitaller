@@ -22,6 +22,12 @@ import {
   CalendarDays,
   MoreVertical,
   History,
+  Settings,
+  Receipt,
+  UserCheck,
+  Sparkles,
+  BarChart3,
+  UserPlus,
 } from 'lucide-react';
 import {
   SectionId,
@@ -34,6 +40,13 @@ import {
   Refaccion,
   MovimientoInventario,
   RefaccionUtilizadaOrden,
+  ConfiguracionTaller,
+  RespaldoDemo,
+  Factura,
+  Empleado,
+  RegistroAsistencia,
+  Seguimiento,
+  Prospecto,
 } from './types';
 import { CitasSection } from './components/CitasSection';
 import { NuevaAtencionSection } from './components/NuevaAtencionSection';
@@ -43,6 +56,13 @@ import { ServiciosSection } from './components/ServiciosSection';
 import { InventarioSection } from './components/InventarioSection';
 import { CalendarioSection } from './components/CalendarioSection';
 import { HistorialModal } from './components/HistorialModal';
+import { ConfiguracionSection } from './components/ConfiguracionSection';
+import { DashboardSection } from './components/DashboardSection';
+import { FacturacionSection } from './components/FacturacionSection';
+import { PersonalAsistenciaSection } from './components/PersonalAsistenciaSection';
+import { AtencionAsistidaSection } from './components/AtencionAsistidaSection';
+import { ReportesSection } from './components/ReportesSection';
+import { ProspectosSection } from './components/ProspectosSection';
 
 interface MenuItem {
   id: SectionId;
@@ -59,6 +79,12 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'ordenes', label: 'Órdenes de trabajo', icon: Wrench },
   { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText },
   { id: 'calendario', label: 'Calendario', icon: CalendarDays },
+  { id: 'facturacion', label: 'Facturación', icon: Receipt },
+  { id: 'personal-asistencia', label: 'Personal y asistencia', icon: UserCheck },
+  { id: 'reportes', label: 'Reportes', icon: BarChart3 },
+  { id: 'prospectos', label: 'Prospectos', icon: UserPlus },
+  { id: 'atencion-asistida', label: 'Atención asistida', icon: Sparkles },
+  { id: 'configuracion', label: 'Configuración', icon: Settings },
 ];
 
 const INITIAL_CLIENTES: Cliente[] = [
@@ -185,6 +211,184 @@ const STORAGE_KEY_ORDENES = 'taller_ordenes_data';
 const STORAGE_KEY_SERVICIOS = 'taller_servicios_data';
 const STORAGE_KEY_REFACCIONES = 'taller_refacciones_data';
 const STORAGE_KEY_MOVIMIENTOS = 'taller_movimientos_inventario_data';
+const STORAGE_KEY_CONFIGURACION = 'taller_configuracion_data';
+const STORAGE_KEY_FACTURAS = 'taller_facturas_data';
+const STORAGE_KEY_EMPLEADOS = 'taller_empleados_data';
+const STORAGE_KEY_ASISTENCIAS = 'taller_asistencias_data';
+const STORAGE_KEY_SEGUIMIENTOS = 'taller_seguimientos_data';
+const STORAGE_KEY_PROSPECTOS = 'taller_prospectos_data';
+
+const INITIAL_FACTURAS: Factura[] = [];
+
+const INITIAL_SEGUIMIENTOS: Seguimiento[] = [
+  {
+    id: 'seg-init-1',
+    clienteId: 'cli-1',
+    vehiculoId: 'veh-1',
+    motivo: 'seguimiento_cotizacion',
+    motivoLabel: 'Seguimiento de cotización',
+    registroTipo: 'cotizacion',
+    registroRef: 'Cotización COT-001',
+    mensaje:
+      'Hola Carlos Mendoza, nos comunicamos de Taller mecánico para dar seguimiento a la cotización COT-001 de tu Toyota Corolla.',
+    fecha: '2026-10-03',
+    hora: '10:30',
+    estado: 'Pendiente',
+    creadoEn: '2026-09-28T10:00:00Z',
+  },
+  {
+    id: 'seg-init-2',
+    clienteId: 'cli-2',
+    vehiculoId: 'veh-2',
+    motivo: 'recordatorio_cita',
+    motivoLabel: 'Recordatorio de cita',
+    registroTipo: 'cita',
+    registroRef: 'Cita 05/10/2026',
+    mensaje:
+      'Hola Lucía Fernández, te recordamos tu cita en Taller mecánico programada para el día 05/10/2026 a las 15:30 hrs para tu Nissan Versa.',
+    fecha: '2026-10-04',
+    hora: '11:00',
+    estado: 'Pendiente',
+    creadoEn: '2026-09-28T10:00:00Z',
+  },
+  {
+    id: 'seg-init-3',
+    clienteId: '',
+    prospectoId: 'pros-init-1',
+    prospectoNombre: 'Mariana Ríos',
+    motivo: 'seguimiento_prospecto',
+    motivoLabel: 'Contacto comercial',
+    registroTipo: 'prospecto',
+    registroRef: 'Prospecto: Mariana Ríos',
+    mensaje: 'Llamar para confirmar cotización y agendar visita para afinación mayor.',
+    fecha: '2026-10-02',
+    hora: '11:00',
+    estado: 'Pendiente',
+    creadoEn: '2026-09-28T09:35:00Z',
+  },
+];
+
+const INITIAL_PROSPECTOS: Prospecto[] = [
+  {
+    id: 'pros-init-1',
+    nombre: 'Mariana Ríos',
+    telefono: '555-345-6789',
+    correo: 'mariana.rios@email.com',
+    servicioInteres: 'Afinación mayor y cambio de aceite',
+    origen: 'Recomendación',
+    estado: 'Nuevo',
+    notas: 'Interesada en cotizar mantenimiento preventivo para auto sedán.',
+    fechaContacto: '2026-09-28',
+    proximaAccionFecha: '2026-10-02',
+    proximaAccionHora: '11:00',
+    proximaAccionNota: 'Llamar para confirmar cotización y agendar visita para afinación mayor.',
+    seguimientoId: 'seg-init-3',
+    historial: [
+      {
+        id: 'hist-pros-1',
+        fechaHora: '2026-09-28T09:30:00Z',
+        tipo: 'creacion',
+        descripcion: 'Prospecto registrado vía Recomendación. Servicio de interés: Afinación mayor y cambio de aceite.',
+      },
+      {
+        id: 'hist-pros-2',
+        fechaHora: '2026-09-28T09:35:00Z',
+        tipo: 'seguimiento',
+        descripcion: 'Próxima acción programada para el 02/10/2026 a las 11:00 hrs.',
+      },
+    ],
+    creadoEn: '2026-09-28T09:30:00Z',
+  },
+  {
+    id: 'pros-init-2',
+    nombre: 'Roberto Garza',
+    telefono: '555-876-5432',
+    correo: 'roberto.garza@email.com',
+    servicioInteres: 'Revisión de suspensión y frenos',
+    origen: 'Llamada',
+    estado: 'Contactado',
+    notas: 'Escucha ruidos al pasar baches. Se le brindó asesoría preliminar.',
+    fechaContacto: '2026-09-27',
+    proximaAccionFecha: '2026-10-03',
+    proximaAccionHora: '16:00',
+    proximaAccionNota: 'Dar seguimiento a presupuesto preliminar.',
+    historial: [
+      {
+        id: 'hist-pros-3',
+        fechaHora: '2026-09-27T11:00:00Z',
+        tipo: 'creacion',
+        descripcion: 'Prospecto registrado vía Llamada.',
+      },
+      {
+        id: 'hist-pros-4',
+        fechaHora: '2026-09-27T11:20:00Z',
+        tipo: 'estado',
+        descripcion: 'Estado actualizado a Contactado.',
+      },
+    ],
+    creadoEn: '2026-09-27T11:00:00Z',
+  },
+];
+
+const INITIAL_EMPLEADOS: Empleado[] = [
+  {
+    id: 'emp-1',
+    codigoQr: 'EMP-001',
+    nombre: 'Roberto Sánchez',
+    puesto: 'Jefe de taller / Mecánico principal',
+    activo: true,
+    fechaAlta: '2026-09-01T08:00:00Z',
+  },
+  {
+    id: 'emp-2',
+    codigoQr: 'EMP-002',
+    nombre: 'Miguel Ángel Gómez',
+    puesto: 'Mecánico automotriz',
+    activo: true,
+    fechaAlta: '2026-09-01T08:00:00Z',
+  },
+  {
+    id: 'emp-3',
+    codigoQr: 'EMP-003',
+    nombre: 'Sofía Ramírez',
+    puesto: 'Asesora de servicio / Recepción',
+    activo: true,
+    fechaAlta: '2026-09-01T08:00:00Z',
+  },
+];
+
+const INITIAL_ASISTENCIAS: RegistroAsistencia[] = [
+  {
+    id: 'asist-init-1',
+    empleadoId: 'emp-1',
+    fecha: '2026-09-29',
+    hora: '08:00',
+    tipo: 'Entrada',
+    fechaHora: '2026-09-29T08:00:00Z',
+  },
+  {
+    id: 'asist-init-2',
+    empleadoId: 'emp-2',
+    fecha: '2026-09-29',
+    hora: '08:15',
+    tipo: 'Entrada',
+    fechaHora: '2026-09-29T08:15:00Z',
+  },
+  {
+    id: 'asist-init-3',
+    empleadoId: 'emp-3',
+    fecha: '2026-09-29',
+    hora: '08:30',
+    tipo: 'Entrada',
+    fechaHora: '2026-09-29T08:30:00Z',
+  },
+];
+
+const INITIAL_CONFIGURACION: ConfiguracionTaller = {
+  nombre: 'Taller mecánico',
+  telefono: '',
+  direccion: '',
+};
 
 const INITIAL_REFACCIONES: Refaccion[] = [
   {
@@ -297,6 +501,91 @@ export default function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCatalogosOpen, setIsCatalogosOpen] = useState(true);
+  const [isAdminOpen, setIsAdminOpen] = useState(true);
+
+  // Facturas State (ETAPA 15)
+  const [facturas, setFacturas] = useState<Factura[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_FACTURAS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_FACTURAS;
+  });
+
+  // Empleados State (ETAPA 16)
+  const [empleados, setEmpleados] = useState<Empleado[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_EMPLEADOS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_EMPLEADOS;
+  });
+
+  // Asistencias State (ETAPA 16)
+  const [asistencias, setAsistencias] = useState<RegistroAsistencia[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_ASISTENCIAS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_ASISTENCIAS;
+  });
+
+  // Seguimientos State (ETAPA 17)
+  const [seguimientos, setSeguimientos] = useState<Seguimiento[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SEGUIMIENTOS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_SEGUIMIENTOS;
+  });
+
+  // Prospectos State (ETAPA 19)
+  const [prospectos, setProspectos] = useState<Prospecto[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PROSPECTOS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_PROSPECTOS;
+  });
+
+  // Configuración del taller (ETAPA 12)
+  const [configuracion, setConfiguracion] = useState<ConfiguracionTaller>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CONFIGURACION);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.nombre === 'string') return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_CONFIGURACION;
+  });
 
   // Servicios State (ETAPA 8)
   const [servicios, setServicios] = useState<ServicioCatalogo[]>(() => {
@@ -473,6 +762,235 @@ export default function App() {
       console.error(e);
     }
   }, [movimientos]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_CONFIGURACION, JSON.stringify(configuracion));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [configuracion]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_FACTURAS, JSON.stringify(facturas));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [facturas]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_EMPLEADOS, JSON.stringify(empleados));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [empleados]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_ASISTENCIAS, JSON.stringify(asistencias));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [asistencias]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_SEGUIMIENTOS, JSON.stringify(seguimientos));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [seguimientos]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_PROSPECTOS, JSON.stringify(prospectos));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [prospectos]);
+
+  const handleSaveSeguimiento = (newSeg: Seguimiento) => {
+    setSeguimientos((prev) => [newSeg, ...prev]);
+  };
+
+  const handleUpdateSeguimientoEstado = (
+    id: string,
+    nuevoEstado: 'Pendiente' | 'Realizado' | 'Cancelado',
+    newDate?: string,
+    newTime?: string
+  ) => {
+    setSeguimientos((prev) =>
+      prev.map((s) => {
+        if (s.id === id) {
+          return {
+            ...s,
+            estado: nuevoEstado,
+            ...(newDate ? { fecha: newDate } : {}),
+            ...(newTime ? { hora: newTime } : {}),
+          };
+        }
+        return s;
+      })
+    );
+
+    // Sync with linked prospecto if exists
+    setProspectos((prev) =>
+      prev.map((p) => {
+        if (p.seguimientoId === id) {
+          const nowIso = new Date().toISOString();
+          const updatedHistorial = [...p.historial];
+          let desc = `Seguimiento marcado como ${nuevoEstado}.`;
+          if (newDate) {
+            desc = `Próxima acción reprogramada para el ${newDate} a las ${newTime || '10:00'} hrs.`;
+          }
+          updatedHistorial.unshift({
+            id: `hist-${Date.now()}-sync`,
+            fechaHora: nowIso,
+            tipo: 'seguimiento',
+            descripcion: desc,
+          });
+
+          return {
+            ...p,
+            proximaAccionFecha: newDate || p.proximaAccionFecha,
+            proximaAccionHora: newTime || p.proximaAccionHora,
+            historial: updatedHistorial,
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handleSaveProspecto = (newPros: Prospecto, linkedSeguimiento?: Seguimiento) => {
+    setProspectos((prev) => [newPros, ...prev]);
+    if (linkedSeguimiento) {
+      setSeguimientos((prev) => [linkedSeguimiento, ...prev]);
+    }
+  };
+
+  const handleUpdateProspecto = (updatedPros: Prospecto, linkedSeguimiento?: Seguimiento) => {
+    setProspectos((prev) => prev.map((p) => (p.id === updatedPros.id ? updatedPros : p)));
+    if (linkedSeguimiento) {
+      setSeguimientos((prev) => {
+        const exists = prev.some((s) => s.id === linkedSeguimiento.id);
+        if (exists) {
+          return prev.map((s) => (s.id === linkedSeguimiento.id ? linkedSeguimiento : s));
+        } else {
+          return [linkedSeguimiento, ...prev];
+        }
+      });
+    }
+  };
+
+  const handleConvertirEnCliente = (
+    prospectoId: string,
+    clienteData: { nombre: string; telefono: string; correo?: string },
+    existingClienteId?: string
+  ) => {
+    let targetClienteId = existingClienteId;
+
+    if (!targetClienteId) {
+      const newClienteId = `cli-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+      const newCliente: Cliente = {
+        id: newClienteId,
+        nombre: clienteData.nombre.trim(),
+        telefono: clienteData.telefono.trim(),
+        correo: clienteData.correo?.trim() || undefined,
+      };
+      setClientes((prev) => [newCliente, ...prev]);
+      targetClienteId = newClienteId;
+    }
+
+    const nowIso = new Date().toISOString();
+    setProspectos((prev) =>
+      prev.map((p) => {
+        if (p.id === prospectoId) {
+          const updatedHistorial = [...p.historial];
+          updatedHistorial.unshift({
+            id: `hist-${Date.now()}-conv`,
+            fechaHora: nowIso,
+            tipo: 'conversion',
+            descripcion: `Convertido en cliente formal (${clienteData.nombre.trim()}). Relación guardada exitosamente.`,
+          });
+          return {
+            ...p,
+            estado: 'Convertido en cliente',
+            clienteId: targetClienteId,
+            historial: updatedHistorial,
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handleSaveEmpleado = (newEmp: Empleado) => {
+    setEmpleados((prev) => [newEmp, ...prev]);
+  };
+
+  const handleUpdateEmpleado = (updatedEmp: Empleado) => {
+    setEmpleados((prev) => prev.map((e) => (e.id === updatedEmp.id ? updatedEmp : e)));
+  };
+
+  const handleSaveAsistencia = (newAsist: RegistroAsistencia) => {
+    setAsistencias((prev) => [newAsist, ...prev]);
+  };
+
+  const handleSaveFactura = (newFac: Factura) => {
+    setFacturas((prev) => [newFac, ...prev]);
+  };
+
+  const handleUpdateFactura = (updatedFac: Factura) => {
+    setFacturas((prev) => prev.map((f) => (f.id === updatedFac.id ? updatedFac : f)));
+  };
+
+  // Restore whole demo data handler (ETAPA 12 & 15)
+  const handleRestoreData = (backup: RespaldoDemo) => {
+    setConfiguracion(backup.configuracion);
+    setClientes(backup.clientes);
+    setVehiculos(backup.vehiculos);
+    setCitas(backup.citas);
+    setCotizaciones(backup.cotizaciones);
+    setOrdenes(backup.ordenes);
+    setServicios(backup.servicios);
+    setRefacciones(backup.refacciones);
+    setMovimientos(backup.movimientos);
+    setFacturas(backup.facturas || []);
+    setEmpleados(backup.empleados || INITIAL_EMPLEADOS);
+    setAsistencias(backup.asistencias || INITIAL_ASISTENCIAS);
+    if (backup.seguimientos) {
+      setSeguimientos(backup.seguimientos);
+    }
+    if (backup.prospectos) {
+      setProspectos(backup.prospectos);
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY_CONFIGURACION, JSON.stringify(backup.configuracion));
+      localStorage.setItem(STORAGE_KEY_CLIENTES, JSON.stringify(backup.clientes));
+      localStorage.setItem(STORAGE_KEY_VEHICULOS, JSON.stringify(backup.vehiculos));
+      localStorage.setItem(STORAGE_KEY_CITAS, JSON.stringify(backup.citas));
+      localStorage.setItem(STORAGE_KEY_COTIZACIONES, JSON.stringify(backup.cotizaciones));
+      localStorage.setItem(STORAGE_KEY_ORDENES, JSON.stringify(backup.ordenes));
+      localStorage.setItem(STORAGE_KEY_SERVICIOS, JSON.stringify(backup.servicios));
+      localStorage.setItem(STORAGE_KEY_REFACCIONES, JSON.stringify(backup.refacciones));
+      localStorage.setItem(STORAGE_KEY_MOVIMIENTOS, JSON.stringify(backup.movimientos));
+      localStorage.setItem(STORAGE_KEY_FACTURAS, JSON.stringify(backup.facturas || []));
+      localStorage.setItem(STORAGE_KEY_EMPLEADOS, JSON.stringify(backup.empleados || INITIAL_EMPLEADOS));
+      localStorage.setItem(STORAGE_KEY_ASISTENCIAS, JSON.stringify(backup.asistencias || INITIAL_ASISTENCIAS));
+      if (backup.seguimientos) {
+        localStorage.setItem(STORAGE_KEY_SEGUIMIENTOS, JSON.stringify(backup.seguimientos));
+      }
+      if (backup.prospectos) {
+        localStorage.setItem(STORAGE_KEY_PROSPECTOS, JSON.stringify(backup.prospectos));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Clientes & Vehículos Modals State
   const [searchCliente, setSearchCliente] = useState('');
@@ -966,9 +1484,17 @@ export default function App() {
       <header className="md:hidden flex items-center justify-between px-5 py-4 bg-[#0d1b2a] text-white shadow-sm sticky top-0 z-30 no-print">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#0d5c58] flex items-center justify-center font-bold text-white text-sm">
-            TM
+            {(configuracion.nombre || 'TM')
+              .split(' ')
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((w) => w[0])
+              .join('')
+              .toUpperCase() || 'TM'}
           </div>
-          <span className="font-semibold text-lg tracking-tight">Taller mecánico</span>
+          <span className="font-semibold text-lg tracking-tight">
+            {configuracion.nombre || 'Taller mecánico'}
+          </span>
         </div>
         <button
           type="button"
@@ -997,11 +1523,17 @@ export default function App() {
         <div className="px-6 py-6 border-b border-[#1b2d45] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-[#0d5c58] flex items-center justify-center font-bold text-white shadow-sm">
-              TM
+              {(configuracion.nombre || 'TM')
+                .split(' ')
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join('')
+                .toUpperCase() || 'TM'}
             </div>
             <div>
               <h1 className="font-bold text-lg text-white tracking-tight leading-tight">
-                Taller mecánico
+                {configuracion.nombre || 'Taller mecánico'}
               </h1>
               <span className="text-xs text-slate-400 font-normal">Panel de gestión</span>
             </div>
@@ -1016,7 +1548,15 @@ export default function App() {
         </div>
 
         <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
-          {MENU_ITEMS.map((item) => {
+          {MENU_ITEMS.filter(
+            (item) =>
+              item.id !== 'configuracion' &&
+              item.id !== 'facturacion' &&
+              item.id !== 'personal-asistencia' &&
+              item.id !== 'reportes' &&
+              item.id !== 'prospectos' &&
+              item.id !== 'atencion-asistida'
+          ).map((item) => {
             const Icon = item.icon;
             const isSelected = activeSection === item.id;
             return (
@@ -1089,6 +1629,139 @@ export default function App() {
               </div>
             )}
           </div>
+
+          {/* Grupo desplegable: Administración (ETAPA 15) */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setIsAdminOpen(!isAdminOpen)}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#172a3f]/50 uppercase tracking-wider transition-colors text-left"
+            >
+              <span>Administración</span>
+              {isAdminOpen ? (
+                <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              )}
+            </button>
+
+            {isAdminOpen && (
+              <div className="mt-1 space-y-1 pl-2">
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('facturacion')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                    activeSection === 'facturacion'
+                      ? 'bg-[#0d5c58] text-white shadow-sm font-semibold'
+                      : 'text-slate-300 hover:bg-[#172a3f] hover:text-white'
+                  }`}
+                >
+                  <Receipt
+                    className={`w-4 h-4 shrink-0 ${
+                      activeSection === 'facturacion' ? 'text-teal-200' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Facturación</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('personal-asistencia')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                    activeSection === 'personal-asistencia'
+                      ? 'bg-[#0d5c58] text-white shadow-sm font-semibold'
+                      : 'text-slate-300 hover:bg-[#172a3f] hover:text-white'
+                  }`}
+                >
+                  <UserCheck
+                    className={`w-4 h-4 shrink-0 ${
+                      activeSection === 'personal-asistencia' ? 'text-teal-200' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Personal y asistencia</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('reportes')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                    activeSection === 'reportes'
+                      ? 'bg-[#0d5c58] text-white shadow-sm font-semibold'
+                      : 'text-slate-300 hover:bg-[#172a3f] hover:text-white'
+                  }`}
+                >
+                  <BarChart3
+                    className={`w-4 h-4 shrink-0 ${
+                      activeSection === 'reportes' ? 'text-teal-200' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Reportes</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectSection('prospectos')}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                    activeSection === 'prospectos'
+                      ? 'bg-[#0d5c58] text-white shadow-sm font-semibold'
+                      : 'text-slate-300 hover:bg-[#172a3f] hover:text-white'
+                  }`}
+                >
+                  <UserPlus
+                    className={`w-4 h-4 shrink-0 ${
+                      activeSection === 'prospectos' ? 'text-teal-200' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Prospectos</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Opción secundaria: Atención asistida (ETAPA 17) */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => handleSelectSection('atencion-asistida')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all text-left ${
+                activeSection === 'atencion-asistida'
+                  ? 'bg-[#0d5c58] text-white shadow-sm font-semibold'
+                  : 'text-slate-300 hover:bg-[#172a3f] hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <Sparkles
+                  className={`w-5 h-5 shrink-0 ${
+                    activeSection === 'atencion-asistida' ? 'text-teal-200' : 'text-slate-400'
+                  }`}
+                />
+                <span className="truncate">Atención asistida</span>
+              </div>
+              <span className="ml-2 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                Demo
+              </span>
+            </button>
+          </div>
+
+          {/* Configuración (ETAPA 12) - Al final del menú izquierdo */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => handleSelectSection('configuracion')}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left ${
+                activeSection === 'configuracion'
+                  ? 'bg-[#0d5c58] text-white shadow-sm font-semibold'
+                  : 'text-slate-300 hover:bg-[#172a3f] hover:text-white'
+              }`}
+            >
+              <Settings
+                className={`w-5 h-5 shrink-0 ${
+                  activeSection === 'configuracion' ? 'text-teal-200' : 'text-slate-400'
+                }`}
+              />
+              <span>Configuración</span>
+            </button>
+          </div>
         </nav>
 
         <div className="p-4 border-t border-[#1b2d45] text-xs text-slate-400 text-center">
@@ -1099,68 +1772,18 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
         <div className="p-6 md:p-10 max-w-5xl w-full mx-auto">
-          {/* DASHBOARD */}
+          {/* DASHBOARD (ETAPA 14) */}
           {activeSection === 'dashboard' && (
-            <section className="space-y-6">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-                  Resumen del taller
-                </h2>
-                <p className="text-sm md:text-base text-slate-500 mt-1">
-                  Estado general de las actividades y servicios en el taller.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-2">
-                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-xs hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-600">Citas de hoy</span>
-                    <div className="p-2.5 rounded-lg bg-teal-50 text-[#0d5c58]">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <span className="text-3xl md:text-4xl font-bold text-slate-900">5</span>
-                    <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      Próxima cita a las 10:30 AM
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-xs hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-600">Órdenes en proceso</span>
-                    <div className="p-2.5 rounded-lg bg-teal-50 text-[#0d5c58]">
-                      <Wrench className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <span className="text-3xl md:text-4xl font-bold text-slate-900">8</span>
-                    <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
-                      3 en revisión final para entrega
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-xs hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-600">Cotizaciones pendientes</span>
-                    <div className="p-2.5 rounded-lg bg-teal-50 text-[#0d5c58]">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <span className="text-3xl md:text-4xl font-bold text-slate-900">3</span>
-                    <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-slate-400" />
-                      Esperando confirmación del cliente
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <DashboardSection
+              clientes={clientes}
+              vehiculos={vehiculos}
+              citas={citas}
+              cotizaciones={cotizaciones}
+              ordenes={ordenes}
+              refacciones={refacciones}
+              seguimientos={seguimientos}
+              onNavigate={handleSelectSection}
+            />
           )}
 
           {/* NUEVA ATENCIÓN */}
@@ -1458,6 +2081,7 @@ export default function App() {
               clientes={clientes}
               vehiculos={vehiculos}
               servicios={servicios}
+              configuracion={configuracion}
               onSaveCotizacion={handleSaveCotizacion}
               onUpdateEstado={handleUpdateCotizacionEstado}
               onLinkCotizacionToOrden={handleLinkCotizacionToOrden}
@@ -1475,6 +2099,7 @@ export default function App() {
               vehiculos={vehiculos}
               servicios={servicios}
               refacciones={refacciones}
+              configuracion={configuracion}
               onSaveOrden={handleSaveOrden}
               onSaveCotizacion={handleSaveCotizacion}
               onLinkOrdenAndCotizacion={handleLinkOrdenAndCotizacion}
@@ -1509,7 +2134,100 @@ export default function App() {
               clientes={clientes}
               vehiculos={vehiculos}
               servicios={servicios}
+              seguimientos={seguimientos}
               onSaveCita={handleSaveCita}
+            />
+          )}
+
+          {/* FACTURACIÓN (ETAPA 15) */}
+          {activeSection === 'facturacion' && (
+            <FacturacionSection
+              facturas={facturas}
+              cotizaciones={cotizaciones}
+              clientes={clientes}
+              vehiculos={vehiculos}
+              configuracion={configuracion}
+              onSaveFactura={handleSaveFactura}
+              onUpdateFactura={handleUpdateFactura}
+            />
+          )}
+
+          {/* PERSONAL Y ASISTENCIA (ETAPA 16) */}
+          {activeSection === 'personal-asistencia' && (
+            <PersonalAsistenciaSection
+              empleados={empleados}
+              asistencias={asistencias}
+              configuracion={configuracion}
+              onSaveEmpleado={handleSaveEmpleado}
+              onUpdateEmpleado={handleUpdateEmpleado}
+              onSaveAsistencia={handleSaveAsistencia}
+            />
+          )}
+
+          {/* ATENCIÓN ASISTIDA (ETAPA 17) */}
+          {activeSection === 'atencion-asistida' && (
+            <AtencionAsistidaSection
+              clientes={clientes}
+              vehiculos={vehiculos}
+              citas={citas}
+              cotizaciones={cotizaciones}
+              ordenes={ordenes}
+              servicios={servicios}
+              configuracion={configuracion}
+              seguimientos={seguimientos}
+              onSaveSeguimiento={handleSaveSeguimiento}
+              onUpdateSeguimientoEstado={handleUpdateSeguimientoEstado}
+              onNavigateToSection={handleSelectSection}
+            />
+          )}
+
+          {/* CONFIGURACIÓN Y RESPALDO (ETAPA 12) */}
+          {activeSection === 'configuracion' && (
+            <ConfiguracionSection
+              configuracion={configuracion}
+              onSaveConfiguracion={(newConf) => setConfiguracion(newConf)}
+              clientes={clientes}
+              vehiculos={vehiculos}
+              citas={citas}
+              cotizaciones={cotizaciones}
+              ordenes={ordenes}
+              servicios={servicios}
+              refacciones={refacciones}
+              movimientos={movimientos}
+              facturas={facturas}
+              empleados={empleados}
+              asistencias={asistencias}
+              seguimientos={seguimientos}
+              prospectos={prospectos}
+              onRestoreData={handleRestoreData}
+            />
+          )}
+
+          {/* REPORTES DE DEMOSTRACIÓN (ETAPA 18) */}
+          {activeSection === 'reportes' && (
+            <ReportesSection
+              ordenes={ordenes}
+              cotizaciones={cotizaciones}
+              citas={citas}
+              facturas={facturas}
+              refacciones={refacciones}
+              servicios={servicios}
+              configuracion={configuracion}
+            />
+          )}
+
+          {/* PROSPECTOS Y SEGUIMIENTO COMERCIAL (ETAPA 19) */}
+          {activeSection === 'prospectos' && (
+            <ProspectosSection
+              prospectos={prospectos}
+              clientes={clientes}
+              servicios={servicios}
+              seguimientos={seguimientos}
+              onSaveProspecto={handleSaveProspecto}
+              onUpdateProspecto={handleUpdateProspecto}
+              onConvertirEnCliente={handleConvertirEnCliente}
+              onUpdateSeguimientoEstado={handleUpdateSeguimientoEstado}
+              onNavigateToClientes={() => handleSelectSection('clientes')}
             />
           )}
 
@@ -1523,7 +2241,13 @@ export default function App() {
             activeSection !== 'ordenes' &&
             activeSection !== 'servicios' &&
             activeSection !== 'inventario' &&
-            activeSection !== 'calendario' && (
+            activeSection !== 'calendario' &&
+            activeSection !== 'facturacion' &&
+            activeSection !== 'personal-asistencia' &&
+            activeSection !== 'atencion-asistida' &&
+            activeSection !== 'reportes' &&
+            activeSection !== 'prospectos' &&
+            activeSection !== 'configuracion' && (
               <section className="bg-white rounded-xl p-8 md:p-12 border border-slate-200 text-center max-w-xl mx-auto my-12 shadow-xs">
                 <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mb-4">
                   <currentItem.icon className="w-7 h-7 text-[#0d5c58]" />
