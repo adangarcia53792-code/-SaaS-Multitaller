@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ServicioCatalogo } from '../types';
-import { Search, Plus, Pencil, X, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Search, Plus, Pencil, X, CheckCircle2, AlertCircle, Sparkles, Wrench } from 'lucide-react';
 
 interface ServiciosSectionProps {
   servicios: ServicioCatalogo[];
@@ -123,20 +123,25 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Catálogo de servicios
-          </h2>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Gestión de servicios estandarizados con precios base de refacciones y mano de obra.
-          </p>
+      {/* Encabezado Merkatics para Catálogos */}
+      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-emerald-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+            <Wrench className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+              Catálogo de servicios
+            </h2>
+            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+              Gestión de servicios estandarizados con precios base de refacciones y mano de obra.
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar servicio</span>
@@ -144,7 +149,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
       </div>
 
       {/* Controls: Search & Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="relative w-full sm:max-w-xs">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
@@ -152,16 +157,16 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre o descripción..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
           />
         </div>
 
-        <div className="flex gap-1 bg-white p-1 rounded-lg border border-slate-200 text-xs sm:text-sm font-medium">
+        <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#E4E7EC] text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilterEstado('todos')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filterEstado === 'todos' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filterEstado === 'todos' ? 'bg-[#E9504F] text-white shadow-xs font-semibold' : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Todos ({servicios.length})
@@ -169,8 +174,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
           <button
             type="button"
             onClick={() => setFilterEstado('activos')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filterEstado === 'activos' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filterEstado === 'activos' ? 'bg-[#E9504F] text-white shadow-xs font-semibold' : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Activos ({servicios.filter((s) => s.activo).length})
@@ -178,8 +183,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
           <button
             type="button"
             onClick={() => setFilterEstado('inactivos')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filterEstado === 'inactivos' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filterEstado === 'inactivos' ? 'bg-[#E9504F] text-white shadow-xs font-semibold' : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Inactivos ({servicios.filter((s) => !s.activo).length})
@@ -187,12 +192,13 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Table & Mobile View */}
+      <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs overflow-hidden no-print">
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
                 <th className="py-3.5 px-5">Nombre del servicio</th>
                 <th className="py-3.5 px-5">Descripción breve</th>
                 <th className="py-3.5 px-5">Precio base total</th>
@@ -244,7 +250,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(s)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                         <span>Editar</span>
@@ -264,9 +270,58 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile View: Bloques legibles sin scroll horizontal */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredServicios.length > 0 ? (
+            filteredServicios.map((s) => (
+              <div key={s.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-[#202124] text-sm">{s.nombre}</span>
+                      {s.activo ? (
+                        <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Activo
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                          Inactivo
+                        </span>
+                      )}
+                    </div>
+                    {s.descripcion && (
+                      <p className="text-xs text-slate-600 line-clamp-2">{s.descripcion}</p>
+                    )}
+                    <p className="text-sm font-bold text-slate-900 mt-1">
+                      ${s.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+                    </p>
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                      Ref: ${s.importeRefacciones.toFixed(2)} | MO: ${s.importeManoObra.toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(s)}
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors shrink-0 cursor-pointer"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>Editar</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-6 text-center text-xs text-slate-400">
+              {searchQuery
+                ? 'No se encontraron servicios que coincidan con la búsqueda.'
+                : 'No hay servicios registrados en el catálogo.'}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* MODAL: AGREGAR / EDITAR SERVICIO */}
+      {/* MODAL: AGENDAR / EDITAR SERVICIO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
@@ -281,8 +336,19 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={() => {
+                  const dirty =
+                    formNombre.trim() !== (editingServicio?.nombre || '') ||
+                    formDescripcion.trim() !== (editingServicio?.descripcion || '') ||
+                    formRefacciones !== (editingServicio?.importeRefacciones?.toString() || '0') ||
+                    formManoObra !== (editingServicio?.importeManoObra?.toString() || '0');
+                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
+                    return;
+                  }
+                  setIsModalOpen(false);
+                }}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -296,14 +362,15 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                 </label>
                 <input
                   type="text"
+                  autoFocus
                   value={formNombre}
                   onChange={(e) => {
                     setFormNombre(e.target.value);
                     if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: '' });
                   }}
                   placeholder="Ej. Cambio de balatas y rectificado"
-                  className={`w-full px-3.5 py-2 border rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] transition-all ${
-                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all ${
+                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                   }`}
                 />
                 {formErrors.nombre && (
@@ -313,7 +380,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
               {/* Descripción */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[#202124] mb-1">
                   Descripción breve <span className="text-xs text-slate-400 font-normal">(Opcional)</span>
                 </label>
                 <textarea
@@ -321,14 +388,14 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                   value={formDescripcion}
                   onChange={(e) => setFormDescripcion(e.target.value)}
                   placeholder="Detalles de los trabajos y componentes incluidos..."
-                  className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] transition-all"
+                  className="w-full px-3.5 py-2 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
                 />
               </div>
 
               {/* Importes */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-[#202124] mb-1">
                     Importe estimado refacciones ($ MXN)
                   </label>
                   <input
@@ -340,8 +407,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                       setFormRefacciones(e.target.value);
                       if (formErrors.refacciones) setFormErrors({ ...formErrors, refacciones: '' });
                     }}
-                    className={`w-full px-3.5 py-2 border rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                     }`}
                   />
                   {formErrors.refacciones && (
@@ -350,7 +417,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-[#202124] mb-1">
                     Importe mano de obra ($ MXN)
                   </label>
                   <input
@@ -362,8 +429,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                       setFormManoObra(e.target.value);
                       if (formErrors.manoObra) setFormErrors({ ...formErrors, manoObra: '' });
                     }}
-                    className={`w-full px-3.5 py-2 border rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                     }`}
                   />
                   {formErrors.manoObra && (
@@ -373,39 +440,39 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
               </div>
 
               {/* Total Calculado Automáticamente */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+              <div className="p-3.5 bg-emerald-50/50 border border-emerald-200 rounded-lg flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-semibold text-slate-600 block">Precio base total calculado:</span>
-                  <span className="text-xs text-slate-400">Refacciones + Mano de obra en centavos exactos</span>
+                  <span className="text-xs font-semibold text-slate-700 block">Precio base total calculado:</span>
+                  <span className="text-xs text-slate-500">Refacciones + Mano de obra en centavos exactos</span>
                 </div>
-                <div className="text-lg font-bold text-[#0d5c58]">
+                <div className="text-lg font-bold text-emerald-700">
                   ${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                 </div>
               </div>
 
               {/* Estado: Activo o Inactivo */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label className="block text-sm font-medium text-[#202124] mb-1.5">
                   Estado en el catálogo
                 </label>
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-800">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-[#202124]">
                     <input
                       type="radio"
                       name="servicioActivo"
                       checked={formActivo}
                       onChange={() => setFormActivo(true)}
-                      className="text-[#0d5c58] focus:ring-[#0d5c58]"
+                      className="text-[#E9504F] focus:ring-[#E9504F]"
                     />
                     <span>Activo (disponible en formularios)</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-800">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-[#202124]">
                     <input
                       type="radio"
                       name="servicioActivo"
                       checked={!formActivo}
                       onChange={() => setFormActivo(false)}
-                      className="text-[#0d5c58] focus:ring-[#0d5c58]"
+                      className="text-[#E9504F] focus:ring-[#E9504F]"
                     />
                     <span>Inactivo (oculto en selecciones futuras)</span>
                   </label>
@@ -419,14 +486,24 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                  onClick={() => {
+                    const dirty =
+                      formNombre.trim() !== (editingServicio?.nombre || '') ||
+                      formDescripcion.trim() !== (editingServicio?.descripcion || '') ||
+                      formRefacciones !== (editingServicio?.importeRefacciones?.toString() || '0') ||
+                      formManoObra !== (editingServicio?.importeManoObra?.toString() || '0');
+                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
+                      return;
+                    }
+                    setIsModalOpen(false);
+                  }}
+                  className="px-4 py-2.5 border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#5F6368] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium rounded-lg shadow-xs transition-colors"
+                  className="px-5 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
                   Guardar
                 </button>

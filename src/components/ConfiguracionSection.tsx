@@ -30,6 +30,8 @@ import {
   Prospecto,
   Usuario,
   SesionUsuario,
+  Garantia,
+  EventoBitacora,
 } from '../types';
 import { UsuariosPermisosSection } from './UsuariosPermisosSection';
 
@@ -50,6 +52,8 @@ interface ConfiguracionSectionProps {
   asistencias?: RegistroAsistencia[];
   seguimientos?: Seguimiento[];
   prospectos?: Prospecto[];
+  garantias?: Garantia[];
+  bitacora?: EventoBitacora[];
   // Restore all data handler
   onRestoreData: (backup: RespaldoDemo) => void;
   // Usuarios y permisos (ETAPA 20)
@@ -77,6 +81,8 @@ export function ConfiguracionSection({
   asistencias,
   seguimientos,
   prospectos,
+  garantias,
+  bitacora,
   onRestoreData,
   usuarios,
   currentUser,
@@ -146,6 +152,8 @@ export function ConfiguracionSection({
       asistencias: asistencias || [],
       seguimientos: seguimientos || [],
       prospectos: prospectos || [],
+      garantias: garantias || [],
+      bitacora: bitacora || [],
     };
 
     const jsonString = JSON.stringify(backup, null, 2);
@@ -474,6 +482,10 @@ export function ConfiguracionSection({
       }
     }
 
+    if (jsonObj.bitacora !== undefined && !Array.isArray(jsonObj.bitacora)) {
+      return { valid: false, error: 'La bitácora de actividad en el archivo de respaldo no tiene un formato válido.' };
+    }
+
     return {
       valid: true,
       data: {
@@ -495,6 +507,10 @@ export function ConfiguracionSection({
         facturas: Array.isArray(jsonObj.facturas) ? jsonObj.facturas : undefined,
         empleados: Array.isArray(jsonObj.empleados) ? jsonObj.empleados : undefined,
         asistencias: Array.isArray(jsonObj.asistencias) ? jsonObj.asistencias : undefined,
+        seguimientos: Array.isArray(jsonObj.seguimientos) ? jsonObj.seguimientos : undefined,
+        prospectos: Array.isArray(jsonObj.prospectos) ? jsonObj.prospectos : undefined,
+        garantias: Array.isArray(jsonObj.garantias) ? jsonObj.garantias : undefined,
+        bitacora: Array.isArray(jsonObj.bitacora) ? jsonObj.bitacora : undefined,
       },
     };
   };

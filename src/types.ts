@@ -14,6 +14,8 @@ export type SectionId =
   | 'atencion-asistida'
   | 'reportes'
   | 'prospectos'
+  | 'garantias'
+  | 'bitacora'
   | 'configuracion';
 
 export type MotivoAtencion =
@@ -191,6 +193,89 @@ export interface RespaldoDemo {
   asistencias?: RegistroAsistencia[];
   seguimientos?: Seguimiento[];
   prospectos?: Prospecto[];
+  garantias?: Garantia[];
+  bitacora?: EventoBitacora[];
+}
+
+export type SeccionBitacora =
+  | 'Clientes'
+  | 'Vehículos'
+  | 'Citas'
+  | 'Cotizaciones'
+  | 'Órdenes'
+  | 'Inventario'
+  | 'Facturación'
+  | 'Garantías'
+  | 'Configuración'
+  | 'Usuarios'
+  | 'Respaldos';
+
+export interface DetalleCambioBitacora {
+  etiqueta: string;
+  anterior?: string;
+  nuevo?: string;
+}
+
+export interface EventoBitacora {
+  id: string;
+  fechaHora: string;
+  usuarioId: string;
+  usuarioNombre: string;
+  usuarioRol: RolUsuario;
+  tipoAccion: string;
+  seccion: SeccionBitacora;
+  registroId?: string;
+  registroFolio?: string;
+  descripcion: string;
+  detalles?: DetalleCambioBitacora[];
+}
+
+export type EstadoGarantia = 'Vigente' | 'Vencida' | 'Aplicada' | 'Cancelada';
+
+export interface AplicacionGarantia {
+  motivoRegreso: string;
+  observaciones?: string;
+  fecha: string; // YYYY-MM-DD
+  nuevaOrdenId: string;
+  nuevaOrdenFolio: string;
+  fechaAplicacion: string;
+}
+
+export interface CancelacionGarantia {
+  motivo: string;
+  fechaCancelacion: string;
+}
+
+export interface ObservacionMecanicoGarantia {
+  id: string;
+  mecanicoNombre: string;
+  texto: string;
+  fechaHora: string;
+}
+
+export interface Garantia {
+  id: string;
+  folio: string; // Ej. GAR-001
+  ordenId: string;
+  ordenFolio: string;
+  clienteId: string;
+  clienteNombre: string;
+  clienteTelefono?: string;
+  vehiculoId: string;
+  vehiculoDescripcion: string;
+  vehiculoPlacas: string;
+  mecanicoId?: string;
+  mecanicoNombre?: string;
+  trabajoCubierto: string; // Copia del trabajo cubierto
+  fechaInicio: string; // YYYY-MM-DD
+  duracionDias: number; // Ej. 30, 60, 90, 180
+  fechaVencimiento: string; // YYYY-MM-DD
+  condiciones: string; // Condiciones o alcance
+  estado: EstadoGarantia;
+  aplicacion?: AplicacionGarantia;
+  cancelacion?: CancelacionGarantia;
+  observacionesMecanico?: ObservacionMecanicoGarantia[];
+  creadoEn: string;
 }
 
 export type TipoMovimiento = 'Entrada' | 'Salida';
@@ -306,5 +391,21 @@ export interface OrdenTrabajo {
   estado: EstadoOrden;
   mecanicoId?: string;
   mecanicoNombre?: string;
+  fechaEntregaPrometida?: string; // YYYY-MM-DD
   creadoEn: string;
+}
+
+export type NivelAviso = 'Información' | 'Atención' | 'Urgente';
+
+export interface AvisoPendiente {
+  id: string; // ID único para control de visto temporal
+  tipo: string;
+  titulo: string;
+  descripcion: string;
+  fechaHoraRelacionada: string;
+  nivel: NivelAviso;
+  seccionDestino: SectionId;
+  registroId?: string;
+  esHoy?: boolean;
+  esUrgente?: boolean;
 }

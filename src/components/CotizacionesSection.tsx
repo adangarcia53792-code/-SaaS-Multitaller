@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   FileText,
   Link as LinkIcon,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 
 interface CotizacionesSectionProps {
@@ -347,24 +348,31 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Cotizaciones
-          </h2>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Presupuestos y cotizaciones de servicios y refacciones.
-          </p>
+      {/* Encabezado Merkatics para Cotizaciones */}
+      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-purple-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-full bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center shrink-0">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+              Cotizaciones
+            </h2>
+            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+              Presupuestos y autorizaciones de servicios y refacciones.
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nueva cotización</span>
-        </button>
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nueva cotización</span>
+          </button>
+        </div>
       </div>
 
       {/* Controls: Search & Tabs */}
@@ -376,16 +384,18 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por folio, cliente o placas..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
           />
         </div>
 
-        <div className="flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1 text-xs sm:text-sm font-medium">
+        <div className="flex flex-wrap gap-1 rounded-lg border border-[#E4E7EC] bg-white p-1 text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilter('todas')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filter === 'todas' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filter === 'todas'
+                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
+                : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Todas
@@ -393,8 +403,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
           <button
             type="button"
             onClick={() => setFilter('Por autorizar')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filter === 'Por autorizar' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filter === 'Por autorizar'
+                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
+                : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Por autorizar
@@ -402,8 +414,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
           <button
             type="button"
             onClick={() => setFilter('Aprobada')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filter === 'Aprobada' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filter === 'Aprobada'
+                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
+                : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Aprobadas
@@ -411,8 +425,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
           <button
             type="button"
             onClick={() => setFilter('Rechazada')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filter === 'Rechazada' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filter === 'Rechazada'
+                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
+                : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Rechazadas
@@ -420,12 +436,13 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table & Mobile View */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden no-print">
-        <div className="overflow-x-auto">
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
                 <th className="py-3.5 px-5">Folio</th>
                 <th className="py-3.5 px-5">Cliente y vehículo</th>
                 <th className="py-3.5 px-5">Trabajo solicitado</th>
@@ -449,13 +466,13 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       {/* Folio */}
                       <td className="py-3.5 px-5 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-[#0d5c58] bg-teal-50 px-2.5 py-1 rounded text-xs border border-teal-100">
+                          <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded text-xs border border-purple-200">
                             {cot.folio}
                           </span>
                         </div>
                         {linkedOrden && (
-                          <div className="text-[11px] text-slate-500 font-mono mt-1 flex items-center gap-1">
-                            <LinkIcon className="w-3 h-3 text-[#0d5c58]" />
+                          <div className="text-[11px] text-amber-700 font-mono mt-1 flex items-center gap-1">
+                            <LinkIcon className="w-3 h-3 text-amber-600" />
                             <span>{linkedOrden.folio}</span>
                           </div>
                         )}
@@ -463,14 +480,14 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
                       {/* Cliente y vehículo */}
                       <td className="py-3.5 px-5">
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-[#202124]">
                           {client ? client.nombre : 'Cliente no encontrado'}
                         </div>
-                        <div className="text-xs text-slate-500 mt-0.5">
+                        <div className="text-xs text-[#5F6368] mt-0.5">
                           {veh ? (
                             <span>
                               {veh.marca} {veh.modelo}{' '}
-                              <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">
+                              <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#E4E7EC]">
                                 {veh.placas}
                               </strong>
                             </span>
@@ -481,12 +498,12 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       </td>
 
                       {/* Trabajo solicitado */}
-                      <td className="py-3.5 px-5 text-slate-700 max-w-xs">
+                      <td className="py-3.5 px-5 text-[#202124] max-w-xs">
                         <span className="line-clamp-2">{cot.descripcion}</span>
                       </td>
 
                       {/* Total */}
-                      <td className="py-3.5 px-5 whitespace-nowrap font-semibold text-slate-900">
+                      <td className="py-3.5 px-5 whitespace-nowrap font-semibold text-[#202124]">
                         ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                       </td>
 
@@ -515,7 +532,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(cot)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-medium text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer shadow-xs"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             <span>Editar</span>
@@ -526,8 +543,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                             <button
                               type="button"
                               onClick={() => setOpenMenuId(isMenuOpen ? null : cot.id)}
-                              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+                              className="p-2 text-[#5F6368] hover:text-[#202124] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                               title="Más opciones"
+                              aria-label="Más opciones"
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
@@ -538,7 +556,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                                   className="fixed inset-0 z-20"
                                   onClick={() => setOpenMenuId(null)}
                                 />
-                                <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                   {/* For approved quotes: Crear o vincular orden / Ver orden */}
                                   {cot.estado === 'Aprobada' && (
                                     <>
@@ -549,7 +567,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                                             setViewingLinkedOrden(linkedOrden);
                                             setOpenMenuId(null);
                                           }}
-                                          className="w-full px-3 py-2 text-[#0d5c58] hover:bg-teal-50 flex items-center gap-2"
+                                          className="w-full px-3 py-2 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
                                         >
                                           <ExternalLink className="w-4 h-4" />
                                           <span>Ver orden</span>
@@ -558,7 +576,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                                         <button
                                           type="button"
                                           onClick={() => handleOpenLinkingModal(cot)}
-                                          className="w-full px-3 py-2 text-[#0d5c58] hover:bg-teal-50 flex items-center gap-2"
+                                          className="w-full px-3 py-2 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
                                         >
                                           <LinkIcon className="w-4 h-4" />
                                           <span>Crear o vincular orden</span>
@@ -629,6 +647,170 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Block View: Bloques legibles sin scroll horizontal */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredCotizaciones.length > 0 ? (
+            filteredCotizaciones.map((cot) => {
+              const client = clienteMap.get(cot.clienteId);
+              const veh = vehiculoMap.get(cot.vehiculoId);
+              const isMenuOpen = openMenuId === cot.id;
+              const linkedOrden = cot.ordenId
+                ? ordenMap.get(cot.ordenId)
+                : ordenes.find((o) => o.cotizacionId === cot.id);
+
+              return (
+                <div key={cot.id} className="p-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-xs border border-purple-200">
+                          {cot.folio}
+                        </span>
+                        {cot.estado === 'Por autorizar' && (
+                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            Por autorizar
+                          </span>
+                        )}
+                        {cot.estado === 'Aprobada' && (
+                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Aprobada
+                          </span>
+                        )}
+                        {cot.estado === 'Rechazada' && (
+                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                            Rechazada
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-medium text-[#202124] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
+                      <p className="text-xs text-[#5F6368] mt-0.5">
+                        {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{cot.descripcion}</p>
+                      <p className="text-sm font-bold text-[#202124] mt-1.5">
+                        ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+                      </p>
+                      {linkedOrden && (
+                        <p className="text-xs text-amber-700 font-mono flex items-center gap-1 mt-1">
+                          <LinkIcon className="w-3 h-3 text-amber-600" />
+                          <span>Orden vinculada: {linkedOrden.folio}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(cot)}
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer shadow-xs"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Editar</span>
+                      </button>
+
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenMenuId(isMenuOpen ? null : cot.id)}
+                          className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-[#5F6368] hover:text-[#202124] rounded-lg"
+                          aria-label="Más opciones"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+
+                        {isMenuOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                              {cot.estado === 'Aprobada' && (
+                                <>
+                                  {linkedOrden ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setViewingLinkedOrden(linkedOrden);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className="w-full px-3 py-2.5 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      <span>Ver orden</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenLinkingModal(cot)}
+                                      className="w-full px-3 py-2.5 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
+                                    >
+                                      <LinkIcon className="w-4 h-4" />
+                                      <span>Crear o vincular orden</span>
+                                    </button>
+                                  )}
+                                </>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPrintingCotizacion(cot);
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <FileText className="w-4 h-4 text-slate-500" />
+                                <span>Ver / imprimir</span>
+                              </button>
+
+                              {cot.estado !== 'Aprobada' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setStatusConfirm({ cotizacion: cot, action: 'Aprobada' });
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full px-3 py-2.5 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                                >
+                                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                  <span>Aprobar</span>
+                                </button>
+                              )}
+
+                              {cot.estado !== 'Rechazada' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setStatusConfirm({ cotizacion: cot, action: 'Rechazada' });
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full px-3 py-2.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                                >
+                                  <XCircle className="w-4 h-4 text-rose-600" />
+                                  <span>Rechazar</span>
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-6 text-center text-xs text-slate-400">
+              {searchQuery
+                ? 'No se encontraron cotizaciones que coincidan con la búsqueda.'
+                : filter !== 'todas'
+                ? `No hay cotizaciones con estado "${filter}".`
+                : 'No hay cotizaciones registradas.'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MODAL: CREAR O VINCULAR ORDEN (ETAPA 7) */}
@@ -669,7 +851,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     <select
                       value={selectedExistingOrdenId}
                       onChange={(e) => setSelectedExistingOrdenId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
                     >
                       {availableOrdersForLinking.map((ord) => (
                         <option key={ord.id} value={ord.id}>
@@ -682,7 +864,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       type="button"
                       disabled={!selectedExistingOrdenId || isLinkingProcessing}
                       onClick={handleConfirmLinkExisting}
-                      className="w-full px-4 py-2 bg-[#0d5c58] hover:bg-[#0a4845] disabled:opacity-50 text-white rounded-md font-medium text-xs shadow-xs transition-colors"
+                      className="w-full px-4 py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white rounded-lg font-semibold text-xs shadow-xs transition-colors cursor-pointer"
                     >
                       Vincular a la orden seleccionada
                     </button>
@@ -695,18 +877,18 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
 
               {/* Opción 2: Crear nueva orden */}
-              <div className="p-4 border border-slate-200 rounded-lg space-y-3 bg-slate-50/50">
-                <h4 className="font-semibold text-slate-800 text-xs uppercase tracking-wider">
+              <div className="p-4 border border-[#E4E7EC] rounded-lg space-y-3 bg-slate-50/50">
+                <h4 className="font-semibold text-[#202124] text-xs uppercase tracking-wider">
                   Opción B: Crear nueva orden de trabajo
                 </h4>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#5F6368]">
                   Crea una nueva orden con el cliente, vehículo y trabajo de la cotización, asignándole folio único y estado "Pendiente".
                 </p>
                 <button
                   type="button"
                   disabled={isLinkingProcessing}
                   onClick={handleConfirmCreateNewOrder}
-                  className="w-full px-4 py-2 border border-[#0d5c58] text-[#0d5c58] hover:bg-teal-50 disabled:opacity-50 rounded-md font-medium text-xs transition-colors"
+                  className="w-full px-4 py-2.5 min-h-[42px] border border-[#E9504F] text-[#E9504F] hover:bg-rose-50 disabled:opacity-50 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Crear nueva orden y vincular
                 </button>
@@ -735,7 +917,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 <h3 className="text-lg font-bold text-slate-900">
                   Orden vinculada: {viewingLinkedOrden.folio}
                 </h3>
-                <span className="text-xs text-[#0d5c58] font-semibold">
+                <span className="text-xs text-purple-700 font-semibold">
                   Estado: {viewingLinkedOrden.estado}
                 </span>
               </div>
@@ -748,7 +930,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </button>
             </div>
 
-            <div className="text-xs space-y-2 text-slate-700 bg-slate-50 p-4 rounded-lg border">
+            <div className="text-xs space-y-2 text-slate-700 bg-slate-50 p-4 rounded-lg border border-[#E4E7EC]">
               <p>
                 <span className="text-slate-400 font-medium">Trabajo:</span> {viewingLinkedOrden.servicio}
               </p>
@@ -768,7 +950,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setViewingLinkedOrden(null)}
-                className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"
+                className="px-4 py-2 border border-[#E4E7EC] rounded-lg text-xs font-medium text-[#5F6368] hover:bg-slate-50 cursor-pointer"
               >
                 Cerrar
               </button>
@@ -780,7 +962,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     setViewingLinkedOrden(null);
                     onNavigateToOrden(id);
                   }}
-                  className="px-4 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded-lg text-xs font-medium"
+                  className="px-4 py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-colors"
                 >
                   Ir a la sección Órdenes
                 </button>
@@ -805,8 +987,20 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsFormModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={() => {
+                  const dirty =
+                    formClientId !== (editingCotizacion?.clienteId || clientes[0]?.id || '') ||
+                    formVehiculoId !== (editingCotizacion?.vehiculoId || '') ||
+                    formDescripcion.trim() !== (editingCotizacion?.descripcion || '') ||
+                    formRefacciones !== (editingCotizacion?.importeRefacciones?.toString() || '0') ||
+                    formManoObra !== (editingCotizacion?.importeManoObra?.toString() || '0');
+                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
+                    return;
+                  }
+                  setIsFormModalOpen(false);
+                }}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -830,9 +1024,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 </label>
                 {clientes.length > 0 ? (
                   <select
+                    autoFocus
                     value={formClientId}
                     onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
                   >
                     <option value="" disabled>Seleccione un cliente</option>
                     {clientes.map((c) => (
@@ -863,7 +1058,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       setFormVehiculoId(e.target.value);
                       if (formErrors.vehiculoId) setFormErrors((prev) => ({ ...prev, vehiculoId: '' }));
                     }}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
                   >
                     <option value="" disabled>Seleccione un vehículo</option>
                     {availableVehicles.map((v) => (
@@ -882,27 +1077,27 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 )}
               </div>
 
-              {/* Selector opcional: Servicio del catálogo */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Servicio del catálogo <span className="text-xs text-slate-400 font-normal">(Opcional)</span>
-                </label>
-                <select
-                  value={selectedCatalogId}
-                  onChange={(e) => handleSelectCatalogService(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
-                >
-                  <option value="">Seleccionar del catálogo o capturar abajo...</option>
-                  {activeCatalogServices.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nombre} (${s.total.toFixed(2)} MXN)
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-400 mt-1">
-                  Al elegir un servicio del catálogo se completan la descripción, refacciones y mano de obra automáticamente.
-                </p>
-              </div>
+              {/* Apartado desplegable opcional: Servicio del catálogo */}
+              <details className="group pt-1" open={Boolean(selectedCatalogId)}>
+                <summary className="text-xs text-slate-500 hover:text-slate-800 cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                  <span>Datos opcionales (autocompletar con catálogo de servicios)</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="pt-2">
+                  <select
+                    value={selectedCatalogId}
+                    onChange={(e) => handleSelectCatalogService(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                  >
+                    <option value="">Seleccionar del catálogo o capturar abajo...</option>
+                    {activeCatalogServices.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre} (${s.total.toFixed(2)} MXN)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </details>
 
               {/* Descripción */}
               <div>
@@ -917,8 +1112,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     if (formErrors.descripcion) setFormErrors((prev) => ({ ...prev, descripcion: '' }));
                   }}
                   placeholder="Detalle de trabajos y refacciones solicitados..."
-                  className={`w-full px-3.5 py-2 border rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                    formErrors.descripcion ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                    formErrors.descripcion ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                   }`}
                 />
                 {formErrors.descripcion && (
@@ -941,8 +1136,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       setFormRefacciones(e.target.value);
                       if (formErrors.refacciones) setFormErrors((prev) => ({ ...prev, refacciones: '' }));
                     }}
-                    className={`w-full px-3.5 py-2 border rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                     }`}
                   />
                   {formErrors.refacciones && (
@@ -963,8 +1158,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       setFormManoObra(e.target.value);
                       if (formErrors.manoObra) setFormErrors((prev) => ({ ...prev, manoObra: '' }));
                     }}
-                    className={`w-full px-3.5 py-2 border rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                     }`}
                   />
                   {formErrors.manoObra && (
@@ -974,26 +1169,37 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
 
               {/* Total display */}
-              <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 flex items-center justify-between">
+              <div className="bg-slate-50 p-3.5 rounded-lg border border-[#E4E7EC] flex items-center justify-between">
                 <span className="font-semibold text-slate-700 text-sm">Total calculado:</span>
-                <span className="text-lg font-bold text-[#0d5c58]">
+                <span className="text-lg font-bold text-[#E9504F]">
                   ${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                 </span>
               </div>
 
               {/* Botones */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E4E7EC]">
                 <button
                   type="button"
-                  onClick={() => setIsFormModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                  onClick={() => {
+                    const dirty =
+                      formClientId !== (editingCotizacion?.clienteId || clientes[0]?.id || '') ||
+                      formVehiculoId !== (editingCotizacion?.vehiculoId || '') ||
+                      formDescripcion.trim() !== (editingCotizacion?.descripcion || '') ||
+                      formRefacciones !== (editingCotizacion?.importeRefacciones?.toString() || '0') ||
+                      formManoObra !== (editingCotizacion?.importeManoObra?.toString() || '0');
+                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
+                      return;
+                    }
+                    setIsFormModalOpen(false);
+                  }}
+                  className="px-4 py-2.5 min-h-[42px] border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#5F6368] hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={clientes.length === 0 || availableVehicles.length === 0}
-                  className="px-5 py-2 bg-[#0d5c58] hover:bg-[#0a4845] disabled:opacity-50 text-white text-sm font-medium rounded-lg shadow-xs transition-colors"
+                  className="px-5 py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -1062,7 +1268,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded text-xs font-medium transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Imprimir</span>
@@ -1080,7 +1286,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             <div className="p-8 sm:p-10 bg-white text-slate-800 space-y-6">
               <div className="flex justify-between items-start border-b border-slate-200 pb-5">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  <h1 className="text-2xl font-bold text-[#202124] tracking-tight">
                     {configuracion?.nombre || 'Taller mecánico'}
                   </h1>
                   {configuracion?.telefono && (
@@ -1089,7 +1295,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                   {configuracion?.direccion && (
                     <p className="text-xs text-slate-500">{configuracion.direccion}</p>
                   )}
-                  <p className="text-xs uppercase tracking-widest text-[#0d5c58] font-bold mt-1">
+                  <p className="text-xs uppercase tracking-widest text-[#E9504F] font-bold mt-1">
                     Documento de demostración
                   </p>
                 </div>
@@ -1192,9 +1398,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       ${printingCotizacion.importeManoObra.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                     </span>
                   </div>
-                  <div className="flex justify-between py-3.5 px-4 bg-teal-50/50">
+                  <div className="flex justify-between py-3.5 px-4 bg-purple-50/50">
                     <span className="font-bold text-slate-900 text-base">Total estimado</span>
-                    <span className="font-bold text-xl text-[#0d5c58]">
+                    <span className="font-bold text-xl text-purple-700">
                       ${printingCotizacion.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                     </span>
                   </div>
@@ -1218,14 +1424,14 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setPrintingCotizacion(null)}
-                className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors min-h-[38px] cursor-pointer"
               >
                 Cerrar
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="px-4 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                className="px-4 py-2 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors min-h-[38px] cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Imprimir cotización</span>

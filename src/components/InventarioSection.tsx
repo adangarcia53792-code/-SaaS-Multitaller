@@ -248,20 +248,25 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Inventario de refacciones
-          </h2>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Control de existencias, cantidades mínimas y registro de movimientos de refacciones.
-          </p>
+      {/* Encabezado Merkatics para Catálogos e Inventario */}
+      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-emerald-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+            <Package className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+              Inventario de refacciones
+            </h2>
+            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+              Control de existencias, cantidades mínimas y registro de movimientos de refacciones.
+            </p>
+          </div>
         </div>
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar refacción</span>
@@ -277,17 +282,17 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por código o nombre..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
           />
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex gap-1 bg-white p-1 rounded-lg border border-slate-200 text-xs sm:text-sm font-medium">
+        <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#E4E7EC] text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilterStock('todas')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filterStock === 'todas' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filterStock === 'todas' ? 'bg-[#E9504F] text-white shadow-xs font-semibold' : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Todas ({refacciones.length})
@@ -295,8 +300,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           <button
             type="button"
             onClick={() => setFilterStock('stock-bajo')}
-            className={`px-3 py-1.5 rounded-md transition-colors ${
-              filterStock === 'stock-bajo' ? 'bg-[#0d5c58] text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+              filterStock === 'stock-bajo' ? 'bg-[#E9504F] text-white shadow-xs font-semibold' : 'text-[#5F6368] hover:text-[#202124]'
             }`}
           >
             Stock bajo ({refacciones.filter((r) => r.existencias < r.minimo).length})
@@ -304,12 +309,13 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden no-print">
-        <div className="overflow-x-auto">
+      {/* Table & Mobile View */}
+      <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs overflow-hidden no-print">
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
                 <th className="py-3.5 px-5">Código</th>
                 <th className="py-3.5 px-5">Nombre de la refacción</th>
                 <th className="py-3.5 px-5 text-center">Existencias</th>
@@ -328,16 +334,16 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     <tr key={ref.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Código */}
                       <td className="py-3.5 px-5 whitespace-nowrap">
-                        <span className="font-mono font-bold text-[#0d5c58] bg-teal-50 px-2.5 py-1 rounded text-xs border border-teal-100">
+                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded text-xs border border-emerald-200">
                           {ref.codigo}
                         </span>
                       </td>
 
                       {/* Nombre */}
                       <td className="py-3.5 px-5">
-                        <div className="font-medium text-slate-900">{ref.nombre}</div>
+                        <div className="font-medium text-[#202124]">{ref.nombre}</div>
                         {ref.costoUnitario !== undefined && (
-                          <div className="text-xs text-slate-400 mt-0.5">
+                          <div className="text-xs text-[#5F6368] mt-0.5">
                             Costo base: ${ref.costoUnitario.toFixed(2)} MXN
                           </div>
                         )}
@@ -379,7 +385,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(ref)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             <span>Editar</span>
@@ -392,6 +398,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                               onClick={() => setOpenMenuId(isMenuOpen ? null : ref.id)}
                               className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
                               title="Más opciones"
+                              aria-label="Más opciones"
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
@@ -457,6 +464,121 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile View: Bloques legibles sin scroll horizontal */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredRefacciones.length > 0 ? (
+            filteredRefacciones.map((ref) => {
+              const isLowStock = ref.existencias < ref.minimo;
+              const isMenuOpen = openMenuId === ref.id;
+
+              return (
+                <div key={ref.id} className="p-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200">
+                          {ref.codigo}
+                        </span>
+                        {isLowStock ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            <AlertTriangle className="w-3 h-3 text-amber-600" />
+                            <span>Stock bajo</span>
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            Normal
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="font-semibold text-slate-900 text-sm">{ref.nombre}</h4>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Existencias: <strong className={`font-bold ${isLowStock ? 'text-amber-700' : 'text-slate-900'}`}>{ref.existencias} pzs</strong> (Mínimo: {ref.minimo} pzs)
+                      </p>
+                      {ref.costoUnitario !== undefined && (
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Costo: ${ref.costoUnitario.toFixed(2)} MXN
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(ref)}
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Editar</span>
+                      </button>
+
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenMenuId(isMenuOpen ? null : ref.id)}
+                          className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-slate-500 hover:text-slate-800 rounded-lg"
+                          aria-label="Más opciones"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+
+                        {isMenuOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMovementModal(ref, 'Entrada')}
+                                className="w-full px-3 py-2.5 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                              >
+                                <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+                                <span>Registrar entrada</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMovementModal(ref, 'Salida')}
+                                className="w-full px-3 py-2.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                              >
+                                <ArrowUpRight className="w-4 h-4 text-rose-600" />
+                                <span>Registrar salida</span>
+                              </button>
+
+                              <div className="border-t border-slate-100 my-1" />
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setViewingHistoryRefaccion(ref);
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                              >
+                                <History className="w-4 h-4 text-slate-500" />
+                                <span>Ver movimientos</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-6 text-center text-xs text-slate-400">
+              {searchQuery
+                ? 'No se encontraron refacciones que coincidan con la búsqueda.'
+                : filterStock === 'stock-bajo'
+                ? 'No hay refacciones con stock bajo en este momento.'
+                : 'No hay refacciones registradas en el inventario.'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ======================================================== */}
@@ -478,8 +600,19 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsFormModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={() => {
+                  const dirty =
+                    formCodigo.trim() !== (editingRefaccion?.codigo || '') ||
+                    formNombre.trim() !== (editingRefaccion?.nombre || '') ||
+                    formMinimo !== (editingRefaccion?.minimo?.toString() || '3') ||
+                    formCostoUnitario !== (editingRefaccion?.costoUnitario !== undefined ? editingRefaccion.costoUnitario.toString() : '');
+                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
+                    return;
+                  }
+                  setIsFormModalOpen(false);
+                }}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -493,11 +626,12 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                 </label>
                 <input
                   type="text"
+                  autoFocus
                   value={formCodigo}
                   onChange={(e) => setFormCodigo(e.target.value)}
                   placeholder="Ej. REF-010 o FIL-ACE-01"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm uppercase font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                    formErrors.codigo ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm uppercase font-mono text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                    formErrors.codigo ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                   }`}
                 />
                 {formErrors.codigo && (
@@ -507,7 +641,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
               {/* Nombre */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#202124] mb-1">
                   Nombre de la refacción <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -515,8 +649,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   value={formNombre}
                   onChange={(e) => setFormNombre(e.target.value)}
                   placeholder="Ej. Filtro de aire para motor"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                   }`}
                 />
                 {formErrors.nombre && (
@@ -527,7 +661,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               {/* Existencia inicial (Solo al crear) */}
               {!editingRefaccion ? (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#202124] mb-1">
                     Existencia inicial (piezas) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -536,8 +670,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     step="1"
                     value={formExistencias}
                     onChange={(e) => setFormExistencias(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                      formErrors.existencias ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                      formErrors.existencias ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                     }`}
                   />
                   {formErrors.existencias && (
@@ -548,7 +682,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+                <div className="p-3 bg-slate-50 border border-[#E4E7EC] rounded-lg text-xs space-y-1">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Existencias actuales:</span>
                     <strong className="text-slate-900">{editingRefaccion.existencias} pzs</strong>
@@ -561,7 +695,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
               {/* Cantidad mínima */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#202124] mb-1">
                   Cantidad mínima para alerta de stock bajo <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -570,8 +704,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   step="1"
                   value={formMinimo}
                   onChange={(e) => setFormMinimo(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                    formErrors.minimo ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                    formErrors.minimo ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                   }`}
                 />
                 {formErrors.minimo && (
@@ -584,7 +718,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
               {/* Costo unitario opcional */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#202124] mb-1">
                   Costo unitario ($ MXN) <span className="text-slate-400 font-normal">(Opcional)</span>
                 </label>
                 <input
@@ -594,8 +728,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   value={formCostoUnitario}
                   onChange={(e) => setFormCostoUnitario(e.target.value)}
                   placeholder="Ej. 180.50"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                    formErrors.costoUnitario ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                    formErrors.costoUnitario ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
                   }`}
                 />
                 {formErrors.costoUnitario && (
@@ -604,17 +738,27 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               </div>
 
               {/* Botones */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsFormModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                  onClick={() => {
+                    const dirty =
+                      formCodigo.trim() !== (editingRefaccion?.codigo || '') ||
+                      formNombre.trim() !== (editingRefaccion?.nombre || '') ||
+                      formMinimo !== (editingRefaccion?.minimo?.toString() || '3') ||
+                      formCostoUnitario !== (editingRefaccion?.costoUnitario !== undefined ? editingRefaccion.costoUnitario.toString() : '');
+                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
+                      return;
+                    }
+                    setIsFormModalOpen(false);
+                  }}
+                  className="px-4 py-2.5 border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#5F6368] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                  className="px-5 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -666,7 +810,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   step="1"
                   value={movCantidad}
                   onChange={(e) => setMovCantidad(e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded text-slate-800 text-sm focus:outline-none focus:ring-1 focus:ring-[#0d5c58]"
+                  className="w-full p-2.5 border border-[#E4E7EC] rounded-lg text-[#202124] text-sm focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
                 />
               </div>
 
@@ -679,7 +823,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   value={movMotivo}
                   onChange={(e) => setMovMotivo(e.target.value)}
                   placeholder="Ej. Compra de lote, ajuste de conteo, merma..."
-                  className="w-full p-2 border border-slate-200 rounded text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-[#0d5c58]"
+                  className="w-full p-2.5 border border-[#E4E7EC] rounded-lg text-[#202124] text-xs focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
                 />
               </div>
 
