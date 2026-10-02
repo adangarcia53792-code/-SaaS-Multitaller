@@ -141,26 +141,26 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
           className="w-full sm:w-[420px] max-w-full bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-200 h-full"
         >
           {/* Encabezado del panel */}
-          <div className="px-5 py-4 border-b border-[#E4E7EC] bg-white flex items-center justify-between gap-3">
+          <div className="px-5 py-4 border-b border-[#DDE4E8] bg-white flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-50 text-[#E9504F] border border-rose-200 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FF661B] border border-orange-200 flex items-center justify-center">
                 <Bell className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#202124]">Avisos</h3>
-                <p className="text-xs text-[#5F6368]">Pendientes operativos del taller</p>
+                <h3 className="text-base font-bold text-[#231F20]">Avisos</h3>
+                <p className="text-xs text-[#5F6B73]">Pendientes operativos del taller</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-50 text-[#E9504F] border border-rose-200">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-50 text-[#FF661B] border border-orange-200">
                 {badgeText}
               </span>
               <button
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-[#202124] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#E9504F] transition-colors"
+                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors"
                 aria-label="Cerrar panel de avisos"
               >
                 <X className="w-5 h-5" />
@@ -169,7 +169,7 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
           </div>
 
           {/* Filtros: Todos, Hoy, Urgentes */}
-          <div className="px-5 py-2.5 bg-[#F6F7F9] border-b border-[#E4E7EC] flex items-center gap-1.5">
+          <div className="px-5 py-2.5 bg-[#F6F8FA] border-b border-[#DDE4E8] flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => {
@@ -178,8 +178,8 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all min-h-[36px] ${
                 tabFiltro === 'todos'
-                  ? 'bg-[#202124] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:bg-slate-200/70'
+                  ? 'bg-[#231F20] text-white shadow-xs'
+                  : 'text-[#5F6B73] hover:bg-slate-200/70'
               }`}
             >
               Todos ({avisos.length})
@@ -193,8 +193,8 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all min-h-[36px] ${
                 tabFiltro === 'hoy'
-                  ? 'bg-[#E9504F] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:bg-slate-200/70'
+                  ? 'bg-[#1D7EAE] text-white shadow-xs'
+                  : 'text-[#5F6B73] hover:bg-slate-200/70'
               }`}
             >
               Hoy ({avisos.filter((a) => a.esHoy).length})
@@ -208,8 +208,8 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all min-h-[36px] ${
                 tabFiltro === 'urgentes'
-                  ? 'bg-[#C93F43] text-white shadow-xs'
-                  : 'text-[#5F6368] hover:bg-slate-200/70'
+                  ? 'bg-[#FF661B] text-white shadow-xs'
+                  : 'text-[#5F6B73] hover:bg-slate-200/70'
               }`}
             >
               Urgentes ({avisos.filter((a) => a.nivel === 'Urgente' || a.esUrgente).length})
@@ -277,7 +277,7 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
                           onVerAviso(aviso);
                           onClose();
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                       >
                         <span>Ver</span>
                         <ArrowRight className="w-3 h-3" />
@@ -287,12 +287,12 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
                 );
               })
             ) : (
-              <div className="p-8 text-center text-slate-400 space-y-2.5 my-8 relative rounded-xl border border-[#E4E7EC] bg-white">
-                <div className="absolute inset-0 merkatics-dots-pattern rounded-xl pointer-events-none" />
+              <div className="p-8 text-center text-slate-400 space-y-2.5 my-8 relative rounded-xl border border-[#DDE4E8] bg-white">
+                <div className="absolute inset-0 iot-dots-pattern rounded-xl pointer-events-none" />
                 <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto text-slate-400 relative z-10">
                   <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h4 className="text-sm font-semibold text-[#202124] relative z-10">Sin pendientes en este filtro</h4>
+                <h4 className="text-sm font-semibold text-[#231F20] relative z-10">Sin pendientes en este filtro</h4>
                 <p className="text-xs text-[#5F6368] max-w-xs mx-auto relative z-10">
                   {tabFiltro === 'urgentes'
                     ? 'No hay avisos urgentes ni entregas vencidas pendientes de atención.'

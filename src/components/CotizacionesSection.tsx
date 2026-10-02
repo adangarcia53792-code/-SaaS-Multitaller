@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Cliente, Vehiculo, Cotizacion, OrdenTrabajo, ServicioCatalogo, ConfiguracionTaller } from '../types';
+import { IotLogo } from './IotLogo';
 import {
   Search,
   Plus,
@@ -348,17 +349,17 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado Merkatics para Cotizaciones */}
-      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-purple-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      {/* Encabezado IOT Technologies para Cotizaciones */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
               Cotizaciones
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               Presupuestos y autorizaciones de servicios y refacciones.
             </p>
           </div>
@@ -367,7 +368,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]"
           >
             <Plus className="w-4 h-4" />
             <span>Nueva cotización</span>
@@ -384,18 +385,18 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por folio, cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
           />
         </div>
 
-        <div className="flex flex-wrap gap-1 rounded-lg border border-[#E4E7EC] bg-white p-1 text-xs sm:text-sm font-medium">
+        <div className="flex flex-wrap gap-1 rounded-lg border border-[#DDE4E8] bg-white p-1 text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilter('todas')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'todas'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Todas
@@ -405,8 +406,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             onClick={() => setFilter('Por autorizar')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'Por autorizar'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Por autorizar
@@ -416,8 +417,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             onClick={() => setFilter('Aprobada')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'Aprobada'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Aprobadas
@@ -427,8 +428,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             onClick={() => setFilter('Rechazada')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'Rechazada'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Rechazadas
@@ -480,14 +481,14 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
                       {/* Cliente y vehículo */}
                       <td className="py-3.5 px-5">
-                        <div className="font-medium text-[#202124]">
+                        <div className="font-medium text-[#231F20]">
                           {client ? client.nombre : 'Cliente no encontrado'}
                         </div>
-                        <div className="text-xs text-[#5F6368] mt-0.5">
+                        <div className="text-xs text-[#5F6B73] mt-0.5">
                           {veh ? (
                             <span>
                               {veh.marca} {veh.modelo}{' '}
-                              <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#E4E7EC]">
+                              <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#DDE4E8]">
                                 {veh.placas}
                               </strong>
                             </span>
@@ -498,12 +499,12 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       </td>
 
                       {/* Trabajo solicitado */}
-                      <td className="py-3.5 px-5 text-[#202124] max-w-xs">
+                      <td className="py-3.5 px-5 text-[#231F20] max-w-xs">
                         <span className="line-clamp-2">{cot.descripcion}</span>
                       </td>
 
                       {/* Total */}
-                      <td className="py-3.5 px-5 whitespace-nowrap font-semibold text-[#202124]">
+                      <td className="py-3.5 px-5 whitespace-nowrap font-semibold text-[#231F20]">
                         ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                       </td>
 
@@ -532,7 +533,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(cot)}
-                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-medium text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer shadow-xs"
+                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-medium text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer shadow-xs"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             <span>Editar</span>
@@ -543,7 +544,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                             <button
                               type="button"
                               onClick={() => setOpenMenuId(isMenuOpen ? null : cot.id)}
-                              className="p-2 text-[#5F6368] hover:text-[#202124] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                              className="p-2 text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                               title="Más opciones"
                               aria-label="Más opciones"
                             >
@@ -556,7 +557,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                                   className="fixed inset-0 z-20"
                                   onClick={() => setOpenMenuId(null)}
                                 />
-                                <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                <div className="absolute right-0 mt-1 w-48 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                   {/* For approved quotes: Crear o vincular orden / Ver orden */}
                                   {cot.estado === 'Aprobada' && (
                                     <>
@@ -683,12 +684,12 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                           </span>
                         )}
                       </div>
-                      <p className="font-medium text-[#202124] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
-                      <p className="text-xs text-[#5F6368] mt-0.5">
+                      <p className="font-medium text-[#231F20] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
+                      <p className="text-xs text-[#5F6B73] mt-0.5">
                         {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
                       </p>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">{cot.descripcion}</p>
-                      <p className="text-sm font-bold text-[#202124] mt-1.5">
+                      <p className="text-sm font-bold text-[#231F20] mt-1.5">
                         ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                       </p>
                       {linkedOrden && (
@@ -703,7 +704,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(cot)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer shadow-xs"
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer shadow-xs"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                         <span>Editar</span>
@@ -713,7 +714,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => setOpenMenuId(isMenuOpen ? null : cot.id)}
-                          className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-[#5F6368] hover:text-[#202124] rounded-lg"
+                          className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-[#5F6B73] hover:text-[#231F20] rounded-lg"
                           aria-label="Más opciones"
                         >
                           <MoreVertical className="w-4 h-4" />
@@ -725,7 +726,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                               className="fixed inset-0 z-20"
                               onClick={() => setOpenMenuId(null)}
                             />
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
                               {cot.estado === 'Aprobada' && (
                                 <>
                                   {linkedOrden ? (
@@ -851,7 +852,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     <select
                       value={selectedExistingOrdenId}
                       onChange={(e) => setSelectedExistingOrdenId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                      className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                     >
                       {availableOrdersForLinking.map((ord) => (
                         <option key={ord.id} value={ord.id}>
@@ -864,7 +865,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       type="button"
                       disabled={!selectedExistingOrdenId || isLinkingProcessing}
                       onClick={handleConfirmLinkExisting}
-                      className="w-full px-4 py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white rounded-lg font-semibold text-xs shadow-xs transition-colors cursor-pointer"
+                      className="w-full px-4 py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white rounded-lg font-semibold text-xs shadow-xs transition-colors cursor-pointer"
                     >
                       Vincular a la orden seleccionada
                     </button>
@@ -877,18 +878,18 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
 
               {/* Opción 2: Crear nueva orden */}
-              <div className="p-4 border border-[#E4E7EC] rounded-lg space-y-3 bg-slate-50/50">
-                <h4 className="font-semibold text-[#202124] text-xs uppercase tracking-wider">
+              <div className="p-4 border border-[#DDE4E8] rounded-lg space-y-3 bg-slate-50/50">
+                <h4 className="font-semibold text-[#231F20] text-xs uppercase tracking-wider">
                   Opción B: Crear nueva orden de trabajo
                 </h4>
-                <p className="text-xs text-[#5F6368]">
+                <p className="text-xs text-[#5F6B73]">
                   Crea una nueva orden con el cliente, vehículo y trabajo de la cotización, asignándole folio único y estado "Pendiente".
                 </p>
                 <button
                   type="button"
                   disabled={isLinkingProcessing}
                   onClick={handleConfirmCreateNewOrder}
-                  className="w-full px-4 py-2.5 min-h-[42px] border border-[#E9504F] text-[#E9504F] hover:bg-rose-50 disabled:opacity-50 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+                  className="w-full px-4 py-2.5 min-h-[42px] border border-[#1D7EAE] text-[#1D7EAE] hover:bg-rose-50 disabled:opacity-50 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Crear nueva orden y vincular
                 </button>
@@ -930,7 +931,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </button>
             </div>
 
-            <div className="text-xs space-y-2 text-slate-700 bg-slate-50 p-4 rounded-lg border border-[#E4E7EC]">
+            <div className="text-xs space-y-2 text-slate-700 bg-slate-50 p-4 rounded-lg border border-[#DDE4E8]">
               <p>
                 <span className="text-slate-400 font-medium">Trabajo:</span> {viewingLinkedOrden.servicio}
               </p>
@@ -950,7 +951,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setViewingLinkedOrden(null)}
-                className="px-4 py-2 border border-[#E4E7EC] rounded-lg text-xs font-medium text-[#5F6368] hover:bg-slate-50 cursor-pointer"
+                className="px-4 py-2 border border-[#DDE4E8] rounded-lg text-xs font-medium text-[#5F6B73] hover:bg-slate-50 cursor-pointer"
               >
                 Cerrar
               </button>
@@ -962,7 +963,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     setViewingLinkedOrden(null);
                     onNavigateToOrden(id);
                   }}
-                  className="px-4 py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+                  className="px-4 py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition-colors"
                 >
                   Ir a la sección Órdenes
                 </button>
@@ -1027,7 +1028,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     autoFocus
                     value={formClientId}
                     onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <option value="" disabled>Seleccione un cliente</option>
                     {clientes.map((c) => (
@@ -1058,7 +1059,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       setFormVehiculoId(e.target.value);
                       if (formErrors.vehiculoId) setFormErrors((prev) => ({ ...prev, vehiculoId: '' }));
                     }}
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <option value="" disabled>Seleccione un vehículo</option>
                     {availableVehicles.map((v) => (
@@ -1087,7 +1088,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                   <select
                     value={selectedCatalogId}
                     onChange={(e) => handleSelectCatalogService(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <option value="">Seleccionar del catálogo o capturar abajo...</option>
                     {activeCatalogServices.map((s) => (
@@ -1112,8 +1113,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     if (formErrors.descripcion) setFormErrors((prev) => ({ ...prev, descripcion: '' }));
                   }}
                   placeholder="Detalle de trabajos y refacciones solicitados..."
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
-                    formErrors.descripcion ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                    formErrors.descripcion ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                   }`}
                 />
                 {formErrors.descripcion && (
@@ -1136,8 +1137,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       setFormRefacciones(e.target.value);
                       if (formErrors.refacciones) setFormErrors((prev) => ({ ...prev, refacciones: '' }));
                     }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
-                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                     }`}
                   />
                   {formErrors.refacciones && (
@@ -1158,8 +1159,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       setFormManoObra(e.target.value);
                       if (formErrors.manoObra) setFormErrors((prev) => ({ ...prev, manoObra: '' }));
                     }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
-                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                     }`}
                   />
                   {formErrors.manoObra && (
@@ -1169,15 +1170,15 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
 
               {/* Total display */}
-              <div className="bg-slate-50 p-3.5 rounded-lg border border-[#E4E7EC] flex items-center justify-between">
+              <div className="bg-slate-50 p-3.5 rounded-lg border border-[#DDE4E8] flex items-center justify-between">
                 <span className="font-semibold text-slate-700 text-sm">Total calculado:</span>
-                <span className="text-lg font-bold text-[#E9504F]">
+                <span className="text-lg font-bold text-[#1D7EAE]">
                   ${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
                 </span>
               </div>
 
               {/* Botones */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E4E7EC]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
                   onClick={() => {
@@ -1192,14 +1193,14 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     }
                     setIsFormModalOpen(false);
                   }}
-                  className="px-4 py-2.5 min-h-[42px] border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#5F6368] hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="px-4 py-2.5 min-h-[42px] border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={clientes.length === 0 || availableVehicles.length === 0}
-                  className="px-5 py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -1262,13 +1263,13 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
       {printingCotizacion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area">
-            <div className="no-print bg-slate-800 text-white px-6 py-3.5 flex items-center justify-between">
+            <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-6 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Vista previa de cotización</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Imprimir</span>
@@ -1276,7 +1277,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setPrintingCotizacion(null)}
-                  className="p-1.5 text-slate-300 hover:text-white rounded transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1286,7 +1287,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             <div className="p-8 sm:p-10 bg-white text-slate-800 space-y-6">
               <div className="flex justify-between items-start border-b border-slate-200 pb-5">
                 <div>
-                  <h1 className="text-2xl font-bold text-[#202124] tracking-tight">
+                  <div className="mb-2.5">
+                    <IotLogo size="sm" variant="dark" />
+                  </div>
+                  <h1 className="text-xl font-bold text-[#231F20] tracking-tight">
                     {configuracion?.nombre || 'Taller mecánico'}
                   </h1>
                   {configuracion?.telefono && (
@@ -1295,7 +1299,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                   {configuracion?.direccion && (
                     <p className="text-xs text-slate-500">{configuracion.direccion}</p>
                   )}
-                  <p className="text-xs uppercase tracking-widest text-[#E9504F] font-bold mt-1">
+                  <p className="text-xs uppercase tracking-widest text-[#1D7EAE] font-bold mt-1">
                     Documento de demostración
                   </p>
                 </div>
@@ -1431,7 +1435,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="px-4 py-2 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors min-h-[38px] cursor-pointer"
+                className="px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors min-h-[38px] cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Imprimir cotización</span>

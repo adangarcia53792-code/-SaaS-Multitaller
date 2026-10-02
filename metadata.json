@@ -1,6 +1,6 @@
 {
-  "name": "Taller Mecánico",
-  "description": "Sistema de gestión para talleres mecánicos",
+  "name": "Sistema de Talleres Mecánicos",
+  "description": "Sistema de gestión para talleres mecánicos - IOT Technologies",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

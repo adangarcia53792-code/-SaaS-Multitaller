@@ -13,6 +13,7 @@ import {
   ArrowRight,
   RotateCcw,
   ShieldAlert,
+  Shield,
   ChevronDown,
 } from 'lucide-react';
 import {
@@ -193,11 +194,11 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
       case 'Cotizaciones':
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Órdenes':
-        return 'bg-teal-50 text-[#0d5c58] border-teal-200';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Inventario':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'Facturación':
-        return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+        return 'bg-rose-50 text-[#0032A0] border-rose-200';
       case 'Garantías':
         return 'bg-emerald-50 text-emerald-800 border-emerald-300';
       case 'Configuración':
@@ -214,7 +215,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
   const getRolBadge = (rolUser: string) => {
     switch (rolUser) {
       case 'Administrador':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
+        return 'bg-rose-50 text-[#0032A0] border-rose-200';
       case 'Recepción':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'Mecánico':
@@ -226,21 +227,25 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <ClipboardList className="w-7 h-7 text-[#0d5c58]" />
-              <span>Bitácora de actividad</span>
-            </h2>
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-teal-50 text-[#0d5c58] border border-teal-200">
-              Auditoría
-            </span>
+      {/* Encabezado IOT Technologies para Bitácora */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE] shrink-0">
+            <Shield className="w-6 h-6" />
           </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Registro cronológico inmutable de las operaciones y movimientos realizados en el taller.
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+                Bitácora de actividad
+              </h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#98DAE9]/20 text-[#1D7EAE] border border-[#98DAE9]/40">
+                Auditoría
+              </span>
+            </div>
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+              Registro cronológico inmutable de las operaciones y movimientos realizados en el taller.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -273,7 +278,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                 setVisibleCount(20);
               }}
               placeholder="Buscar usuario, folio o texto..."
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white transition-all"
+              className="w-full pl-9 pr-3 py-2 bg-white border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
             />
           </div>
 
@@ -285,7 +290,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                 setSeccionFiltro(e.target.value);
                 setVisibleCount(20);
               }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white transition-all cursor-pointer"
+              className="w-full px-3 py-2 bg-white border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all cursor-pointer"
             >
               <option value="todas">Todas las secciones</option>
               {SECCIONES_FILTRO.filter((sec) => {
@@ -315,7 +320,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                 setFechaInicio(e.target.value);
                 setVisibleCount(20);
               }}
-              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white"
+              className="w-full px-2.5 py-1.5 bg-white border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
             />
           </div>
 
@@ -329,7 +334,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                 setFechaFin(e.target.value);
                 setVisibleCount(20);
               }}
-              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white"
+              className="w-full px-2.5 py-1.5 bg-white border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
             />
           </div>
         </div>
@@ -428,7 +433,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                           e.stopPropagation();
                           setSelectedEvento(ev);
                         }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#1D7EAE] bg-rose-50 hover:bg-rose-100 rounded-md transition-colors cursor-pointer border border-rose-200"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Ver</span>
@@ -449,7 +454,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                       <button
                         type="button"
                         onClick={handleLimpiarFiltros}
-                        className="mt-2 text-xs font-semibold text-[#0d5c58] hover:underline"
+                        className="mt-2 text-xs font-semibold text-[#1D7EAE] hover:underline"
                       >
                         Limpiar filtros
                       </button>
@@ -472,7 +477,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-slate-500 font-mono text-[11px]">{ev.fechaHora}</span>
-                  <span className="text-xs font-semibold text-[#0d5c58] bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+                  <span className="text-xs font-semibold text-[#0032A0] bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
                     {ev.seccion}
                   </span>
                 </div>
@@ -505,7 +510,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                 <button
                   type="button"
                   onClick={handleLimpiarFiltros}
-                  className="mt-2 text-xs font-semibold text-[#0d5c58] hover:underline"
+                  className="mt-2 text-xs font-semibold text-[#1D7EAE] hover:underline"
                 >
                   Limpiar filtros
                 </button>
@@ -523,7 +528,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
             <button
               type="button"
               onClick={handleVerMas}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 min-h-[42px] rounded-lg bg-white border border-[#DDE4E8] hover:bg-slate-100 text-[#231F20] text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <span>Ver más</span>
               <ChevronDown className="w-3.5 h-3.5" />
@@ -539,7 +544,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
             {/* Encabezado modal */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-[#0d5c58]">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-[#0032A0]">
                   <ClipboardList className="w-4 h-4" />
                 </div>
                 <div>
@@ -554,7 +559,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedEvento(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -604,7 +609,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
                     <span className="text-[11px] text-slate-500 font-medium block">
                       Registro relacionado
                     </span>
-                    <span className="font-mono font-bold text-[#0d5c58] text-xs">
+                    <span className="font-mono font-bold text-[#0032A0] text-xs">
                       {selectedEvento.registroFolio}
                     </span>
                   </div>

@@ -25,6 +25,7 @@ import {
   ConfiguracionTaller,
   EstadoFactura,
 } from '../types';
+import { IotLogo } from './IotLogo';
 
 interface FacturacionSectionProps {
   facturas: Factura[];
@@ -250,17 +251,17 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado Merkatics para Facturación */}
-      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-[#C93F43] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      {/* Encabezado IOT Technologies para Facturación */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-rose-50 text-[#C93F43] flex items-center justify-center shrink-0 border border-rose-100">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
             <Receipt className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
               Facturación
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               Comprobantes de demostración administrativa sin validez fiscal.
             </p>
           </div>
@@ -269,7 +270,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Crear factura de prueba</span>
@@ -285,11 +286,11 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por folio, cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
           />
         </div>
 
-        <div className="flex rounded-lg border border-[#E4E7EC] bg-white p-1 text-xs font-medium shrink-0">
+        <div className="flex rounded-lg border border-[#DDE4E8] bg-white p-1 text-xs font-medium shrink-0">
           {(['todas', 'Pendiente', 'Pagada', 'Cancelada'] as FilterEstado[]).map((tab) => (
             <button
               key={tab}
@@ -297,8 +298,8 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               onClick={() => setFilterEstado(tab)}
               className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
                 filterEstado === tab
-                  ? 'bg-[#E9504F] text-white font-semibold shadow-xs'
-                  : 'text-[#5F6368] hover:text-[#202124] hover:bg-slate-50'
+                  ? 'bg-[#1D7EAE] text-white font-semibold shadow-xs'
+                  : 'text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-50'
               }`}
             >
               {tab === 'todas' ? 'Todas' : tab}
@@ -308,7 +309,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
       </div>
 
       {/* Invoices Table & Mobile View */}
-      <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs overflow-hidden no-print">
+      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden no-print">
         {/* Desktop View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
@@ -382,7 +383,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => setViewingFactura(fac)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Ver</span>
@@ -404,14 +405,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                                   className="fixed inset-0 z-20"
                                   onClick={() => setOpenMenuId(null)}
                                 />
-                                <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                   <button
                                     type="button"
                                     onClick={() => {
                                       setOpenMenuId(null);
                                       setViewingFactura(fac);
                                     }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#E9504F] flex items-center gap-2 transition-colors cursor-pointer"
+                                    className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors cursor-pointer"
                                   >
                                     <Printer className="w-3.5 h-3.5 text-slate-500" />
                                     <span>Ver / imprimir</span>
@@ -507,7 +508,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => setViewingFactura(fac)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Ver</span>
@@ -593,8 +594,8 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-[#C93F43]" />
-                <h3 className="font-bold text-[#202124] text-base">
+                <Receipt className="w-5 h-5 text-[#0032A0]" />
+                <h3 className="font-bold text-[#231F20] text-base">
                   Crear factura de prueba
                 </h3>
               </div>
@@ -611,7 +612,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               {availableApprovedCotizaciones.length > 0 ? (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-[#202124] mb-1">
+                    <label className="block text-sm font-medium text-[#231F20] mb-1">
                       Seleccionar cotización aprobada <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -620,7 +621,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                         setSelectedCotizacionId(e.target.value);
                         if (createError) setCreateError(null);
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                     >
                       {availableApprovedCotizaciones.map((cot) => {
                         const cli = clienteMap.get(cot.clienteId);
@@ -638,10 +639,10 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   </div>
 
                   {selectedQuoteForCreate && (
-                    <div className="bg-slate-50 p-4 rounded-xl border border-[#E4E7EC] space-y-3 text-xs">
-                      <div className="font-bold text-[#202124] text-sm flex items-center justify-between">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-[#DDE4E8] space-y-3 text-xs">
+                      <div className="font-bold text-[#231F20] text-sm flex items-center justify-between">
                         <span>Resumen de la cotización {selectedQuoteForCreate.folio}</span>
-                        <span className="text-[#C93F43] font-bold">
+                        <span className="text-[#0032A0] font-bold">
                           ${selectedQuoteForCreate.total.toFixed(2)} MXN
                         </span>
                       </div>
@@ -694,13 +695,13 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsCreateModalOpen(false)}
-                      className="px-4 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#5F6368] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                      className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                      className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                     >
                       Emitir factura de prueba
                     </button>
@@ -776,7 +777,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                 <select
                   value={metodoPago}
                   onChange={(e) => setMetodoPago(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                 >
                   <option value="Transferencia bancaria">Transferencia bancaria</option>
                   <option value="Efectivo">Efectivo</option>
@@ -794,7 +795,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   type="date"
                   value={fechaPago}
                   onChange={(e) => setFechaPago(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                 />
               </div>
 
@@ -807,7 +808,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   value={notasPago}
                   onChange={(e) => setNotasPago(e.target.value)}
                   placeholder="Ej. No. de transacción o recibo..."
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                 />
               </div>
 
@@ -907,13 +908,13 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area">
             {/* Top Bar for Screen only */}
-            <div className="no-print bg-slate-800 text-white px-6 py-3.5 flex items-center justify-between">
+            <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-6 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Vista previa de comprobante</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Imprimir</span>
@@ -921,7 +922,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setViewingFactura(null)}
-                  className="p-1.5 text-slate-300 hover:text-white rounded transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -933,7 +934,10 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               {/* Header */}
               <div className="flex justify-between items-start border-b border-slate-200 pb-5">
                 <div>
-                  <h1 className="text-2xl font-bold text-[#202124] tracking-tight">
+                  <div className="mb-2.5">
+                    <IotLogo size="sm" variant="dark" />
+                  </div>
+                  <h1 className="text-xl font-bold text-[#231F20] tracking-tight">
                     {configuracion?.nombre || 'Taller mecánico'}
                   </h1>
                   {configuracion?.telefono && (
@@ -942,7 +946,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   {configuracion?.direccion && (
                     <p className="text-xs text-slate-500">{configuracion.direccion}</p>
                   )}
-                  <p className="text-xs uppercase tracking-widest text-[#C93F43] font-bold mt-2">
+                  <p className="text-xs uppercase tracking-widest text-[#1D7EAE] font-bold mt-2">
                     Comprobante de demostración sin validez fiscal
                   </p>
                 </div>

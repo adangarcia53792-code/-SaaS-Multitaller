@@ -83,6 +83,7 @@ import { GarantiasSection } from './components/GarantiasSection';
 import { BitacoraSection } from './components/BitacoraSection';
 import { LoginView } from './components/LoginView';
 import { CentroAvisosDrawer } from './components/CentroAvisosDrawer';
+import { IotLogo } from './components/IotLogo';
 
 interface MenuItem {
   id: SectionId;
@@ -2882,21 +2883,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#F6F7F9] text-[#202124] font-sans selection:bg-[#E9504F] selection:text-white">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#F6F8FA] text-[#231F20] font-sans selection:bg-[#1D7EAE] selection:text-white">
       {/* Mobile Header */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white text-[#202124] border-b border-[#E4E7EC] shadow-2xs sticky top-0 z-30 no-print">
+      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white text-[#231F20] border-b border-[#DDE4E8] shadow-2xs sticky top-0 z-30 no-print">
         <div className="flex items-center gap-2.5 min-w-0">
-          <img
-            src="/merkatics-logo-light.png"
-            alt="Merkatics"
-            className="h-6 w-auto object-contain shrink-0"
-          />
-          <div className="h-4 w-px bg-[#E4E7EC] shrink-0" />
+          <IotLogo variant="dark" size="sm" />
+          <div className="h-4 w-px bg-[#DDE4E8] shrink-0" />
           <div className="min-w-0">
-            <span className="font-bold text-xs text-[#202124] tracking-tight block leading-tight truncate">
+            <span className="font-bold text-xs text-[#231F20] tracking-tight block leading-tight truncate">
               {configuracion.nombre || 'Taller mecánico'}
             </span>
-            <span className="text-[10px] text-[#5F6368] font-medium block truncate">
+            <span className="text-[10px] text-[#5F6B73] font-medium block truncate">
               {sesion?.nombre} ({sesion?.rol})
             </span>
           </div>
@@ -2908,13 +2905,13 @@ export default function App() {
             ref={mobileBellRef}
             type="button"
             onClick={() => handleOpenCentroAvisos(true)}
-            className="relative min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#5F6368] hover:text-[#202124] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#E9504F] transition-colors cursor-pointer"
+            className="relative min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors cursor-pointer"
             title={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
             aria-label={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
           >
-            <Bell className="w-5 h-5 text-[#5F6368]" />
+            <Bell className="w-5 h-5 text-[#5F6B73]" />
             {totalPendientesCount > 0 ? (
-              <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#E9504F]">
+              <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#FF661B]">
                 {totalPendientesCount > 9 ? '9+' : totalPendientesCount}
               </span>
             ) : (
@@ -2927,7 +2924,7 @@ export default function App() {
           <button
             type="button"
             onClick={handleLogout}
-            className="min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#5F6368] hover:text-[#E9504F] hover:bg-rose-50 transition-colors"
+            className="min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-rose-600 hover:bg-rose-50 transition-colors"
             title="Cerrar sesión"
             aria-label="Cerrar sesión"
           >
@@ -2937,7 +2934,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#202124] hover:bg-slate-100 transition-colors"
+            className="min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#231F20] hover:bg-slate-100 transition-colors"
             aria-label={isMobileMenuOpen ? 'Cerrar menú lateral' : 'Abrir menú lateral'}
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -2953,23 +2950,19 @@ export default function App() {
         />
       )}
 
-      {/* Sidebar: Menú lateral izquierdo negro carbón Merkatics */}
+      {/* Sidebar: Menú lateral izquierdo azul profundo #0032A0 IOT Technologies */}
       <aside
-        className={`fixed md:static top-0 bottom-0 left-0 z-40 w-64 bg-[#202124] text-slate-200 flex flex-col transition-transform duration-200 ease-in-out no-print ${
+        className={`fixed md:static top-0 bottom-0 left-0 z-40 w-64 bg-[#0032A0] text-blue-100 flex flex-col transition-transform duration-200 ease-in-out no-print ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="px-5 py-4 border-b border-[#2c2d30] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src="/merkatics-logo-dark.png"
-              alt="Merkatics"
-              className="h-7 w-auto object-contain"
-            />
+            <IotLogo variant="light" size="sm" />
           </div>
           <button
             type="button"
-            className="md:hidden min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-lg focus:outline-none"
+            className="md:hidden min-w-[40px] min-h-[40px] flex items-center justify-center text-blue-200 hover:text-white rounded-lg focus:outline-none"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Cerrar menú lateral"
           >
@@ -2989,11 +2982,11 @@ export default function App() {
                 onClick={() => handleSelectSection(item.id)}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
                   isSelected
-                    ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                    : 'text-slate-300 hover:bg-[#2c2d30] hover:text-white'
+                    ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                    : 'text-blue-100 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
                 <span className="truncate">{item.label}</span>
               </button>
             );
@@ -3012,8 +3005,8 @@ export default function App() {
                       onClick={() => toggleDropdown('catalogos')}
                       className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
                         isCatalogosActive
-                          ? 'text-[#E9504F] bg-[#2c2d30] pl-3'
-                          : 'text-slate-400 hover:text-white hover:bg-[#2c2d30]/70'
+                          ? 'text-[#98DAE9] bg-white/10 pl-3'
+                          : 'text-blue-200 hover:text-white hover:bg-white/10'
                       }`}
                       aria-expanded={isOpen}
                     >
@@ -3022,9 +3015,9 @@ export default function App() {
                         <span>Catálogos</span>
                       </span>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
+                        <ChevronUp className="w-4 h-4 text-blue-200" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <ChevronDown className="w-4 h-4 text-blue-200" />
                       )}
                     </button>
                     {isOpen && (
@@ -3039,11 +3032,11 @@ export default function App() {
                               onClick={() => handleSelectSection(item.id)}
                               className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                                  : 'text-slate-300 hover:bg-[#2c2d30] hover:text-white'
+                                  ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
                               <span>{item.label}</span>
                             </button>
                           );
@@ -3069,8 +3062,8 @@ export default function App() {
                       onClick={() => toggleDropdown('administracion')}
                       className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
                         isAdminActive
-                          ? 'text-[#E9504F] bg-[#2c2d30] pl-3'
-                          : 'text-slate-400 hover:text-white hover:bg-[#2c2d30]/70'
+                          ? 'text-[#98DAE9] bg-white/10 pl-3'
+                          : 'text-blue-200 hover:text-white hover:bg-white/10'
                       }`}
                       aria-expanded={isOpen}
                     >
@@ -3079,9 +3072,9 @@ export default function App() {
                         <span>Administración</span>
                       </span>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
+                        <ChevronUp className="w-4 h-4 text-blue-200" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <ChevronDown className="w-4 h-4 text-blue-200" />
                       )}
                     </button>
                     {isOpen && (
@@ -3096,11 +3089,11 @@ export default function App() {
                               onClick={() => handleSelectSection(item.id)}
                               className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                                  : 'text-slate-300 hover:bg-[#2c2d30] hover:text-white'
+                                  ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
                               <span>{item.label}</span>
                             </button>
                           );
@@ -3126,8 +3119,8 @@ export default function App() {
                       onClick={() => toggleDropdown('configuracion')}
                       className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
                         isConfigActive
-                          ? 'text-[#E9504F] bg-[#2c2d30] pl-3'
-                          : 'text-slate-400 hover:text-white hover:bg-[#2c2d30]/70'
+                          ? 'text-[#98DAE9] bg-white/10 pl-3'
+                          : 'text-blue-200 hover:text-white hover:bg-white/10'
                       }`}
                       aria-expanded={isOpen}
                     >
@@ -3136,9 +3129,9 @@ export default function App() {
                         <span>Configuración</span>
                       </span>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
+                        <ChevronUp className="w-4 h-4 text-blue-200" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                        <ChevronDown className="w-4 h-4 text-blue-200" />
                       )}
                     </button>
                     {isOpen && (
@@ -3153,11 +3146,11 @@ export default function App() {
                               onClick={() => handleSelectSection(item.id)}
                               className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                                  : 'text-slate-300 hover:bg-[#2c2d30] hover:text-white'
+                                  ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
                               <span>{item.label}</span>
                             </button>
                           );
@@ -3171,37 +3164,33 @@ export default function App() {
           )}
         </nav>
 
-        <div className="p-4 border-t border-[#2c2d30] text-xs text-slate-400 text-center">
+        <div className="p-4 border-t border-white/10 text-xs text-blue-200/80 text-center">
           Sistema de Talleres Mecánicos
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#F6F7F9]">
-        {/* Encabezado superior blanco Merkatics con logotipo, buscador, avisos y usuario */}
-        <header className="hidden md:flex items-center justify-between px-8 py-3 bg-white border-b border-[#E4E7EC] shadow-2xs relative no-print">
-          {/* Línea decorativa coral discreta */}
-          <div className="absolute bottom-0 left-0 w-36 h-[2px] bg-[#E9504F]" />
+      <main className="flex-1 flex flex-col min-w-0 bg-[#F6F8FA]">
+        {/* Encabezado superior blanco con Logotipo IOT Technologies, buscador, avisos y usuario */}
+        <header className="hidden md:flex items-center justify-between px-8 py-3 bg-white border-b border-[#DDE4E8] shadow-2xs relative no-print">
+          {/* Línea decorativa azul institucional */}
+          <div className="absolute bottom-0 left-0 w-36 h-[2px] bg-[#1D7EAE]" />
 
-          {/* Izquierda: Logotipo Merkatics + nombre secundario */}
+          {/* Izquierda: Logotipo oficial IOT Technologies + nombre secundario */}
           <div className="flex items-center gap-3.5">
-            <img
-              src="/merkatics-logo-light.png"
-              alt="Merkatics"
-              className="h-7 w-auto object-contain shrink-0"
-            />
-            <div className="h-5 w-px bg-[#E4E7EC]" />
+            <IotLogo variant="dark" size="sm" />
+            <div className="h-5 w-px bg-[#DDE4E8]" />
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-[#5F6368] tracking-tight">
+                <span className="text-xs font-semibold text-[#5F6B73] tracking-tight">
                   Sistema de Talleres Mecánicos
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E9504F]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1D7EAE]" />
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-[#5F6368]">
-                <span className="font-medium text-[#202124]">{configuracion.nombre || 'Taller mecánico'}</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-[#5F6B73]">
+                <span className="font-medium text-[#231F20]">{configuracion.nombre || 'Taller mecánico'}</span>
                 <span>/</span>
-                <span className="text-[#E9504F] font-semibold capitalize">{activeSection.replace('-', ' ')}</span>
+                <span className="text-[#1D7EAE] font-semibold capitalize">{activeSection.replace('-', ' ')}</span>
               </div>
             </div>
           </div>
@@ -3216,7 +3205,7 @@ export default function App() {
                 value={searchCliente}
                 onChange={(e) => setSearchCliente(e.target.value)}
                 placeholder="Buscar cliente, orden..."
-                className="w-full pl-9 pr-3 py-1.5 bg-[#F6F7F9] border border-[#E4E7EC] rounded-lg text-xs text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:bg-white transition-all"
+                className="w-full pl-9 pr-3 py-1.5 bg-[#F6F8FA] border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:bg-white transition-all"
               />
             </div>
 
@@ -3225,13 +3214,13 @@ export default function App() {
               ref={desktopBellRef}
               type="button"
               onClick={() => handleOpenCentroAvisos(false)}
-              className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6368] hover:text-[#202124] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#E9504F] transition-colors cursor-pointer"
+              className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors cursor-pointer"
               title={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
               aria-label={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
             >
-              <Bell className="w-4.5 h-4.5 text-[#5F6368]" />
+              <Bell className="w-4.5 h-4.5 text-[#5F6B73]" />
               {totalPendientesCount > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#E9504F]">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#FF661B]">
                   {totalPendientesCount > 9 ? '9+' : totalPendientesCount}
                 </span>
               ) : (
@@ -3241,19 +3230,19 @@ export default function App() {
               )}
             </button>
 
-            <div className="h-6 w-px bg-[#E4E7EC]" />
+            <div className="h-6 w-px bg-[#DDE4E8]" />
 
             {/* Usuario */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-rose-50 text-[#E9504F] font-bold text-xs flex items-center justify-center border border-rose-200">
+              <div className="w-8 h-8 rounded-full bg-sky-50 text-[#1D7EAE] font-bold text-xs flex items-center justify-center border border-[#98DAE9]/50">
                 {sesion?.nombre.slice(0, 2).toUpperCase() || 'US'}
               </div>
               <div className="text-left hidden lg:block">
-                <p className="text-xs font-semibold text-[#202124] leading-tight">{sesion?.nombre}</p>
+                <p className="text-xs font-semibold text-[#231F20] leading-tight">{sesion?.nombre}</p>
                 <span
                   className={`inline-block text-[10px] font-semibold px-1.5 py-0.2 rounded ${
                     sesion?.rol === 'Administrador'
-                      ? 'bg-rose-50 text-[#E9504F] border border-rose-200'
+                      ? 'bg-sky-50 text-[#1D7EAE] border border-[#98DAE9]/50'
                       : sesion?.rol === 'Recepción'
                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
                       : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -3264,12 +3253,12 @@ export default function App() {
               </div>
             </div>
 
-            <div className="h-6 w-px bg-[#E4E7EC]" />
+            <div className="h-6 w-px bg-[#DDE4E8]" />
 
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6368] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer min-h-[36px]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer min-h-[36px]"
               title="Cerrar sesión"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -3291,7 +3280,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveSection('dashboard')}
-                className="px-5 py-2.5 min-h-[42px] rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+                className="px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
               >
                 Volver al Dashboard
               </button>
@@ -3334,17 +3323,17 @@ export default function App() {
           {/* CLIENTES */}
           {activeSection === 'clientes' && (
             <section className="space-y-6">
-              {/* Encabezado Merkatics para Clientes */}
-              <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-teal-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Encabezado IOT Technologies para Clientes */}
+              <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal-200 text-teal-600 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#98DAE9]/25 border border-[#98DAE9]/50 text-[#1D7EAE] flex items-center justify-center shrink-0">
                     <Users className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+                    <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
                       Clientes
                     </h2>
-                    <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+                    <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
                       Consulta y administra los clientes registrados.
                     </p>
                   </div>
@@ -3354,7 +3343,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleOpenAddCliente}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Agregar cliente</span>
@@ -3369,29 +3358,29 @@ export default function App() {
                   value={searchCliente}
                   onChange={(e) => setSearchCliente(e.target.value)}
                   placeholder="Buscar por nombre o teléfono..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
                 />
               </div>
 
-              <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs overflow-hidden">
+              <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-[#F6F7F9] border-b border-[#E4E7EC] text-[#5F6368] font-semibold text-xs uppercase tracking-wider">
+                      <tr className="bg-[#F6F8FA] border-b border-[#DDE4E8] text-[#231F20] font-semibold text-xs uppercase tracking-wider">
                         <th className="py-3.5 px-5">Nombre</th>
                         <th className="py-3.5 px-5">Teléfono</th>
                         <th className="py-3.5 px-5">Correo</th>
                         <th className="py-3.5 px-5 text-right">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E4E7EC]">
+                    <tbody className="divide-y divide-[#DDE4E8]">
                       {filteredClientes.length > 0 ? (
                         filteredClientes.map((cliente) => (
-                          <tr key={cliente.id} className="hover:bg-[#F6F7F9]/80 transition-colors">
-                            <td className="py-3.5 px-5 font-semibold text-[#202124]">{cliente.nombre}</td>
-                            <td className="py-3.5 px-5 text-[#5F6368]">{cliente.telefono}</td>
-                            <td className="py-3.5 px-5 text-[#5F6368]">
+                          <tr key={cliente.id} className="hover:bg-[#98DAE9]/10 transition-colors">
+                            <td className="py-3.5 px-5 font-semibold text-[#231F20]">{cliente.nombre}</td>
+                            <td className="py-3.5 px-5 text-[#5F6B73]">{cliente.telefono}</td>
+                            <td className="py-3.5 px-5 text-[#5F6B73]">
                               {cliente.correo || <span className="text-slate-400 italic">No registrado</span>}
                             </td>
                             <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
@@ -3399,9 +3388,9 @@ export default function App() {
                                 <button
                                   type="button"
                                   onClick={() => setHistorialTarget({ tipo: 'cliente', id: cliente.id })}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer min-h-[36px]"
                                 >
-                                  <History className="w-3.5 h-3.5 text-teal-600" />
+                                  <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
                                   <span>Historial</span>
                                 </button>
 
@@ -3413,7 +3402,7 @@ export default function App() {
                                         openClienteMenuId === cliente.id ? null : cliente.id
                                       )
                                     }
-                                    className="p-2 text-slate-400 hover:text-[#202124] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                    className="p-2 text-slate-400 hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                     title="Más opciones"
                                     aria-label="Más opciones"
                                   >
@@ -3426,14 +3415,14 @@ export default function App() {
                                         className="fixed inset-0 z-20"
                                         onClick={() => setOpenClienteMenuId(null)}
                                       />
-                                      <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                      <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                         <button
                                           type="button"
                                           onClick={() => {
                                             setOpenClienteMenuId(null);
                                             handleOpenEditCliente(cliente);
                                           }}
-                                          className="w-full px-3 py-2 text-[#202124] hover:bg-slate-50 hover:text-[#E9504F] flex items-center gap-2 transition-colors cursor-pointer"
+                                          className="w-full px-3 py-2 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors cursor-pointer"
                                         >
                                           <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                           <span>Editar cliente</span>
@@ -3448,7 +3437,7 @@ export default function App() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="py-8 text-center text-[#5F6368]">
+                          <td colSpan={4} className="py-8 text-center text-[#5F6B73]">
                             {searchCliente
                               ? 'No se encontraron clientes que coincidan con la búsqueda.'
                               : 'No hay clientes registrados.'}
@@ -3460,14 +3449,14 @@ export default function App() {
                 </div>
 
                 {/* Mobile Block View */}
-                <div className="md:hidden divide-y divide-[#E4E7EC]">
+                <div className="md:hidden divide-y divide-[#DDE4E8]">
                   {filteredClientes.length > 0 ? (
                     filteredClientes.map((cliente) => (
                       <div key={cliente.id} className="p-4 space-y-2.5">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-[#202124] text-sm">{cliente.nombre}</h4>
-                            <p className="text-xs text-[#5F6368] mt-0.5">{cliente.telefono}</p>
+                            <h4 className="font-semibold text-[#231F20] text-sm">{cliente.nombre}</h4>
+                            <p className="text-xs text-[#5F6B73] mt-0.5">{cliente.telefono}</p>
                             {cliente.correo && (
                               <p className="text-xs text-slate-400 truncate">{cliente.correo}</p>
                             )}
@@ -3476,9 +3465,9 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => setHistorialTarget({ tipo: 'cliente', id: cliente.id })}
-                              className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#202124] bg-white border border-[#E4E7EC] hover:bg-slate-50 rounded-lg transition-colors"
+                              className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white border border-[#DDE4E8] hover:bg-slate-50 rounded-lg transition-colors"
                             >
-                              <History className="w-3.5 h-3.5 text-teal-600" />
+                              <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
                               <span>Historial</span>
                             </button>
                             <div className="relative">
@@ -3489,7 +3478,7 @@ export default function App() {
                                     openClienteMenuId === cliente.id ? null : cliente.id
                                   )
                                 }
-                                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#202124] rounded-lg"
+                                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#231F20] rounded-lg"
                                 aria-label="Más opciones"
                               >
                                 <MoreVertical className="w-4 h-4" />
@@ -3500,14 +3489,14 @@ export default function App() {
                                     className="fixed inset-0 z-20"
                                     onClick={() => setOpenClienteMenuId(null)}
                                   />
-                                  <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                  <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setOpenClienteMenuId(null);
                                         handleOpenEditCliente(cliente);
                                       }}
-                                      className="w-full px-3 py-2.5 text-[#202124] hover:bg-slate-50 hover:text-[#E9504F] flex items-center gap-2"
+                                      className="w-full px-3 py-2.5 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2"
                                     >
                                       <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                       <span>Editar cliente</span>
@@ -3521,7 +3510,7 @@ export default function App() {
                       </div>
                     ))
                   ) : (
-                    <div className="p-6 text-center text-xs text-[#5F6368]">
+                    <div className="p-6 text-center text-xs text-[#5F6B73]">
                       {searchCliente
                         ? 'No se encontraron clientes que coincidan con la búsqueda.'
                         : 'No hay clientes registrados.'}
@@ -3535,17 +3524,17 @@ export default function App() {
           {/* VEHÍCULOS */}
           {activeSection === 'vehiculos' && (
             <section className="space-y-6">
-              {/* Encabezado Merkatics para Vehículos */}
-              <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-violet-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Encabezado IOT Technologies para Vehículos */}
+              <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-violet-50 border border-violet-200 text-violet-600 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#98DAE9]/25 border border-[#98DAE9]/50 text-[#1D7EAE] flex items-center justify-center shrink-0">
                     <Car className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+                    <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
                       Vehículos
                     </h2>
-                    <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+                    <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
                       Consulta y administra los vehículos vinculados a sus propietarios.
                     </p>
                   </div>
@@ -3555,7 +3544,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleOpenAddVehiculo}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Agregar vehículo</span>
@@ -3570,42 +3559,42 @@ export default function App() {
                   value={searchVehiculo}
                   onChange={(e) => setSearchVehiculo(e.target.value)}
                   placeholder="Buscar por placas o propietario..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
                 />
               </div>
 
-              <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xs overflow-hidden">
+              <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-[#F6F7F9] border-b border-[#E4E7EC] text-[#5F6368] font-semibold text-xs uppercase tracking-wider">
+                      <tr className="bg-[#F6F8FA] border-b border-[#DDE4E8] text-[#231F20] font-semibold text-xs uppercase tracking-wider">
                         <th className="py-3.5 px-5">Vehículo</th>
                         <th className="py-3.5 px-5">Placas</th>
                         <th className="py-3.5 px-5">Propietario</th>
                         <th className="py-3.5 px-5 text-right">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E4E7EC]">
+                    <tbody className="divide-y divide-[#DDE4E8]">
                       {filteredVehiculos.length > 0 ? (
                         filteredVehiculos.map((v) => {
                           const owner = clienteMap.get(v.clienteId);
                           return (
-                            <tr key={v.id} className="hover:bg-[#F6F7F9]/80 transition-colors">
+                            <tr key={v.id} className="hover:bg-[#98DAE9]/10 transition-colors">
                               <td className="py-3.5 px-5">
-                                <div className="font-semibold text-[#202124]">{v.marca} {v.modelo}</div>
-                                {v.año && <div className="text-xs text-[#5F6368]">Año: {v.año}</div>}
+                                <div className="font-semibold text-[#231F20]">{v.marca} {v.modelo}</div>
+                                {v.año && <div className="text-xs text-[#5F6B73]">Año: {v.año}</div>}
                               </td>
                               <td className="py-3.5 px-5">
-                                <span className="inline-block px-2.5 py-1 bg-slate-100 border border-[#E4E7EC] rounded text-xs font-mono font-bold text-[#202124] tracking-wider">
+                                <span className="inline-block px-2.5 py-1 bg-slate-100 border border-[#DDE4E8] rounded text-xs font-mono font-bold text-[#231F20] tracking-wider">
                                   {v.placas}
                                 </span>
                               </td>
-                              <td className="py-3.5 px-5 text-[#202124]">
+                              <td className="py-3.5 px-5 text-[#231F20]">
                                 {owner ? (
                                   <div>
-                                    <div className="font-semibold text-[#202124]">{owner.nombre}</div>
-                                    <div className="text-xs text-[#5F6368]">{owner.telefono}</div>
+                                    <div className="font-semibold text-[#231F20]">{owner.nombre}</div>
+                                    <div className="text-xs text-[#5F6B73]">{owner.telefono}</div>
                                   </div>
                                 ) : (
                                   <span className="text-rose-500 text-xs italic">Cliente no encontrado</span>
@@ -3616,9 +3605,9 @@ export default function App() {
                                   <button
                                     type="button"
                                     onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer min-h-[36px]"
                                   >
-                                    <History className="w-3.5 h-3.5 text-violet-600" />
+                                    <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
                                     <span>Historial</span>
                                   </button>
 
@@ -3630,7 +3619,7 @@ export default function App() {
                                           openVehiculoMenuId === v.id ? null : v.id
                                         )
                                       }
-                                      className="p-2 text-slate-400 hover:text-[#202124] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                      className="p-2 text-slate-400 hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                       title="Más opciones"
                                       aria-label="Más opciones"
                                     >
@@ -3643,14 +3632,14 @@ export default function App() {
                                           className="fixed inset-0 z-20"
                                           onClick={() => setOpenVehiculoMenuId(null)}
                                         />
-                                        <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                        <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                           <button
                                             type="button"
                                             onClick={() => {
                                               setOpenVehiculoMenuId(null);
                                               handleOpenEditVehiculo(v);
                                             }}
-                                            className="w-full px-3 py-2 text-[#202124] hover:bg-slate-50 hover:text-[#E9504F] flex items-center gap-2 transition-colors cursor-pointer"
+                                            className="w-full px-3 py-2 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors cursor-pointer"
                                           >
                                             <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                             <span>Editar vehículo</span>
@@ -3666,7 +3655,7 @@ export default function App() {
                         })
                       ) : (
                         <tr>
-                          <td colSpan={4} className="py-8 text-center text-[#5F6368]">
+                          <td colSpan={4} className="py-8 text-center text-[#5F6B73]">
                             {searchVehiculo
                               ? 'No se encontraron vehículos que coincidan con la búsqueda.'
                               : 'No hay vehículos registrados.'}
@@ -3678,7 +3667,7 @@ export default function App() {
                 </div>
 
                 {/* Mobile Block View */}
-                <div className="md:hidden divide-y divide-[#E4E7EC]">
+                <div className="md:hidden divide-y divide-[#DDE4E8]">
                   {filteredVehiculos.length > 0 ? (
                     filteredVehiculos.map((v) => {
                       const owner = clienteMap.get(v.clienteId);
@@ -3687,23 +3676,23 @@ export default function App() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold text-[#202124] text-sm">{v.marca} {v.modelo}</span>
-                                <span className="px-2 py-0.5 bg-slate-100 border border-[#E4E7EC] rounded text-xs font-mono font-bold text-[#202124]">
+                                <span className="font-semibold text-[#231F20] text-sm">{v.marca} {v.modelo}</span>
+                                <span className="px-2 py-0.5 bg-slate-100 border border-[#DDE4E8] rounded text-xs font-mono font-bold text-[#231F20]">
                                   {v.placas}
                                 </span>
                               </div>
-                              {v.año && <p className="text-xs text-[#5F6368] mt-0.5">Año: {v.año}</p>}
-                              <p className="text-xs text-[#5F6368] mt-1">
-                                Propietario: <strong className="text-[#202124]">{owner ? owner.nombre : 'No encontrado'}</strong>
+                              {v.año && <p className="text-xs text-[#5F6B73] mt-0.5">Año: {v.año}</p>}
+                              <p className="text-xs text-[#5F6B73] mt-1">
+                                Propietario: <strong className="text-[#231F20]">{owner ? owner.nombre : 'No encontrado'}</strong>
                               </p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               <button
                                 type="button"
                                 onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
-                                className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#202124] bg-white border border-[#E4E7EC] hover:bg-slate-50 rounded-lg transition-colors"
+                                className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white border border-[#DDE4E8] hover:bg-slate-50 rounded-lg transition-colors"
                               >
-                                <History className="w-3.5 h-3.5 text-violet-600" />
+                                <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
                                 <span>Historial</span>
                               </button>
                               <div className="relative">
@@ -3714,7 +3703,7 @@ export default function App() {
                                       openVehiculoMenuId === v.id ? null : v.id
                                     )
                                   }
-                                  className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#202124] rounded-lg"
+                                  className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#231F20] rounded-lg"
                                   aria-label="Más opciones"
                                 >
                                   <MoreVertical className="w-4 h-4" />
@@ -3725,14 +3714,14 @@ export default function App() {
                                       className="fixed inset-0 z-20"
                                       onClick={() => setOpenVehiculoMenuId(null)}
                                     />
-                                    <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E4E7EC] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                    <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setOpenVehiculoMenuId(null);
                                           handleOpenEditVehiculo(v);
                                         }}
-                                        className="w-full px-3 py-2.5 text-[#202124] hover:bg-slate-50 hover:text-[#E9504F] flex items-center gap-2"
+                                        className="w-full px-3 py-2.5 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2"
                                       >
                                         <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                         <span>Editar vehículo</span>
@@ -3747,7 +3736,7 @@ export default function App() {
                       );
                     })
                   ) : (
-                    <div className="p-6 text-center text-xs text-[#5F6368]">
+                    <div className="p-6 text-center text-xs text-[#5F6B73]">
                       {searchVehiculo
                         ? 'No se encontraron vehículos que coincidan con la búsqueda.'
                         : 'No hay vehículos registrados.'}
@@ -3988,30 +3977,35 @@ export default function App() {
             activeSection !== 'garantias' &&
             activeSection !== 'bitacora' &&
             activeSection !== 'configuracion' && (
-              <section className="bg-white rounded-xl p-8 md:p-12 border border-[#E4E7EC] text-center max-w-xl mx-auto my-12 shadow-xs relative overflow-hidden">
-                <div className="absolute inset-0 merkatics-dots-pattern pointer-events-none" />
-                <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-[#E9504F] mb-4 relative z-10">
+              <section className="bg-white rounded-xl p-8 md:p-12 border border-[#DDE4E8] text-center max-w-xl mx-auto my-12 shadow-xs relative overflow-hidden">
+                <div className="absolute inset-0 iot-dots-pattern pointer-events-none" />
+                <div className="w-14 h-14 mx-auto rounded-full bg-[#98DAE9]/25 border border-[#98DAE9]/50 flex items-center justify-center text-[#1D7EAE] mb-4 relative z-10">
                   <currentItem.icon className="w-7 h-7" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#202124] mb-2 relative z-10">
+                <h2 className="text-2xl font-bold text-[#231F20] mb-2 relative z-10">
                   {currentItem.label}
                 </h2>
-                <p className="text-base text-[#5F6368] relative z-10">
+                <p className="text-base text-[#5F6B73] relative z-10">
                   Sección en preparación
                 </p>
               </section>
             )}
             </>
           )}
+
+          {/* Pie de página oficial IOT Technologies */}
+          <footer className="mt-12 py-6 border-t border-[#DDE4E8] text-center text-xs text-[#5F6B73] no-print">
+            <p>Tecnología de IOT Technologies</p>
+          </footer>
         </div>
       </main>
 
       {/* MODAL: CLIENTE */}
       {isClienteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-4 border-b border-[#E4E7EC] flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#202124]">
+          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#231F20]">
                 {editingCliente ? 'Editar cliente' : 'Agregar cliente'}
               </h3>
               <button
@@ -4026,7 +4020,7 @@ export default function App() {
                   }
                   setIsClienteModalOpen(false);
                 }}
-                className="text-slate-400 hover:text-[#202124] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -4035,8 +4029,8 @@ export default function App() {
 
             <form onSubmit={handleSaveCliente} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                  Nombre completo <span className="text-[#E9504F]">*</span>
+                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                  Nombre completo <span className="text-[#1D7EAE]">*</span>
                 </label>
                 <input
                   type="text"
@@ -4047,16 +4041,16 @@ export default function App() {
                     if (clienteErrors.nombre) setClienteErrors({ ...clienteErrors, nombre: undefined });
                   }}
                   placeholder="Ej. Juan Pérez"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all ${
-                    clienteErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all ${
+                    clienteErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                   }`}
                 />
                 {clienteErrors.nombre && <p className="text-xs text-red-600 mt-1">{clienteErrors.nombre}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                  Teléfono <span className="text-[#E9504F]">*</span>
+                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                  Teléfono <span className="text-[#1D7EAE]">*</span>
                 </label>
                 <input
                   type="tel"
@@ -4066,8 +4060,8 @@ export default function App() {
                     if (clienteErrors.telefono) setClienteErrors({ ...clienteErrors, telefono: undefined });
                   }}
                   placeholder="Ej. 555-123-4567"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all ${
-                    clienteErrors.telefono ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all ${
+                    clienteErrors.telefono ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                   }`}
                 />
                 {clienteErrors.telefono && <p className="text-xs text-red-600 mt-1">{clienteErrors.telefono}</p>}
@@ -4075,25 +4069,25 @@ export default function App() {
 
               {/* Apartado desplegable para datos opcionales */}
               <details className="group pt-1" open={Boolean(clienteForm.correo)}>
-                <summary className="text-xs text-[#5F6368] hover:text-[#202124] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                <summary className="text-xs text-[#5F6B73] hover:text-[#231F20] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
                   <span>Datos opcionales (correo electrónico)</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="pt-2">
-                  <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                    Correo electrónico <span className="text-xs text-[#5F6368] font-normal">(Opcional)</span>
+                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                    Correo electrónico <span className="text-xs text-[#5F6B73] font-normal">(Opcional)</span>
                   </label>
                   <input
                     type="email"
                     value={clienteForm.correo}
                     onChange={(e) => setClienteForm({ ...clienteForm, correo: e.target.value })}
                     placeholder="Ej. juan.perez@email.com"
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
                   />
                 </div>
               </details>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E4E7EC]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
                   onClick={() => {
@@ -4106,13 +4100,13 @@ export default function App() {
                     }
                     setIsClienteModalOpen(false);
                   }}
-                  className="px-4 py-2.5 border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#202124] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
                 >
                   Guardar
                 </button>
@@ -4125,9 +4119,9 @@ export default function App() {
       {/* MODAL: VEHÍCULO */}
       {isVehiculoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl border border-[#E4E7EC] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-4 border-b border-[#E4E7EC] flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#202124]">
+          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#231F20]">
                 {editingVehiculo ? 'Editar vehículo' : 'Agregar vehículo'}
               </h3>
               <button
@@ -4144,7 +4138,7 @@ export default function App() {
                   }
                   setIsVehiculoModalOpen(false);
                 }}
-                className="text-slate-400 hover:text-[#202124] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -4153,8 +4147,8 @@ export default function App() {
 
             <form onSubmit={handleSaveVehiculo} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                  Cliente propietario <span className="text-[#E9504F]">*</span>
+                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                  Cliente propietario <span className="text-[#1D7EAE]">*</span>
                 </label>
                 {clientes.length > 0 ? (
                   <select
@@ -4164,7 +4158,7 @@ export default function App() {
                       setVehiculoForm({ ...vehiculoForm, clienteId: e.target.value });
                       if (vehiculoErrors.clienteId) setVehiculoErrors({ ...vehiculoErrors, clienteId: '' });
                     }}
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <option value="" disabled>Seleccione un cliente</option>
                     {clientes.map((c) => (
@@ -4185,8 +4179,8 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                    Marca <span className="text-[#E9504F]">*</span>
+                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                    Marca <span className="text-[#1D7EAE]">*</span>
                   </label>
                   <input
                     type="text"
@@ -4196,7 +4190,7 @@ export default function App() {
                       if (vehiculoErrors.marca) setVehiculoErrors({ ...vehiculoErrors, marca: '' });
                     }}
                     placeholder="Ej. Toyota"
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   />
                   {vehiculoErrors.marca && (
                     <p className="text-xs text-red-600 mt-1">{vehiculoErrors.marca}</p>
@@ -4204,8 +4198,8 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                    Modelo <span className="text-[#E9504F]">*</span>
+                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                    Modelo <span className="text-[#1D7EAE]">*</span>
                   </label>
                   <input
                     type="text"
@@ -4215,7 +4209,7 @@ export default function App() {
                       if (vehiculoErrors.modelo) setVehiculoErrors({ ...vehiculoErrors, modelo: '' });
                     }}
                     placeholder="Ej. Corolla"
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   />
                   {vehiculoErrors.modelo && (
                     <p className="text-xs text-red-600 mt-1">{vehiculoErrors.modelo}</p>
@@ -4224,8 +4218,8 @@ export default function App() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#202124] mb-1.5">
-                  Placas <span className="text-[#E9504F]">*</span>
+                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
+                  Placas <span className="text-[#1D7EAE]">*</span>
                 </label>
                 <input
                   type="text"
@@ -4235,7 +4229,7 @@ export default function App() {
                     if (vehiculoErrors.placas) setVehiculoErrors({ ...vehiculoErrors, placas: '' });
                   }}
                   placeholder="Ej. ABC-123"
-                  className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm uppercase text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                  className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm uppercase text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                 />
                 {vehiculoErrors.placas && (
                   <p className="text-xs text-red-600 mt-1">{vehiculoErrors.placas}</p>
@@ -4244,12 +4238,12 @@ export default function App() {
 
               {/* Apartado desplegable para datos opcionales */}
               <details className="group pt-1" open={Boolean(vehiculoForm.año)}>
-                <summary className="text-xs text-[#5F6368] hover:text-[#202124] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                <summary className="text-xs text-[#5F6368] hover:text-[#231F20] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
                   <span>Datos opcionales (año del vehículo)</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="pt-2">
-                  <label className="block text-xs font-semibold text-[#202124] mb-1.5">
+                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
                     Año <span className="text-xs text-[#5F6368] font-normal">(Opcional)</span>
                   </label>
                   <input
@@ -4257,12 +4251,12 @@ export default function App() {
                     value={vehiculoForm.año}
                     onChange={(e) => setVehiculoForm({ ...vehiculoForm, año: e.target.value })}
                     placeholder="Ej. 2021"
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   />
                 </div>
               </details>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E4E7EC]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
                   onClick={() => {
@@ -4277,14 +4271,14 @@ export default function App() {
                     }
                     setIsVehiculoModalOpen(false);
                   }}
-                  className="px-4 py-2.5 border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#202124] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={clientes.length === 0}
-                  className="px-5 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
                 >
                   Guardar
                 </button>
@@ -4321,13 +4315,13 @@ export default function App() {
 
       {/* Toast Feedback Notification (ETAPA 23) */}
       {toastMensaje && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0d1b2a] text-white px-4 py-3 rounded-xl shadow-lg border border-teal-500/30 flex items-center gap-2.5 text-xs sm:text-sm animate-in fade-in slide-in-from-bottom-2">
-          <CheckCircle className="w-4 h-4 text-teal-400 shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0032A0] text-white px-4 py-3 rounded-xl shadow-lg border border-blue-400/30 flex items-center gap-2.5 text-xs sm:text-sm animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle className="w-4 h-4 text-[#98DAE9] shrink-0" />
           <span>{toastMensaje}</span>
           <button
             type="button"
             onClick={() => setToastMensaje(null)}
-            className="ml-2 text-slate-400 hover:text-white p-0.5"
+            className="ml-2 text-blue-200 hover:text-white p-0.5"
             aria-label="Cerrar notificación"
           >
             <X className="w-3.5 h-3.5" />

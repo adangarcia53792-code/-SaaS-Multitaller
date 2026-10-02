@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Cliente, Vehiculo, Cita, Cotizacion, OrdenTrabajo, ServicioCatalogo } from '../types';
-import { CheckCircle2, RotateCcw, Calendar, FileText, Wrench, ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Calendar, FileText, Wrench, ArrowLeft, ArrowRight, Check, PlusCircle } from 'lucide-react';
 
 interface NuevaAtencionSectionProps {
   clientes: Cliente[];
@@ -375,17 +375,17 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado Merkatics para Nueva atención */}
-      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-sky-500 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center text-sky-600 shrink-0">
-            <Wrench className="w-5 h-5" />
+      {/* Encabezado IOT Technologies para Nueva atención */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE] shrink-0">
+            <PlusCircle className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#202124]">
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
               Nueva atención
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6368]">
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               Registra citas, cotizaciones u órdenes de trabajo en sencillos pasos.
             </p>
           </div>
@@ -393,23 +393,23 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
       </div>
 
       {wizardSubmitted && confirmedResult ? (
-        <div className="bg-white rounded-xl border border-[#E4E7EC] p-8 shadow-xs text-center max-w-xl mx-auto space-y-6">
+        <div className="bg-white rounded-xl border border-[#DDE4E8] p-8 shadow-xs text-center max-w-xl mx-auto space-y-6">
           <div className="w-16 h-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto text-sky-600">
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-[#202124]">
+            <h3 className="text-2xl font-bold text-[#231F20]">
               ¡Atención registrada con éxito!
             </h3>
-            <p className="text-[#5F6368] mt-2 text-sm">
+            <p className="text-[#5F6B73] mt-2 text-sm">
               La información ha sido guardada correctamente en el sistema.
             </p>
           </div>
 
-          <div className="bg-[#F6F7F9] border border-[#E4E7EC] rounded-lg p-5 text-left text-sm space-y-2">
+          <div className="bg-[#F6F8FA] border border-[#DDE4E8] rounded-lg p-5 text-left text-sm space-y-2">
             <div className="flex justify-between">
-              <span className="text-[#5F6368]">Tipo:</span>
-              <span className="font-semibold text-[#202124] capitalize">
+              <span className="text-[#5F6B73]">Tipo:</span>
+              <span className="font-semibold text-[#231F20] capitalize">
                 {confirmedResult.tipo === 'cita' && 'Cita (Programada)'}
                 {confirmedResult.tipo === 'cotizacion' && 'Cotización (Por autorizar)'}
                 {confirmedResult.tipo === 'orden' && 'Orden de trabajo (Por autorizar)'}
@@ -417,26 +417,26 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
             </div>
             {confirmedResult.folio && (
               <div className="flex justify-between">
-                <span className="text-[#5F6368]">Folio asignado:</span>
+                <span className="text-[#5F6B73]">Folio asignado:</span>
                 <span className="font-mono font-bold text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded border border-sky-200">
                   {confirmedResult.folio}
                 </span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-[#5F6368]">Cliente:</span>
-              <span className="font-medium text-[#202124]">{confirmedResult.clienteNombre}</span>
+              <span className="text-[#5F6B73]">Cliente:</span>
+              <span className="font-medium text-[#231F20]">{confirmedResult.clienteNombre}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#5F6368]">Vehículo:</span>
-              <span className="font-medium text-[#202124]">{confirmedResult.vehiculoDesc}</span>
+              <span className="text-[#5F6B73]">Vehículo:</span>
+              <span className="font-medium text-[#231F20]">{confirmedResult.vehiculoDesc}</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={resetWizard}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] text-white font-medium text-sm rounded-lg shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-medium text-sm rounded-lg shadow-xs transition-colors cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Iniciar otra atención</span>
@@ -445,7 +445,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
       ) : (
         <div className="space-y-6">
           {/* Step indicators */}
-          <div className="bg-white border border-[#E4E7EC] rounded-xl p-4 shadow-xs">
+          <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-xs">
             <div className="grid grid-cols-4 gap-2 text-center text-xs md:text-sm font-medium">
               <div
                 className={`py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
@@ -453,7 +453,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                     ? 'bg-sky-600 text-white font-semibold shadow-xs'
                     : wizardStep > 1
                     ? 'bg-sky-50 text-sky-700'
-                    : 'text-[#5F6368] bg-[#F6F7F9]'
+                    : 'text-[#5F6B73] bg-[#F6F8FA]'
                 }`}
               >
                 <span className="w-5 h-5 rounded-full border flex items-center justify-center text-xs">1</span>
@@ -466,7 +466,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                     ? 'bg-sky-600 text-white font-semibold shadow-xs'
                     : wizardStep > 2
                     ? 'bg-sky-50 text-sky-700'
-                    : 'text-[#5F6368] bg-[#F6F7F9]'
+                    : 'text-[#5F6B73] bg-[#F6F8FA]'
                 }`}
               >
                 <span className="w-5 h-5 rounded-full border flex items-center justify-center text-xs">2</span>
@@ -479,7 +479,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                     ? 'bg-sky-600 text-white font-semibold shadow-xs'
                     : wizardStep > 3
                     ? 'bg-sky-50 text-sky-700'
-                    : 'text-[#5F6368] bg-[#F6F7F9]'
+                    : 'text-[#5F6B73] bg-[#F6F8FA]'
                 }`}
               >
                 <span className="w-5 h-5 rounded-full border flex items-center justify-center text-xs">3</span>
@@ -490,7 +490,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                 className={`py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
                   wizardStep === 4
                     ? 'bg-sky-600 text-white font-semibold shadow-xs'
-                    : 'text-[#5F6368] bg-[#F6F7F9]'
+                    : 'text-[#5F6B73] bg-[#F6F8FA]'
                 }`}
               >
                 <span className="w-5 h-5 rounded-full border flex items-center justify-center text-xs">4</span>
@@ -500,7 +500,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
           </div>
 
           {/* Form Card */}
-          <div className="bg-white border border-[#E4E7EC] rounded-xl p-6 md:p-8 shadow-xs">
+          <div className="bg-white border border-[#DDE4E8] rounded-xl p-6 md:p-8 shadow-xs">
             {/* PASO 1 */}
             {wizardStep === 1 && (
               <div className="space-y-6">
@@ -548,7 +548,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         <select
                           value={selectedClientId}
                           onChange={(e) => setSelectedClientId(e.target.value)}
-                          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                          className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                         >
                           {clientes.map((c) => (
                             <option key={c.id} value={c.id}>
@@ -557,7 +557,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                           ))}
                         </select>
                       ) : (
-                        <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                        <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
                           No hay clientes registrados en el sistema. Puedes optar por registrar uno nuevo arriba.
                         </p>
                       )}
@@ -574,7 +574,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         <select
                           value={selectedVehiculoId}
                           onChange={(e) => setSelectedVehiculoId(e.target.value)}
-                          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                          className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                         >
                           {vehiclesForClient.map((v) => (
                             <option key={v.id} value={v.id}>
@@ -588,7 +588,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => setIsNewClientAndVehicle(true)}
-                            className="text-xs font-semibold text-[#0d5c58] hover:underline"
+                            className="text-xs font-semibold text-[#1D7EAE] hover:underline"
                           >
                             Cambiar a capturar cliente y vehículo nuevos
                           </button>
@@ -615,8 +615,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newClientName}
                             onChange={(e) => setNewClientName(e.target.value)}
                             placeholder="Ej. Roberto Gómez"
-                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                              step1Errors.clientName ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                              step1Errors.clientName ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                             }`}
                           />
                           {step1Errors.clientName && (
@@ -633,8 +633,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newClientPhone}
                             onChange={(e) => setNewClientPhone(e.target.value)}
                             placeholder="Ej. 555-432-8765"
-                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                              step1Errors.clientPhone ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                              step1Errors.clientPhone ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                             }`}
                           />
                           {step1Errors.clientPhone && (
@@ -651,7 +651,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newClientEmail}
                             onChange={(e) => setNewClientEmail(e.target.value)}
                             placeholder="Ej. roberto@email.com"
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                            className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                           />
                         </div>
                       </div>
@@ -671,8 +671,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newVehBrand}
                             onChange={(e) => setNewVehBrand(e.target.value)}
                             placeholder="Ej. Honda"
-                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                              step1Errors.vehBrand ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                              step1Errors.vehBrand ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                             }`}
                           />
                           {step1Errors.vehBrand && (
@@ -689,8 +689,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newVehModel}
                             onChange={(e) => setNewVehModel(e.target.value)}
                             placeholder="Ej. Civic"
-                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                              step1Errors.vehModel ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                              step1Errors.vehModel ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                             }`}
                           />
                           {step1Errors.vehModel && (
@@ -707,8 +707,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newVehPlates}
                             onChange={(e) => setNewVehPlates(e.target.value)}
                             placeholder="Ej. DEF-456"
-                            className={`w-full px-3 py-2 border rounded-lg text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                              step1Errors.vehPlates ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                            className={`w-full px-3 py-2 border rounded-lg text-sm uppercase focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                              step1Errors.vehPlates ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                             }`}
                           />
                           {step1Errors.vehPlates && (
@@ -725,7 +725,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                             value={newVehYear}
                             onChange={(e) => setNewVehYear(e.target.value)}
                             placeholder="Ej. 2023"
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                            className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                           />
                         </div>
                       </div>
@@ -753,15 +753,15 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                     className={`cursor-pointer rounded-xl p-5 border-2 transition-all flex flex-col justify-between ${
                       tipoAtencion === 'cita'
                         ? 'border-sky-500 bg-sky-50/40 shadow-xs'
-                        : 'border-[#E4E7EC] hover:border-slate-300 bg-white'
+                        : 'border-[#DDE4E8] hover:border-slate-300 bg-white'
                     }`}
                   >
                     <div>
                       <div className="p-3 bg-sky-50 text-sky-600 rounded-lg w-fit mb-3">
                         <Calendar className="w-6 h-6" />
                       </div>
-                      <h4 className="font-semibold text-[#202124] text-base">Agendar una cita</h4>
-                      <p className="text-xs text-[#5F6368] mt-1.5 leading-relaxed">
+                      <h4 className="font-semibold text-[#231F20] text-base">Agendar una cita</h4>
+                      <p className="text-xs text-[#5F6B73] mt-1.5 leading-relaxed">
                         Reserva un espacio en la agenda para revisión o mantenimiento futuro.
                       </p>
                     </div>
@@ -783,15 +783,15 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                     className={`cursor-pointer rounded-xl p-5 border-2 transition-all flex flex-col justify-between ${
                       tipoAtencion === 'cotizacion'
                         ? 'border-sky-500 bg-sky-50/40 shadow-xs'
-                        : 'border-[#E4E7EC] hover:border-slate-300 bg-white'
+                        : 'border-[#DDE4E8] hover:border-slate-300 bg-white'
                     }`}
                   >
                     <div>
                       <div className="p-3 bg-sky-50 text-sky-600 rounded-lg w-fit mb-3">
                         <FileText className="w-6 h-6" />
                       </div>
-                      <h4 className="font-semibold text-[#202124] text-base">Solicitar una cotización</h4>
-                      <p className="text-xs text-[#5F6368] mt-1.5 leading-relaxed">
+                      <h4 className="font-semibold text-[#231F20] text-base">Solicitar una cotización</h4>
+                      <p className="text-xs text-[#5F6B73] mt-1.5 leading-relaxed">
                         Presupuesto previo con desglose de refacciones y mano de obra.
                       </p>
                     </div>
@@ -813,15 +813,15 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                     className={`cursor-pointer rounded-xl p-5 border-2 transition-all flex flex-col justify-between ${
                       tipoAtencion === 'orden'
                         ? 'border-sky-500 bg-sky-50/40 shadow-xs'
-                        : 'border-[#E4E7EC] hover:border-slate-300 bg-white'
+                        : 'border-[#DDE4E8] hover:border-slate-300 bg-white'
                     }`}
                   >
                     <div>
                       <div className="p-3 bg-sky-50 text-sky-600 rounded-lg w-fit mb-3">
                         <Wrench className="w-6 h-6" />
                       </div>
-                      <h4 className="font-semibold text-[#202124] text-base">Dejar el vehículo en el taller</h4>
-                      <p className="text-xs text-[#5F6368] mt-1.5 leading-relaxed">
+                      <h4 className="font-semibold text-[#231F20] text-base">Dejar el vehículo en el taller</h4>
+                      <p className="text-xs text-[#5F6B73] mt-1.5 leading-relaxed">
                         Abrir una orden de trabajo directa sin necesidad de cita previa.
                       </p>
                     </div>
@@ -865,7 +865,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                       <select
                         value={selectedCatalogIdCita}
                         onChange={(e) => handleSelectCatalogCita(e.target.value)}
-                        className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                        className="w-full px-3.5 py-2 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                       >
                         <option value="">Seleccionar del catálogo o escribir abajo...</option>
                         {activeServicios.map((s) => (
@@ -885,8 +885,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         value={citaServicio}
                         onChange={(e) => setCitaServicio(e.target.value)}
                         placeholder="Ej. Cambio de balatas y afinación"
-                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                          step3Errors.citaServicio ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                          step3Errors.citaServicio ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                         }`}
                       />
                       {step3Errors.citaServicio && (
@@ -903,8 +903,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                           type="date"
                           value={citaFecha}
                           onChange={(e) => setCitaFecha(e.target.value)}
-                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                            step3Errors.citaFecha ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                            step3Errors.citaFecha ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                           }`}
                         />
                         {step3Errors.citaFecha && (
@@ -920,8 +920,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                           type="time"
                           value={citaHora}
                           onChange={(e) => setCitaHora(e.target.value)}
-                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                            step3Errors.citaHora ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                            step3Errors.citaHora ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                           }`}
                         />
                         {step3Errors.citaHora && (
@@ -942,7 +942,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                       <select
                         value={selectedCatalogIdCot}
                         onChange={(e) => handleSelectCatalogCot(e.target.value)}
-                        className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                        className="w-full px-3.5 py-2 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                       >
                         <option value="">Seleccionar del catálogo o escribir abajo...</option>
                         {activeServicios.map((s) => (
@@ -965,8 +965,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         value={cotDescripcion}
                         onChange={(e) => setCotDescripcion(e.target.value)}
                         placeholder="Detalle de trabajos y refacciones a presupuestar..."
-                        className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                          step3Errors.cotDescripcion ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                        className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                          step3Errors.cotDescripcion ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                         }`}
                       />
                       {step3Errors.cotDescripcion && (
@@ -985,8 +985,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                           step="0.01"
                           value={cotRefacciones}
                           onChange={(e) => setCotRefacciones(e.target.value)}
-                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                            step3Errors.cotRefacciones ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                            step3Errors.cotRefacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                           }`}
                         />
                         {step3Errors.cotRefacciones && (
@@ -1004,8 +1004,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                           step="0.01"
                           value={cotManoObra}
                           onChange={(e) => setCotManoObra(e.target.value)}
-                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                            step3Errors.cotManoObra ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                          className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                            step3Errors.cotManoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                           }`}
                         />
                         {step3Errors.cotManoObra && (
@@ -1014,9 +1014,9 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
-                      <span className="font-semibold text-slate-700">Total estimado:</span>
-                      <span className="text-xl font-bold text-[#0d5c58]">
+                    <div className="bg-[#F6F8FA] p-4 rounded-xl border border-[#DDE4E8] flex items-center justify-between">
+                      <span className="font-semibold text-[#231F20]">Total estimado:</span>
+                      <span className="text-xl font-bold text-[#1D7EAE]">
                         ${cotTotal.toFixed(2)}
                       </span>
                     </div>
@@ -1033,7 +1033,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                       <select
                         value={selectedCatalogIdOrden}
                         onChange={(e) => handleSelectCatalogOrden(e.target.value)}
-                        className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                        className="w-full px-3.5 py-2 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                       >
                         <option value="">Seleccionar del catálogo o escribir abajo...</option>
                         {activeServicios.map((s) => (
@@ -1056,8 +1056,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         value={ordenServicio}
                         onChange={(e) => setOrdenServicio(e.target.value)}
                         placeholder="Ej. Revisión de frenos y suspensión"
-                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                          step3Errors.ordenServicio ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                          step3Errors.ordenServicio ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                         }`}
                       />
                       {step3Errors.ordenServicio && (
@@ -1074,8 +1074,8 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         value={ordenKm}
                         onChange={(e) => setOrdenKm(e.target.value)}
                         placeholder="Ej. 65,400 km"
-                        className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
-                          step3Errors.ordenKm ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+                        className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
+                          step3Errors.ordenKm ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                         }`}
                       />
                       {step3Errors.ordenKm && (
@@ -1092,7 +1092,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                         value={ordenObservaciones}
                         onChange={(e) => setOrdenObservaciones(e.target.value)}
                         placeholder="Detalles estéticos o notas especiales..."
-                        className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                        className="w-full px-3.5 py-2 border border-[#DDE4E8] rounded-lg text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                       />
                     </div>
                   </div>
@@ -1213,7 +1213,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="inline-flex items-center gap-2 px-5 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium rounded-lg shadow-xs transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   <span>Continuar</span>
                   <ArrowRight className="w-4 h-4" />
@@ -1223,7 +1223,7 @@ export const NuevaAtencionSection: React.FC<NuevaAtencionSectionProps> = ({
                   type="button"
                   disabled={isSaving}
                   onClick={handleConfirmAtencion}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0d5c58] hover:bg-[#0a4845] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>{isSaving ? 'Guardando...' : 'Confirmar atención'}</span>

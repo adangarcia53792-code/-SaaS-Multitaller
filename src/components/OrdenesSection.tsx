@@ -34,7 +34,9 @@ import {
   Package,
   RotateCcw,
   Wrench,
+  ClipboardList,
 } from 'lucide-react';
+import { IotLogo } from './IotLogo';
 
 interface OrdenesSectionProps {
   ordenes: OrdenTrabajo[];
@@ -864,15 +866,15 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado Merkatics para Órdenes */}
-      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-amber-500 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      {/* Encabezado IOT Technologies para Órdenes */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
-            <Wrench className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+            <ClipboardList className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+              <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
                 {isMecanico ? 'Órdenes asignadas' : 'Órdenes de trabajo'}
               </h2>
               {isMecanico && (
@@ -886,7 +888,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 </span>
               )}
             </div>
-            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               {isMecanico
                 ? `Órdenes asignadas a ${currentUser?.nombre}. Registra diagnóstico, observaciones, refacciones y finaliza trabajos.`
                 : 'Control de recepción, diagnóstico, progreso y entrega de vehículos.'}
@@ -898,7 +900,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E9504F]"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]"
             >
               <Plus className="w-4 h-4" />
               <span>Nueva orden</span>
@@ -916,18 +918,18 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por folio, cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
           />
         </div>
 
-        <div className="flex flex-wrap gap-1 rounded-lg border border-[#E4E7EC] bg-white p-1 text-xs sm:text-sm font-medium">
+        <div className="flex flex-wrap gap-1 rounded-lg border border-[#DDE4E8] bg-white p-1 text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilter('todas')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'todas'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Todas
@@ -937,8 +939,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             onClick={() => setFilter('Por autorizar')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'Por autorizar'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Por autorizar
@@ -948,8 +950,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             onClick={() => setFilter('Pendiente')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'Pendiente'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Pendiente
@@ -959,8 +961,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             onClick={() => setFilter('En proceso')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'En proceso'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             En proceso
@@ -970,8 +972,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             onClick={() => setFilter('Terminado')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'Terminado'
-                ? 'bg-[#E9504F] text-white shadow-xs font-semibold'
-                : 'text-[#5F6368] hover:text-[#202124]'
+                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                : 'text-[#5F6B73] hover:text-[#231F20]'
             }`}
           >
             Terminado
@@ -1097,7 +1099,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(ord)}
-                              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#E9504F] hover:bg-[#C93F43] rounded-lg shadow-xs transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1D7EAE] hover:bg-[#0032A0] rounded-lg shadow-xs transition-colors cursor-pointer"
                             >
                               <Wrench className="w-3.5 h-3.5" />
                               <span>Registrar trabajo</span>
@@ -1106,7 +1108,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                             <button
                               type="button"
                               onClick={() => handleOpenContinuar(ord)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#E9504F] hover:bg-[#C93F43] rounded-lg shadow-xs transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1D7EAE] hover:bg-[#0032A0] rounded-lg shadow-xs transition-colors cursor-pointer"
                             >
                               <span>Continuar</span>
                               <ArrowRight className="w-3.5 h-3.5" />
@@ -1161,9 +1163,9 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                         onRegistrarGarantia(ord);
                                         setOpenMenuId(null);
                                       }}
-                                      className="w-full px-3 py-2 text-[#E9504F] hover:bg-rose-50 flex items-center gap-2 font-medium"
+                                      className="w-full px-3 py-2 text-[#1D7EAE] hover:bg-rose-50 flex items-center gap-2 font-medium"
                                     >
-                                      <ShieldCheck className="w-4 h-4 text-[#E9504F]" />
+                                      <ShieldCheck className="w-4 h-4 text-[#1D7EAE]" />
                                       <span>Registrar garantía</span>
                                     </button>
                                   )}
@@ -1234,8 +1236,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           </span>
                         )}
                       </div>
-                      <p className="font-medium text-[#202124] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
-                      <p className="text-xs text-[#5F6368] mt-0.5">
+                      <p className="font-medium text-[#231F20] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
+                      <p className="text-xs text-[#5F6B73] mt-0.5">
                         {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
                       </p>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">{ord.servicio}</p>
@@ -1258,7 +1260,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenContinuar(ord)}
-                          className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#E9504F] hover:bg-[#C93F43] rounded-lg transition-colors cursor-pointer shadow-xs"
+                          className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1D7EAE] hover:bg-[#0032A0] rounded-lg transition-colors cursor-pointer shadow-xs"
                         >
                           <Wrench className="w-3.5 h-3.5" />
                           <span>Registrar</span>
@@ -1267,7 +1269,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenContinuar(ord)}
-                          className="inline-flex items-center gap-1 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#E9504F] hover:bg-[#C93F43] rounded-lg transition-colors cursor-pointer shadow-xs"
+                          className="inline-flex items-center gap-1 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1D7EAE] hover:bg-[#0032A0] rounded-lg transition-colors cursor-pointer shadow-xs"
                         >
                           <ArrowRight className="w-3.5 h-3.5" />
                           <span>Continuar</span>
@@ -1322,9 +1324,9 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                     onRegistrarGarantia(ord);
                                     setOpenMenuId(null);
                                   }}
-                                  className="w-full px-3 py-2.5 text-[#E9504F] hover:bg-rose-50 flex items-center gap-2 font-medium"
+                                  className="w-full px-3 py-2.5 text-[#1D7EAE] hover:bg-rose-50 flex items-center gap-2 font-medium"
                                 >
-                                  <ShieldCheck className="w-4 h-4 text-[#E9504F]" />
+                                  <ShieldCheck className="w-4 h-4 text-[#1D7EAE]" />
                                   <span>Registrar garantía</span>
                                 </button>
                               )}
@@ -1356,17 +1358,17 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto no-print">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-150 my-6 flex flex-col">
             {/* Header: Folio, Cliente, Vehículo */}
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+            <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-teal-300 font-bold text-sm">
+                  <span className="font-mono text-[#1D7EAE] font-bold text-sm bg-[#98DAE9]/20 border border-[#98DAE9]/40 px-2 py-0.5 rounded">
                     {continuarOrden.folio}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                  <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-[#5F6B73] border border-[#DDE4E8]">
                     Estado: {continuarOrden.estado}
                   </span>
                 </div>
-                <h3 className="text-base font-bold text-white mt-1">
+                <h3 className="text-base font-bold text-[#231F20] mt-1">
                   {clienteMap.get(continuarOrden.clienteId)?.nombre} — {vehiculoMap.get(continuarOrden.vehiculoId)?.marca}{' '}
                   {vehiculoMap.get(continuarOrden.vehiculoId)?.modelo} ({vehiculoMap.get(continuarOrden.vehiculoId)?.placas})
                 </h3>
@@ -1374,7 +1376,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setContinuarOrden(null)}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1550,7 +1552,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                           step="1"
                                           value={returningCantidad}
                                           onChange={(e) => setReturningCantidad(e.target.value)}
-                                          className="w-20 p-1.5 border border-[#E4E7EC] rounded text-[#202124] text-xs focus:outline-none focus:border-[#E9504F] focus:ring-1 focus:ring-[#E9504F]"
+                                          className="w-20 p-1.5 border border-[#DDE4E8] rounded text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                                         />
                                         <span className="text-slate-500 text-xs">pzs</span>
                                       </div>
@@ -1604,7 +1606,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                               setSelectedRefaccionId(e.target.value);
                               setRefaccionError('');
                             }}
-                            className="w-full p-2 border border-[#E4E7EC] rounded text-[#202124] bg-white text-xs focus:outline-none focus:border-[#E9504F] focus:ring-1 focus:ring-[#E9504F]"
+                            className="w-full p-2 border border-[#DDE4E8] rounded text-[#231F20] bg-white text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                           >
                             <option value="">Seleccionar refacción del catálogo...</option>
                             {refacciones.map((r) => (
@@ -1629,13 +1631,13 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                 setSelectedRefaccionCantidad(e.target.value);
                                 setRefaccionError('');
                               }}
-                              className="w-20 p-2 border border-[#E4E7EC] rounded text-[#202124] text-xs focus:outline-none focus:border-[#E9504F] focus:ring-1 focus:ring-[#E9504F]"
+                              className="w-20 p-2 border border-[#DDE4E8] rounded text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                             />
                             <button
                               type="button"
                               disabled={!selectedRefaccionId || isActionProcessing}
                               onClick={() => handleConfirmUseRefaccion(continuarOrden)}
-                              className="flex-1 py-2 px-3 bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white rounded text-xs font-semibold transition-colors shadow-xs cursor-pointer"
+                              className="flex-1 py-2 px-3 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white rounded text-xs font-semibold transition-colors shadow-xs cursor-pointer"
                             >
                               Confirmar uso
                             </button>
@@ -1679,20 +1681,20 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-5 space-y-4">
                   <div className="flex items-center gap-2 text-amber-700">
                     <FileText className="w-5 h-5 shrink-0" />
-                    <h4 className="font-bold text-[#202124] text-sm">
+                    <h4 className="font-bold text-[#231F20] text-sm">
                       Paso siguiente: Preparar o vincular cotización
                     </h4>
                   </div>
-                  <p className="text-xs text-[#5F6368]">
+                  <p className="text-xs text-[#5F6B73]">
                     Esta orden aún no tiene un presupuesto vinculado. Puedes redactar una nueva cotización o asociar una existente del vehículo.
                   </p>
 
-                  <div className="flex rounded-md border border-[#E4E7EC] bg-white p-1 text-xs">
+                  <div className="flex rounded-md border border-[#DDE4E8] bg-white p-1 text-xs">
                     <button
                       type="button"
                       onClick={() => setStep1SubTab('crear')}
                       className={`flex-1 py-1.5 rounded transition-colors font-medium cursor-pointer ${
-                        step1SubTab === 'crear' ? 'bg-[#E9504F] text-white shadow-xs' : 'text-[#5F6368]'
+                        step1SubTab === 'crear' ? 'bg-[#1D7EAE] text-white shadow-xs' : 'text-[#5F6B73]'
                       }`}
                     >
                       Preparar nueva cotización
@@ -1701,7 +1703,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       type="button"
                       onClick={() => setStep1SubTab('vincular')}
                       className={`flex-1 py-1.5 rounded transition-colors font-medium cursor-pointer ${
-                        step1SubTab === 'vincular' ? 'bg-[#E9504F] text-white shadow-xs' : 'text-[#5F6368]'
+                        step1SubTab === 'vincular' ? 'bg-[#1D7EAE] text-white shadow-xs' : 'text-[#5F6B73]'
                       }`}
                     >
                       Vincular cotización existente
@@ -1713,7 +1715,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                   )}
 
                   {step1SubTab === 'crear' ? (
-                    <div className="space-y-3 bg-white p-3.5 rounded-lg border border-[#E4E7EC] text-xs">
+                    <div className="space-y-3 bg-white p-3.5 rounded-lg border border-[#DDE4E8] text-xs">
                       <div>
                         <label className="block font-medium text-slate-700 mb-1">
                           Servicio del catálogo <span className="text-[11px] text-slate-400 font-normal">(Opcional)</span>
@@ -1721,7 +1723,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         <select
                           value={step1SelectedCatalogId}
                           onChange={(e) => handleSelectCatalogInStep1(e.target.value)}
-                          className="w-full p-2 border border-[#E4E7EC] rounded text-[#202124] bg-white"
+                          className="w-full p-2 border border-[#DDE4E8] rounded text-[#231F20] bg-white"
                         >
                           <option value="">Seleccionar del catálogo o escribir abajo...</option>
                           {activeCatalogServices.map((s) => (
@@ -1740,7 +1742,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           rows={2}
                           value={newCotDesc}
                           onChange={(e) => setNewCotDesc(e.target.value)}
-                          className="w-full p-2 border border-[#E4E7EC] rounded text-[#202124] focus:outline-none focus:border-[#E9504F] focus:ring-1 focus:ring-[#E9504F]"
+                          className="w-full p-2 border border-[#DDE4E8] rounded text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -1772,9 +1774,9 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center pt-2 border-t border-[#E4E7EC]">
+                      <div className="flex justify-between items-center pt-2 border-t border-[#DDE4E8]">
                         <span className="font-semibold text-slate-700">Total calculado:</span>
-                        <span className="font-bold text-sm text-[#E9504F]">
+                        <span className="font-bold text-sm text-[#1D7EAE]">
                           ${((parseFloat(newCotRef) || 0) + (parseFloat(newCotMo) || 0)).toFixed(2)} MXN
                         </span>
                       </div>
@@ -1783,13 +1785,13 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         type="button"
                         disabled={isActionProcessing}
                         onClick={handleStep1CreateNewQuote}
-                        className="w-full py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                        className="w-full py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                       >
                         Crear cotización y vincular a la orden
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-3 bg-white p-3.5 rounded-lg border border-[#E4E7EC] text-xs">
+                    <div className="space-y-3 bg-white p-3.5 rounded-lg border border-[#DDE4E8] text-xs">
                       {availableUnlinkedCotizaciones.length > 0 ? (
                         <>
                           <label className="block font-medium text-slate-700">
@@ -1798,7 +1800,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           <select
                             value={selectedExistingCotId}
                             onChange={(e) => setSelectedExistingCotId(e.target.value)}
-                            className="w-full p-2.5 border border-[#E4E7EC] rounded-lg text-slate-800 bg-white"
+                            className="w-full p-2.5 border border-[#DDE4E8] rounded-lg text-slate-800 bg-white"
                           >
                             {availableUnlinkedCotizaciones.map((c) => (
                               <option key={c.id} value={c.id}>
@@ -1810,7 +1812,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                             type="button"
                             disabled={!selectedExistingCotId || isActionProcessing}
                             onClick={handleStep1LinkExistingQuote}
-                            className="w-full py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                            className="w-full py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                           >
                             Vincular a esta cotización
                           </button>
@@ -1852,7 +1854,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     </div>
                     <div className="flex justify-between font-bold text-sm text-slate-900 border-t pt-1.5">
                       <span>Total presupuestado:</span>
-                      <span className="text-[#E9504F]">${activeLinkedCotizacion.total.toFixed(2)} MXN</span>
+                      <span className="text-[#1D7EAE]">${activeLinkedCotizacion.total.toFixed(2)} MXN</span>
                     </div>
                   </div>
 
@@ -1949,7 +1951,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t font-semibold">
                         <span>Total corregido:</span>
-                        <span className="text-[#E9504F]">
+                        <span className="text-[#1D7EAE]">
                           ${((parseFloat(rejRef) || 0) + (parseFloat(rejMo) || 0)).toFixed(2)} MXN
                         </span>
                       </div>
@@ -1957,14 +1959,14 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => setEditingRejectedCot(null)}
-                          className="px-3 py-1.5 border border-[#E4E7EC] rounded-lg text-slate-600 hover:bg-slate-50 min-h-[36px]"
+                          className="px-3 py-1.5 border border-[#DDE4E8] rounded-lg text-slate-600 hover:bg-slate-50 min-h-[36px]"
                         >
                           Cancelar
                         </button>
                         <button
                           type="button"
                           onClick={handleStep3SaveCorrectedQuote}
-                          className="px-4 py-1.5 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg font-medium min-h-[36px] cursor-pointer"
+                          className="px-4 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg font-medium min-h-[36px] cursor-pointer"
                         >
                           Guardar y solicitar autorización
                         </button>
@@ -2004,7 +2006,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     type="button"
                     disabled={isActionProcessing}
                     onClick={handleStep4IniciarTrabajo}
-                    className="w-full py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-white" />
                     <span>Iniciar el trabajo (cambiar a “En proceso”)</span>
@@ -2031,7 +2033,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         type="checkbox"
                         checked={step5TrabajoTerminado}
                         onChange={(e) => setStep5TrabajoTerminado(e.target.checked)}
-                        className="w-4 h-4 text-[#E9504F] rounded border-slate-300"
+                        className="w-4 h-4 text-[#1D7EAE] rounded border-slate-300"
                       />
                       <span className="font-medium">Trabajo terminado verificado</span>
                     </label>
@@ -2041,7 +2043,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         type="checkbox"
                         checked={step5RevisionFinal}
                         onChange={(e) => setStep5RevisionFinal(e.target.checked)}
-                        className="w-4 h-4 text-[#E9504F] rounded border-slate-300"
+                        className="w-4 h-4 text-[#1D7EAE] rounded border-slate-300"
                       />
                       <span className="font-medium">Revisión final realizada</span>
                     </label>
@@ -2054,7 +2056,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       type="button"
                       disabled={isActionProcessing}
                       onClick={handleStep5MarcarTerminadoYRevision}
-                      className="w-full py-2.5 min-h-[42px] bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                      className="w-full py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 mt-2 cursor-pointer"
                     >
                       <Check className="w-4 h-4" />
                       <span>Marcar como terminado y registrar revisión final</span>
@@ -2135,7 +2137,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                   setContinuarOrden(null);
                   handleOpenEdit(ord);
                 }}
-                className="text-xs text-[#E9504F] hover:underline font-medium flex items-center gap-1.5 cursor-pointer"
+                className="text-xs text-[#1D7EAE] hover:underline font-medium flex items-center gap-1.5 cursor-pointer"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 <span>Abrir formulario completo</span>
@@ -2199,7 +2201,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     autoFocus
                     value={formClientId}
                     onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <option value="" disabled>Seleccione un cliente</option>
                     {clientes.map((c) => (
@@ -2230,7 +2232,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       setFormVehiculoId(e.target.value);
                       if (formErrors.vehiculoId) setFormErrors((prev) => ({ ...prev, vehiculoId: '' }));
                     }}
-                    className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                   >
                     <option value="" disabled>Seleccione un vehículo</option>
                     {availableVehicles.map((v) => (
@@ -2257,7 +2259,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 <select
                   value={selectedCatalogId}
                   onChange={(e) => handleSelectCatalogInModal(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                  className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                 >
                   <option value="">Seleccionar del catálogo o escribir abajo...</option>
                   {activeCatalogServices.map((s) => (
@@ -2284,8 +2286,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     if (formErrors.servicio) setFormErrors((prev) => ({ ...prev, servicio: '' }));
                   }}
                   placeholder="Ej. Revisión general, cambio de balatas delanteras y cambio de aceite"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
-                    formErrors.servicio ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                    formErrors.servicio ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                   }`}
                 />
                 {formErrors.servicio && (
@@ -2304,8 +2306,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     setFormEstado(e.target.value as EstadoOrden);
                     if (formErrors.estado) setFormErrors((prev) => ({ ...prev, estado: '' }));
                   }}
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
-                    formErrors.estado ? 'border-red-400 bg-red-50/20' : 'border-[#E4E7EC]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                    formErrors.estado ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
                   }`}
                 >
                   <option value="Por autorizar">Por autorizar</option>
@@ -2335,7 +2337,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     const found = availableMecanicos.find((m) => m.id === selId);
                     setFormMecanicoNombre(found ? found.nombre : '');
                   }}
-                  className={`w-full px-3.5 py-2.5 border border-[#E4E7EC] rounded-lg text-sm text-[#202124] bg-white focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 ${
+                  className={`w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
                     isMecanico ? 'bg-slate-100 cursor-not-allowed text-slate-500' : ''
                   }`}
                 >
@@ -2477,7 +2479,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         disabled={isRecepcion}
                         checked={formTrabajoTerminado}
                         onChange={(e) => setFormTrabajoTerminado(e.target.checked)}
-                        className="w-4 h-4 text-[#E9504F] rounded"
+                        className="w-4 h-4 text-[#1D7EAE] rounded"
                       />
                       <span>Trabajo terminado {isRecepcion && '(Solo mecánico)'}</span>
                     </label>
@@ -2486,7 +2488,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         type="checkbox"
                         checked={formRevisionFinal}
                         onChange={(e) => setFormRevisionFinal(e.target.checked)}
-                        className="w-4 h-4 text-[#E9504F] rounded"
+                        className="w-4 h-4 text-[#1D7EAE] rounded"
                       />
                       <span>Revisión final realizada</span>
                     </label>
@@ -2672,7 +2674,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                               type="button"
                               disabled={!selectedRefaccionId || isActionProcessing}
                               onClick={() => handleConfirmUseRefaccion(editingOrden)}
-                              className="px-3 py-2 bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white rounded text-xs font-semibold shadow-xs cursor-pointer"
+                              className="px-3 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white rounded text-xs font-semibold shadow-xs cursor-pointer"
                             >
                               Confirmar uso
                             </button>
@@ -2701,14 +2703,14 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     }
                     setIsFormModalOpen(false);
                   }}
-                  className="px-4 py-2.5 border border-[#E4E7EC] rounded-lg text-sm font-medium text-[#5F6368] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={clientes.length === 0 || availableVehicles.length === 0}
-                  className="px-5 py-2.5 bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -2724,13 +2726,13 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       {printingOrden && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area">
-            <div className="no-print bg-slate-800 text-white px-6 py-3.5 flex items-center justify-between">
+            <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-6 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Vista previa de orden de trabajo</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-medium transition-colors cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Imprimir</span>
@@ -2738,7 +2740,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setPrintingOrden(null)}
-                  className="p-1.5 text-slate-300 hover:text-white rounded transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2748,7 +2750,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             <div className="p-8 sm:p-10 bg-white text-slate-800 space-y-6">
               <div className="flex justify-between items-start border-b border-slate-200 pb-5">
                 <div>
-                  <h1 className="text-2xl font-bold text-[#202124] tracking-tight">
+                  <div className="mb-2.5">
+                    <IotLogo size="sm" variant="dark" />
+                  </div>
+                  <h1 className="text-xl font-bold text-[#231F20] tracking-tight">
                     {configuracion?.nombre || 'Taller mecánico'}
                   </h1>
                   {configuracion?.telefono && (
@@ -2757,7 +2762,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                   {configuracion?.direccion && (
                     <p className="text-xs text-slate-500">{configuracion.direccion}</p>
                   )}
-                  <p className="text-xs uppercase tracking-widest text-[#E9504F] font-bold mt-1">
+                  <p className="text-xs uppercase tracking-widest text-[#1D7EAE] font-bold mt-1">
                     Documento de demostración
                   </p>
                 </div>
@@ -2928,7 +2933,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div className="flex items-center gap-1.5 text-slate-700">
                     <span className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${
-                      printingOrden.trabajoTerminado ? 'bg-[#E9504F] text-white border-[#E9504F]' : 'bg-white border-slate-300'
+                      printingOrden.trabajoTerminado ? 'bg-[#1D7EAE] text-white border-[#1D7EAE]' : 'bg-white border-slate-300'
                     }`}>
                       {printingOrden.trabajoTerminado ? '✓' : ''}
                     </span>
@@ -2937,7 +2942,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
 
                   <div className="flex items-center gap-1.5 text-slate-700">
                     <span className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${
-                      printingOrden.revisionFinal ? 'bg-[#E9504F] text-white border-[#E9504F]' : 'bg-white border-slate-300'
+                      printingOrden.revisionFinal ? 'bg-[#1D7EAE] text-white border-[#1D7EAE]' : 'bg-white border-slate-300'
                     }`}>
                       {printingOrden.revisionFinal ? '✓' : ''}
                     </span>
@@ -2987,7 +2992,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="px-4 py-2 bg-[#E9504F] hover:bg-[#C93F43] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors min-h-[38px] cursor-pointer"
+                className="px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors min-h-[38px] cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Imprimir orden</span>

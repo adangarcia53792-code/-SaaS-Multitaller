@@ -241,12 +241,12 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
     }
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-[#0d5c58] border border-teal-200">
-          <Wrench className="w-3 h-3 text-[#0d5c58]" />
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <Wrench className="w-3 h-3 text-amber-600" />
           <span>Orden</span>
         </span>
         {folio && (
-          <span className="font-mono text-xs font-bold text-[#0d5c58] bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100">
+          <span className="font-mono text-xs font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
             {folio}
           </span>
         )}
@@ -318,16 +318,16 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 overflow-y-auto no-print animate-in fade-in duration-100">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[92vh] my-4">
         {/* Header Modal */}
-        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-slate-800 rounded-lg text-teal-300">
+            <div className="p-2 bg-[#98DAE9]/20 border border-[#98DAE9]/40 rounded-lg text-[#1D7EAE]">
               <History className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight">
+              <h3 className="text-base font-bold text-[#231F20] tracking-tight">
                 {tipo === 'cliente' ? 'Historial del cliente' : 'Historial del vehículo'}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#5F6B73]">
                 Consulta cronológica de citas, cotizaciones y órdenes de trabajo.
               </p>
             </div>
@@ -335,7 +335,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -380,7 +380,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                         key={v.id}
                         className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-800"
                       >
-                        <Car className="w-3 h-3 text-[#0d5c58]" />
+                        <Car className="w-3 h-3 text-[#1D7EAE]" />
                         <span>
                           {v.marca} {v.modelo}
                         </span>
@@ -427,7 +427,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                       </span>
                       {owner ? (
                         <div className="flex items-center gap-2">
-                          <User className="w-3.5 h-3.5 text-[#0d5c58]" />
+                          <User className="w-3.5 h-3.5 text-[#1D7EAE]" />
                           <strong className="text-slate-900">{owner.nombre}</strong>
                           <span className="text-slate-500">({owner.telefono})</span>
                         </div>
@@ -444,13 +444,13 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
 
         {/* Filter Bar: Un solo filtro (Todos, Citas, Cotizaciones, Órdenes) */}
         <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 bg-white flex-wrap">
-          <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs font-medium">
+          <div className="flex rounded-lg border border-[#DDE4E8] bg-slate-50 p-1 text-xs font-medium">
             <button
               type="button"
               onClick={() => setFilter('Todos')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                 filter === 'Todos'
-                  ? 'bg-[#0d5c58] text-white font-semibold shadow-2xs'
+                  ? 'bg-[#1D7EAE] text-white font-semibold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -459,9 +459,9 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
             <button
               type="button"
               onClick={() => setFilter('Citas')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                 filter === 'Citas'
-                  ? 'bg-[#0d5c58] text-white font-semibold shadow-2xs'
+                  ? 'bg-[#1D7EAE] text-white font-semibold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -470,9 +470,9 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
             <button
               type="button"
               onClick={() => setFilter('Cotizaciones')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                 filter === 'Cotizaciones'
-                  ? 'bg-[#0d5c58] text-white font-semibold shadow-2xs'
+                  ? 'bg-[#1D7EAE] text-white font-semibold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -481,9 +481,9 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
             <button
               type="button"
               onClick={() => setFilter('Órdenes')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
                 filter === 'Órdenes'
-                  ? 'bg-[#0d5c58] text-white font-semibold shadow-2xs'
+                  ? 'bg-[#1D7EAE] text-white font-semibold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -564,7 +564,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setViewingDetailItem(item)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-[#1D7EAE] bg-rose-50 hover:bg-rose-100 rounded-md transition-colors border border-rose-200 cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>Ver detalle</span>
@@ -612,7 +612,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setViewingDetailItem(item)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#1D7EAE] bg-rose-50 hover:bg-rose-100 rounded-md transition-colors border border-rose-200 cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Ver detalle</span>
@@ -658,13 +658,13 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in duration-100">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[88vh]">
             {/* Modal Detail Header */}
-            <div className="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+            <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm">
+                <span className="font-bold text-sm text-[#231F20]">
                   Detalle de {viewingDetailItem.tipo.toLowerCase()}
                 </span>
                 {viewingDetailItem.folio && (
-                  <span className="font-mono text-teal-300 font-bold text-xs bg-slate-800 px-2 py-0.5 rounded">
+                  <span className="font-mono text-[#1D7EAE] font-bold text-xs bg-[#98DAE9]/20 border border-[#98DAE9]/40 px-2 py-0.5 rounded">
                     {viewingDetailItem.folio}
                   </span>
                 )}
@@ -672,7 +672,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
               <button
                 type="button"
                 onClick={() => setViewingDetailItem(null)}
-                className="text-slate-400 hover:text-white"
+                className="p-1.5 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -750,7 +750,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                         <span className="text-[10px] uppercase font-semibold text-slate-400 block">
                           Folio de cotización
                         </span>
-                        <span className="font-mono font-bold text-sm text-[#0d5c58]">
+                        <span className="font-mono font-bold text-sm text-[#1D7EAE]">
                           {cot.folio}
                         </span>
                       </div>
@@ -805,7 +805,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                         <span>Mano de obra:</span>
                         <span>${cot.importeManoObra.toFixed(2)} MXN</span>
                       </div>
-                      <div className="flex justify-between font-bold text-sm text-[#0d5c58] border-t border-slate-200 pt-1.5">
+                      <div className="flex justify-between font-bold text-sm text-[#1D7EAE] border-t border-slate-200 pt-1.5">
                         <span>Total:</span>
                         <span>${cot.total.toFixed(2)} MXN</span>
                       </div>
@@ -839,7 +839,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                         <span className="text-[10px] uppercase font-semibold text-slate-400 block">
                           Folio de orden
                         </span>
-                        <span className="font-mono font-bold text-sm text-[#0d5c58]">
+                        <span className="font-mono font-bold text-sm text-[#1D7EAE]">
                           {ord.folio}
                         </span>
                       </div>
@@ -902,15 +902,15 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
                       </span>
                       <div className="flex items-center gap-4 text-slate-700 flex-wrap">
                         <span className="flex items-center gap-1">
-                          <CheckCircle2 className={`w-3.5 h-3.5 ${ord.trabajoTerminado ? 'text-[#0d5c58]' : 'text-slate-300'}`} />
+                          <CheckCircle2 className={`w-3.5 h-3.5 ${ord.trabajoTerminado ? 'text-emerald-600' : 'text-slate-300'}`} />
                           <span>Trabajo terminado</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          <CheckCircle2 className={`w-3.5 h-3.5 ${ord.revisionFinal ? 'text-[#0d5c58]' : 'text-slate-300'}`} />
+                          <CheckCircle2 className={`w-3.5 h-3.5 ${ord.revisionFinal ? 'text-emerald-600' : 'text-slate-300'}`} />
                           <span>Revisión final</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          <CheckCircle2 className={`w-3.5 h-3.5 ${ord.entregado ? 'text-[#0d5c58]' : 'text-slate-300'}`} />
+                          <CheckCircle2 className={`w-3.5 h-3.5 ${ord.entregado ? 'text-emerald-600' : 'text-slate-300'}`} />
                           <span>Entregado</span>
                         </span>
                       </div>
@@ -929,7 +929,7 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
               <button
                 type="button"
                 onClick={() => setViewingDetailItem(null)}
-                className="px-4 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors"
+                className="px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors"
               >
                 Volver al historial
               </button>

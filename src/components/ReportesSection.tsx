@@ -15,6 +15,7 @@ import {
   Clock,
   Car,
   AlertTriangle,
+  BarChart3,
 } from 'lucide-react';
 import {
   OrdenTrabajo,
@@ -25,6 +26,7 @@ import {
   ServicioCatalogo,
   ConfiguracionTaller,
 } from '../types';
+import { IotLogo } from './IotLogo';
 
 interface ReportesSectionProps {
   ordenes: OrdenTrabajo[];
@@ -312,11 +314,14 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       <div className="hidden print:block mb-6 pb-4 border-b-2 border-slate-800 text-left">
         <div className="flex items-start justify-between">
           <div>
+            <div className="mb-2">
+              <IotLogo size="sm" variant="dark" />
+            </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               {configuracion.nombre || 'Taller mecánico'}
             </h1>
             <div className="mt-1 flex items-center gap-2">
-              <span className="inline-block px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-300 rounded">
+              <span className="inline-block px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 text-[#1D7EAE] border border-slate-300 rounded">
                 Reporte de demostración
               </span>
             </div>
@@ -337,21 +342,26 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       </div>
 
       {/* HEADER EN PANTALLA */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Reportes
-          </h2>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Información operativa consolidada a partir de los registros del taller.
-          </p>
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE] shrink-0">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+              Reportes
+            </h2>
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+              Información operativa consolidada a partir de los registros del taller.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir reporte</span>
@@ -360,17 +370,17 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       </div>
 
       {/* FILTROS DE FECHA (no-print) */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs no-print">
+      <div className="bg-white rounded-xl border border-[#DDE4E8] p-5 shadow-xs no-print">
         <form onSubmit={handleApplyFilter} className="space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              <Calendar className="w-3.5 h-3.5 text-[#0d5c58]" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#231F20] uppercase tracking-wider">
+              <Calendar className="w-3.5 h-3.5 text-[#0032A0]" />
               <span>Filtro por periodo</span>
             </div>
             <div className="text-xs text-slate-500">
               {appliedRange ? (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-50 text-[#0d5c58] font-medium border border-teal-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0d5c58]" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-[#0032A0] font-semibold border border-rose-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1D7EAE]" />
                   Filtro activo
                 </span>
               ) : (
@@ -391,7 +401,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                   setFechaInicioInput(e.target.value);
                   if (dateError) setDateError(null);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white transition-all"
+                className="w-full px-3 py-2 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
               />
             </div>
 
@@ -406,14 +416,14 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                   setFechaFinInput(e.target.value);
                   if (dateError) setDateError(null);
                 }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white transition-all"
+                className="w-full px-3 py-2 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
               />
             </div>
 
             <div className="flex items-center gap-2 sm:col-span-2 md:col-span-2">
               <button
                 type="submit"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
               >
                 <Filter className="w-4 h-4" />
                 <span>Aplicar</span>
@@ -422,7 +432,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
               <button
                 type="button"
                 onClick={handleClearFilter}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] bg-white hover:bg-slate-50 text-[#231F20] border border-[#DDE4E8] text-sm font-medium rounded-lg transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Limpiar</span>
@@ -455,7 +465,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
           <button
             type="button"
             onClick={handleExpandAll}
-            className="text-[#0d5c58] hover:underline font-medium cursor-pointer"
+            className="text-[#1D7EAE] hover:underline font-medium cursor-pointer"
           >
             Expandir todos
           </button>
@@ -482,7 +492,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
             className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/70 transition-colors select-none print:hover:bg-white"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-teal-50 text-[#0d5c58] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                 <Wrench className="w-5 h-5" />
               </div>
               <div>
@@ -541,12 +551,12 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                 <span className="text-[11px] text-blue-700">Trabajo en curso</span>
               </div>
 
-              <div className="bg-teal-50/60 rounded-lg p-3.5 border border-teal-200/80">
-                <span className="text-xs font-medium text-[#0d5c58]">Terminadas</span>
-                <p className="text-2xl sm:text-3xl font-bold text-[#0d5c58] mt-1 font-mono">
+              <div className="bg-emerald-50/60 rounded-lg p-3.5 border border-emerald-200/80">
+                <span className="text-xs font-medium text-emerald-800">Terminadas</span>
+                <p className="text-2xl sm:text-3xl font-bold text-emerald-900 mt-1 font-mono">
                   {ordenesMetrics.terminadas}
                 </p>
-                <span className="text-[11px] text-teal-700">Listas para entrega</span>
+                <span className="text-[11px] text-emerald-700">Listas para entrega</span>
               </div>
 
               <div className="bg-emerald-50/60 rounded-lg p-3.5 border border-emerald-200/80 col-span-2 sm:col-span-1">
@@ -580,7 +590,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                       </td>
                       <td className="py-2 px-3 text-right font-mono text-slate-500">
                         {ordenesMetrics.total > 0
-                          ? `${Math.round((ordenesMetrics.porAutorizar / ordenesMetrics.total) * 100)}%`
+                           ? `${Math.round((ordenesMetrics.porAutorizar / ordenesMetrics.total) * 100)}%`
                           : '0%'}
                       </td>
                     </tr>
@@ -600,7 +610,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                     </tr>
                     <tr>
                       <td className="py-2 px-3 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#0d5c58]" />
+                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
                         <span>Terminadas (pendientes de entrega)</span>
                       </td>
                       <td className="py-2 px-3 text-right font-mono font-medium">
@@ -777,7 +787,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
             className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/70 transition-colors select-none print:hover:bg-white"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-teal-50 text-[#0d5c58] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
                 <Layers className="w-5 h-5" />
               </div>
               <div>
@@ -826,13 +836,13 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                               <span className="text-slate-400 font-mono mr-1.5">#{idx + 1}</span>
                               {s.nombre}
                             </span>
-                            <span className="font-mono font-bold text-[#0d5c58] shrink-0 ml-2">
+                            <span className="font-mono font-bold text-purple-700 shrink-0 ml-2">
                               {s.total} {s.total === 1 ? 'registro' : 'registros'}
                             </span>
                           </div>
                           <div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden">
                             <div
-                              className="bg-[#0d5c58] h-full rounded-full transition-all duration-300"
+                              className="bg-purple-600 h-full rounded-full transition-all duration-300"
                               style={{ width: `${Math.max(8, pct)}%` }}
                             />
                           </div>
@@ -860,7 +870,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                             {idx + 1}
                           </td>
                           <td className="py-2 px-3 font-medium text-slate-900">{s.nombre}</td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-[#0d5c58]">
+                          <td className="py-2 px-3 text-right font-mono font-bold text-[#231F20]">
                             {s.total}
                           </td>
                           <td className="py-2 px-3 text-right font-mono text-[11px] text-slate-500">
@@ -890,7 +900,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
             className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/70 transition-colors select-none print:hover:bg-white"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-teal-50 text-[#0d5c58] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                 <Package className="w-5 h-5" />
               </div>
               <div>
@@ -953,13 +963,13 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                 <span className="text-[11px] opacity-80">Existencias menores al mínimo</span>
               </div>
 
-              <div className="bg-teal-50/60 rounded-lg p-3.5 border border-teal-200/80">
-                <span className="text-xs font-medium text-[#0d5c58]">Valor estimado de inventario</span>
-                <p className="text-2xl sm:text-3xl font-bold text-[#0d5c58] mt-1 font-mono">
+              <div className="bg-emerald-50/60 rounded-lg p-3.5 border border-emerald-200/80">
+                <span className="text-xs font-medium text-emerald-800">Valor estimado de inventario</span>
+                <p className="text-2xl sm:text-3xl font-bold text-emerald-900 mt-1 font-mono">
                   ${inventarioMetrics.valorEstimado.toFixed(2)}{' '}
                   <span className="text-xs font-normal">MXN</span>
                 </p>
-                <span className="text-[11px] text-teal-700">Existencias × costo unitario</span>
+                <span className="text-[11px] text-emerald-700">Existencias × costo unitario</span>
               </div>
             </div>
 
@@ -1042,9 +1052,9 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
 
       {/* PIE DE PÁGINA DE IMPRESIÓN (Visible ÚNICAMENTE al imprimir) */}
       <div className="hidden print:block pt-6 mt-6 border-t border-slate-300 text-center text-xs text-slate-500">
-        <p className="font-semibold text-slate-700">Reporte de demostración</p>
+        <p className="font-semibold text-slate-700">Reporte de demostración operativa</p>
         <p className="text-[11px] text-slate-400 mt-0.5">
-          Generado internamente por el sistema de demostración de {configuracion.nombre || 'Taller mecánico'}. Sin validez legal ni contable.
+          Generado por Sistema de Talleres Mecánicos - IOT Technologies para {configuracion.nombre || 'Taller mecánico'}. Sin validez legal ni contable.
         </p>
       </div>
     </section>

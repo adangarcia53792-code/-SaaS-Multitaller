@@ -11,6 +11,8 @@ import {
   X,
   FileJson,
   AlertCircle,
+  Settings,
+  Sliders,
 } from 'lucide-react';
 import {
   ConfiguracionTaller,
@@ -574,21 +576,28 @@ export function ConfiguracionSection({
   };
 
   return (
-    <section className="space-y-8">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-          Configuración
-        </h2>
-        <p className="text-sm md:text-base text-slate-500 mt-1">
-          Ajustes generales del taller y respaldo de la información.
-        </p>
+    <section className="space-y-6">
+      {/* Encabezado IOT Technologies para Configuración */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+            <Sliders className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+              Configuración
+            </h2>
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+              Ajustes generales del taller, usuarios y respaldo de la información.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Success Notification for Save */}
       {saveSuccess && (
-        <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl flex items-center gap-3 text-teal-800 text-sm animate-in fade-in">
-          <CheckCircle className="w-5 h-5 text-[#0d5c58] shrink-0" />
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-sm animate-in fade-in">
+          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
           <span>Los datos del taller se guardaron correctamente.</span>
         </div>
       )}
@@ -617,7 +626,7 @@ export function ConfiguracionSection({
           <button
             type="button"
             onClick={() => setValidationError(null)}
-            className="text-rose-500 hover:text-rose-700 p-1"
+            className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -625,12 +634,12 @@ export function ConfiguracionSection({
       )}
 
       {/* 1. DATOS DEL TALLER */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2.5">
-          <Building2 className="w-5 h-5 text-[#0d5c58]" />
+      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+        <div className="px-6 py-4 bg-[#F6F8FA] border-b border-[#DDE4E8] flex items-center gap-2.5">
+          <Building2 className="w-5 h-5 text-slate-700" />
           <div>
-            <h3 className="font-bold text-slate-900 text-base">Datos del taller</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="font-bold text-[#231F20] text-base">Datos del taller</h3>
+            <p className="text-xs text-[#5F6B73]">
               Información de identificación reflejada en el encabezado e impresiones.
             </p>
           </div>
@@ -649,8 +658,8 @@ export function ConfiguracionSection({
                 if (nombreError) setNombreError(null);
               }}
               placeholder="Ej. Taller mecánico"
-              className={`w-full px-3.5 py-2.5 bg-white border rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] transition-all ${
-                nombreError ? 'border-red-400 bg-red-50/20' : 'border-slate-200'
+              className={`w-full px-3.5 py-2.5 bg-white border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all ${
+                nombreError ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
               }`}
             />
             {nombreError && <p className="text-xs text-red-600 mt-1">{nombreError}</p>}
@@ -668,7 +677,7 @@ export function ConfiguracionSection({
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
                   placeholder="Ej. 555-123-4567"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
                 />
               </div>
             </div>
@@ -684,7 +693,7 @@ export function ConfiguracionSection({
                   value={direccion}
                   onChange={(e) => setDireccion(e.target.value)}
                   placeholder="Ej. Av. Central #123, Col. Industrial"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
                 />
               </div>
             </div>
@@ -693,7 +702,7 @@ export function ConfiguracionSection({
           <div className="pt-2 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>Guardar cambios</span>
@@ -716,19 +725,19 @@ export function ConfiguracionSection({
       )}
 
       {/* 3. RESPALDO DE LA DEMO */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2.5">
-          <FileJson className="w-5 h-5 text-[#0d5c58]" />
+      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+        <div className="px-6 py-4 bg-[#F6F8FA] border-b border-[#DDE4E8] flex items-center gap-2.5">
+          <FileJson className="w-5 h-5 text-slate-700" />
           <div>
-            <h3 className="font-bold text-slate-900 text-base">Respaldo de la demo</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="font-bold text-[#231F20] text-base">Respaldo de la demo</h3>
+            <p className="text-xs text-[#5F6B73]">
               Descarga o restaura toda la información del taller en este navegador.
             </p>
           </div>
         </div>
 
         <div className="p-6 space-y-6">
-          <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <p className="text-sm text-slate-600 leading-relaxed bg-[#F6F8FA] p-4 rounded-lg border border-[#DDE4E8]">
             Los datos se guardan en este navegador. Descarga un respaldo para conservar una copia o trasladarlos a otro equipo.
           </p>
 
@@ -736,7 +745,7 @@ export function ConfiguracionSection({
             <button
               type="button"
               onClick={handleDownloadBackup}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Descargar respaldo</span>
@@ -745,7 +754,7 @@ export function ConfiguracionSection({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium shadow-xs transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-white border border-[#DDE4E8] hover:bg-slate-50 text-[#231F20] text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Upload className="w-4 h-4 text-slate-500" />
               <span>Restaurar respaldo</span>
@@ -768,7 +777,7 @@ export function ConfiguracionSection({
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
-                <FileJson className="w-5 h-5 text-[#0d5c58]" />
+                <FileJson className="w-5 h-5 text-slate-700" />
                 <h3 className="text-base font-bold text-slate-900">
                   Resumen del archivo de respaldo
                 </h3>
@@ -894,7 +903,7 @@ export function ConfiguracionSection({
                 <button
                   type="button"
                   onClick={handleDownloadBackup}
-                  className="font-semibold text-[#0d5c58] hover:underline flex items-center gap-1 shrink-0 ml-2"
+                  className="font-semibold text-[#1D7EAE] hover:underline flex items-center gap-1 shrink-0 ml-2"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Descargar actual</span>

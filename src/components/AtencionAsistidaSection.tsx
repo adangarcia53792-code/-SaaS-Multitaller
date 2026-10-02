@@ -499,22 +499,22 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* HEADER: Title & Demo Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-[#0d5c58]">
-            <Sparkles className="w-5 h-5" />
+      {/* Encabezado IOT Technologies para Atención asistida */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE] shrink-0">
+            <Sparkles className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+              <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
                 Atención asistida
               </h2>
-              <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#98DAE9]/20 text-[#1D7EAE] border border-[#98DAE9]/40">
                 Demo
               </span>
             </div>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               Genera respuestas profesionales con datos existentes del taller y prográmalas como seguimientos.
             </p>
           </div>
@@ -523,8 +523,8 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
 
       {/* FEEDBACK BANNER */}
       {feedbackMensaje && (
-        <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-lg text-sm text-[#0d5c58] flex items-center gap-2.5 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0d5c58]" />
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800 flex items-center gap-2.5 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
           <span>{feedbackMensaje}</span>
         </div>
       )}
@@ -544,7 +544,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
             <select
               value={selectedClienteId}
               onChange={(e) => handleClienteChange(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
             >
               <option value="">-- Selecciona un cliente --</option>
               {clientes.map((c) => (
@@ -575,7 +575,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
               setMotivo(e.target.value as MotivoAtencion);
               setHasGenerated(false);
             }}
-            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
           >
             {MOTIVOS_OPTIONS.map((opt) => (
               <option key={opt.id} value={opt.id}>
@@ -603,7 +603,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
               <select
                 value={selectedServicioId}
                 onChange={(e) => setSelectedServicioId(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
               >
                 <option value="">-- Servicio general / Consulta abierta --</option>
                 {activeServicios.map((s) => (
@@ -628,7 +628,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                 <select
                   value={selectedCotizacionId}
                   onChange={(e) => setSelectedCotizacionId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 >
                   <option value="">-- Selecciona una cotización --</option>
                   {clientCotizaciones.map((c) => (
@@ -657,7 +657,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                 <select
                   value={selectedCitaId}
                   onChange={(e) => setSelectedCitaId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 >
                   <option value="">-- Selecciona una cita --</option>
                   {clientCitas.map((cit) => (
@@ -686,7 +686,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                 <select
                   value={selectedOrdenId}
                   onChange={(e) => setSelectedOrdenId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 >
                   <option value="">-- Selecciona una orden --</option>
                   {clientOrdenes.map((ord) => (
@@ -716,7 +716,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                   <select
                     value={selectedVehiculoId}
                     onChange={(e) => setSelectedVehiculoId(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   >
                     <option value="">-- Selecciona un vehículo --</option>
                     {clientVehiculos.map((v) => (
@@ -742,7 +742,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                   type="date"
                   value={fechaSugeridaMantenimiento}
                   onChange={(e) => setFechaSugeridaMantenimiento(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
             </div>
@@ -759,7 +759,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
             value={comentarioCliente}
             onChange={(e) => setComentarioCliente(e.target.value)}
             placeholder="Ejemplo: ¿Cuánto tiempo tardaría? / ¿Incluye cambio de filtro?..."
-            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
           />
         </div>
 
@@ -768,7 +768,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
           <button
             type="button"
             onClick={handlePrepararRespuesta}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors min-h-[44px]"
           >
             <Sparkles className="w-4 h-4" />
             <span>Preparar respuesta</span>
@@ -848,7 +848,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-4 animate-in fade-in">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#0d5c58]" />
+              <Sparkles className="w-4 h-4 text-[#1D7EAE]" />
               <span>Propuesta de respuesta generada</span>
             </h3>
             <span className="text-xs text-slate-400">Puedes editar el texto libremente</span>
@@ -859,7 +859,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
               rows={5}
               value={textoRespuesta}
               onChange={(e) => setTextoRespuesta(e.target.value)}
-              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 leading-relaxed focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 leading-relaxed focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
             />
           </div>
 
@@ -887,7 +887,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
               <button
                 type="button"
                 onClick={handleOpenSeguimientoModal}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors"
               >
                 <CalendarPlus className="w-4 h-4" />
                 <span>Guardar como seguimiento</span>
@@ -920,7 +920,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
           className="w-full px-5 py-3.5 bg-white hover:bg-slate-50 flex items-center justify-between text-left transition-colors"
         >
           <div className="flex items-center gap-2.5">
-            <History className="w-4 h-4 text-[#0d5c58]" />
+            <History className="w-4 h-4 text-[#1D7EAE]" />
             <span className="text-sm font-semibold text-slate-800">
               Historial de respuestas preparadas en esta sesión
             </span>
@@ -947,7 +947,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                     <div className="flex items-center justify-between text-slate-500">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-slate-800">{item.clienteNombre}</span>
-                        <span className="px-2 py-0.5 rounded bg-teal-50 text-[#0d5c58] font-medium border border-teal-200/50">
+                        <span className="px-2 py-0.5 rounded bg-rose-50 text-[#0032A0] font-medium border border-rose-200/50">
                           {item.motivo}
                         </span>
                       </div>
@@ -976,7 +976,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                           setFeedbackMensaje('Texto copiado al portapapeles.');
                           setTimeout(() => setFeedbackMensaje(null), 2000);
                         }}
-                        className="px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-[#0d5c58] font-medium transition-colors"
+                        className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-[#0032A0] font-medium transition-colors"
                       >
                         Copiar
                       </button>
@@ -1001,11 +1001,11 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
           className="w-full px-5 py-3.5 bg-white hover:bg-slate-50 flex items-center justify-between text-left transition-colors"
         >
           <div className="flex items-center gap-2.5">
-            <CalendarDays className="w-4 h-4 text-[#0d5c58]" />
+            <CalendarDays className="w-4 h-4 text-[#1D7EAE]" />
             <span className="text-sm font-semibold text-slate-800">
               Seguimientos registrados en el taller
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-teal-100 text-[#0d5c58] font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-50 text-[#0032A0] font-medium border border-rose-200/50">
               {seguimientos.length}
             </span>
           </div>
@@ -1059,7 +1059,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                               </span>
                             )}
                             {seg.registroRef && (
-                              <span className="px-2 py-0.5 rounded bg-teal-50 text-[#0d5c58] font-medium border border-teal-200/50">
+                              <span className="px-2 py-0.5 rounded bg-rose-50 text-[#0032A0] font-medium border border-rose-200/50">
                                 {seg.registroRef}
                               </span>
                             )}
@@ -1109,7 +1109,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                                   type="date"
                                   value={reprogFecha}
                                   onChange={(e) => setReprogFecha(e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0d5c58]"
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1D7EAE] focus:border-[#1D7EAE]"
                                 />
                               </div>
                               <div>
@@ -1118,7 +1118,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                                   type="time"
                                   value={reprogHora}
                                   onChange={(e) => setReprogHora(e.target.value)}
-                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0d5c58]"
+                                  className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1D7EAE] focus:border-[#1D7EAE]"
                                 />
                               </div>
                             </div>
@@ -1143,7 +1143,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                                     setReprogramandoSegId(null);
                                   }
                                 }}
-                                className="px-3 py-1 text-xs font-semibold bg-[#0d5c58] text-white rounded hover:bg-[#0a4845]"
+                                className="px-3 py-1 text-xs font-semibold bg-[#1D7EAE] text-white rounded hover:bg-[#0032A0]"
                               >
                                 Guardar reprogramación
                               </button>
@@ -1203,7 +1203,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 bg-[#0d1b2a] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CalendarPlus className="w-5 h-5 text-teal-400" />
+                <CalendarPlus className="w-5 h-5 text-[#1D7EAE]" />
                 <h3 className="font-semibold text-base">Programar seguimiento</h3>
               </div>
               <button
@@ -1243,7 +1243,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                   required
                   value={fechaSeguimiento}
                   onChange={(e) => setFechaSeguimiento(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
                 />
               </div>
 
@@ -1256,7 +1256,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                   required
                   value={horaSeguimiento}
                   onChange={(e) => setHoraSeguimiento(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:border-transparent transition-all"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
                 />
               </div>
 
@@ -1270,7 +1270,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-sm font-medium bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded-lg shadow-xs transition-colors"
+                  className="px-5 py-2 text-sm font-semibold bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg shadow-xs transition-colors min-h-[42px]"
                 >
                   Guardar seguimiento
                 </button>

@@ -31,6 +31,7 @@ import {
   ConfiguracionTaller,
   SesionUsuario,
 } from '../types';
+import { IotLogo } from './IotLogo';
 
 interface GarantiasSectionProps {
   garantias: Garantia[];
@@ -436,17 +437,17 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado Merkatics para Garantías */}
-      <div className="bg-white border border-[#E4E7EC] border-t-4 border-t-amber-600 rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      {/* Encabezado IOT Technologies para Garantías */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#202124] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
               Garantías de servicio
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               Registro, consulta y aplicación de pólizas de garantía para trabajos entregados.
             </p>
           </div>
@@ -456,7 +457,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#E9504F] hover:bg-[#C93F43] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Registrar garantía</span>
@@ -465,7 +466,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       </div>
 
       {/* Security & Scope disclaimer */}
-      <div className="p-3.5 bg-slate-50 border border-[#E4E7EC] rounded-xl text-xs text-[#5F6368] flex items-start gap-2.5 no-print">
+      <div className="p-3.5 bg-slate-50 border border-[#DDE4E8] rounded-xl text-xs text-[#5F6B73] flex items-start gap-2.5 no-print">
         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
           <strong>Aviso de demostración:</strong> El registro de garantías es una función administrativa
@@ -482,12 +483,12 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por folio, cliente, placas u orden..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E4E7EC] rounded-lg text-xs text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
           />
         </div>
 
         {/* Status filter tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto p-1 bg-white border border-[#E4E7EC] rounded-lg text-xs font-medium">
+        <div className="flex items-center gap-1 overflow-x-auto p-1 bg-white border border-[#DDE4E8] rounded-lg text-xs font-medium">
           {(['todas', 'Vigentes', 'Vencidas', 'Aplicadas', 'Canceladas'] as TabFilter[]).map((tab) => {
             const count = garantiasPermitidas.filter((g) => {
               if (tab === 'todas') return true;
@@ -506,8 +507,8 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 onClick={() => setFilterTab(tab)}
                 className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                   filterTab === tab
-                    ? 'bg-[#E9504F] text-white font-semibold shadow-xs'
-                    : 'text-[#5F6368] hover:text-[#202124] hover:bg-slate-50'
+                    ? 'bg-[#1D7EAE] text-white font-semibold shadow-xs'
+                    : 'text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-50'
                 }`}
               >
                 <span>{tab === 'todas' ? 'Todas' : tab}</span>
@@ -557,8 +558,8 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
 
                       {/* Cliente y vehículo */}
                       <td className="py-3 px-4">
-                        <div className="font-bold text-[#202124]">{g.clienteNombre}</div>
-                        <div className="text-[11px] text-[#5F6368] flex items-center gap-1.5 mt-0.5">
+                        <div className="font-bold text-[#231F20]">{g.clienteNombre}</div>
+                        <div className="text-[11px] text-[#5F6B73] flex items-center gap-1.5 mt-0.5">
                           <Car className="w-3 h-3 text-slate-400" />
                           <span>{g.vehiculoDescripcion}</span>
                           <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.2 rounded text-[10px]">
@@ -634,7 +635,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                             setOpenCondicionesAccordion(true);
                             setOpenObservacionesAccordion(true);
                           }}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Ver</span>
@@ -688,8 +689,8 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                           {estadoEfectivo}
                         </span>
                       </div>
-                      <h4 className="font-semibold text-[#202124] text-sm">{g.clienteNombre}</h4>
-                      <p className="text-xs text-[#5F6368] mt-0.5">
+                      <h4 className="font-semibold text-[#231F20] text-sm">{g.clienteNombre}</h4>
+                      <p className="text-xs text-[#5F6B73] mt-0.5">
                         {g.vehiculoDescripcion} ({g.vehiculoPlacas})
                       </p>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">{g.trabajoCubierto}</p>
@@ -711,7 +712,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                         setOpenCondicionesAccordion(true);
                         setOpenObservacionesAccordion(true);
                       }}
-                      className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6368] hover:text-[#202124] bg-white hover:bg-slate-50 border border-[#E4E7EC] rounded-lg transition-colors shrink-0 cursor-pointer"
+                      className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors shrink-0 cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>Ver</span>
@@ -740,10 +741,12 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 border border-slate-200">
             {/* Modal Header (Hidden on Print) */}
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between no-print">
+            <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between no-print">
               <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-teal-300" />
-                <h3 className="text-base font-bold text-white">
+                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-[#231F20]">
                   Póliza de garantía {selectedGarantia.folio}
                 </h3>
               </div>
@@ -751,7 +754,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 <button
                   type="button"
                   onClick={handlePrintSheet}
-                  className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-3.5 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                   title="Imprimir póliza de garantía"
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -760,7 +763,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedGarantia(null)}
-                  className="p-1 rounded-md text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1 rounded-md text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -772,6 +775,9 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
               {/* Workshop Header */}
               <div className="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
+                  <div className="mb-2">
+                    <IotLogo size="sm" variant="dark" />
+                  </div>
                   <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
                     {configuracion.nombre || 'Taller mecánico'}
                   </h1>
@@ -879,13 +885,13 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 <span className="font-bold text-slate-800 text-xs uppercase tracking-wider text-[11px] block">
                   Trabajo cubierto por la garantía
                 </span>
-                <div className="p-3.5 bg-white border border-[#E4E7EC] rounded-xl leading-relaxed text-[#202124] font-medium">
+                <div className="p-3.5 bg-white border border-[#DDE4E8] rounded-xl leading-relaxed text-[#231F20] font-medium">
                   {selectedGarantia.trabajoCubierto}
                 </div>
               </div>
 
               {/* Apartado desplegable: Condiciones o alcance */}
-              <div className="border border-[#E4E7EC] rounded-xl overflow-hidden">
+              <div className="border border-[#DDE4E8] rounded-xl overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setOpenCondicionesAccordion(!openCondicionesAccordion)}
@@ -967,19 +973,19 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 </button>
 
                 {openObservacionesAccordion && (
-                  <div className="p-4 bg-white border-t border-[#E4E7EC] space-y-3">
+                  <div className="p-4 bg-white border-t border-[#DDE4E8] space-y-3">
                     {selectedGarantia.observacionesMecanico && selectedGarantia.observacionesMecanico.length > 0 ? (
                       <div className="space-y-2">
                         {selectedGarantia.observacionesMecanico.map((obs) => (
                           <div
                             key={obs.id}
-                            className="p-2.5 bg-slate-50 rounded-lg border border-[#E4E7EC] text-xs space-y-1"
+                            className="p-2.5 bg-slate-50 rounded-lg border border-[#DDE4E8] text-xs space-y-1"
                           >
                             <div className="flex items-center justify-between text-[11px] text-slate-500">
-                              <span className="font-bold text-[#202124]">{obs.mecanicoNombre}</span>
+                              <span className="font-bold text-[#231F20]">{obs.mecanicoNombre}</span>
                               <span>{obs.fechaHora}</span>
                             </div>
-                            <p className="text-[#5F6368]">{obs.texto}</p>
+                            <p className="text-[#5F6B73]">{obs.texto}</p>
                           </div>
                         ))}
                       </div>
@@ -996,12 +1002,12 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                         value={obsInput}
                         onChange={(e) => setObsInput(e.target.value)}
                         placeholder="Escribir nota u observación técnica sobre la garantía..."
-                        className="flex-1 px-3 py-1.5 border border-[#E4E7EC] rounded-lg text-xs text-[#202124] placeholder-slate-400 focus:outline-none focus:border-[#E9504F] focus:ring-2 focus:ring-[#E9504F]/20"
+                        className="flex-1 px-3 py-1.5 border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
                       />
                       <button
                         type="submit"
                         disabled={!obsInput.trim()}
-                        className="px-3.5 py-1.5 bg-[#E9504F] hover:bg-[#C93F43] disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        className="px-3.5 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <Send className="w-3 h-3" />
                         <span>Añadir</span>
@@ -1072,18 +1078,20 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       {/* ========================================================================= */}
       {isApplyModalOpen && selectedGarantia && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8 border border-slate-200">
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-blue-400" />
-                <h3 className="text-sm font-bold text-white">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8 border border-[#DDE4E8]">
+            <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                  <RotateCcw className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#231F20]">
                   Aplicar garantía {selectedGarantia.folio}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsApplyModalOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1115,7 +1123,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                     if (applyError) setApplyError(null);
                   }}
                   placeholder="Ej. El cliente reporta ruido persistente en horquilla derecha..."
-                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
 
@@ -1128,7 +1136,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                   value={applyObs}
                   onChange={(e) => setApplyObs(e.target.value)}
                   placeholder="Detalles sobre las condiciones de recepción o revisión preliminar..."
-                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
 
@@ -1153,7 +1161,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                       setApplyConfirmed(e.target.checked);
                       if (applyError) setApplyError(null);
                     }}
-                    className="w-4 h-4 text-[#0d5c58] rounded mt-0.5"
+                    className="w-4 h-4 text-[#1D7EAE] rounded mt-0.5"
                   />
                   <span className="text-slate-700 font-medium">
                     Confirmo la aplicación de esta garantía y la creación de la nueva orden de servicio de reingreso.
@@ -1189,16 +1197,18 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       {/* ========================================================================= */}
       {isCancelModalOpen && selectedGarantia && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8 border border-slate-200">
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <XCircle className="w-5 h-5 text-rose-400" />
-                <h3 className="text-sm font-bold text-white">Cancelar garantía</h3>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8 border border-[#DDE4E8]">
+            <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                  <XCircle className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#231F20]">Cancelar garantía</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCancelModalOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1228,7 +1238,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                     if (cancelError) setCancelError(null);
                   }}
                   placeholder="Ej. Pérdida total del vehículo, solicitud del cliente, violación de condiciones..."
-                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
 
@@ -1258,16 +1268,18 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       {/* ========================================================================= */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8 border border-slate-200">
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-teal-300" />
-                <h3 className="text-base font-bold text-white">Registrar póliza de garantía</h3>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8 border border-[#DDE4E8]">
+            <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-[#231F20]">Registrar póliza de garantía</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1289,7 +1301,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                   <select
                     value={createOrdenId}
                     onChange={(e) => handleSelectCreateOrder(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                    className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   >
                     {ordenesEntregadas.map((ord) => {
                       const cli = clientes.find((c) => c.id === ord.clienteId);
@@ -1318,7 +1330,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                   value={createTrabajo}
                   onChange={(e) => setCreateTrabajo(e.target.value)}
                   placeholder="Detalle del servicio, partes reparadas o refacciones amparadas..."
-                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
                   Se almacena una copia estática para que cambios posteriores en la orden no modifiquen la cobertura de esta garantía.
@@ -1335,7 +1347,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                     type="date"
                     value={createFechaInicio}
                     onChange={(e) => setCreateFechaInicio(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 bg-white"
+                    className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   />
                 </div>
 
@@ -1346,7 +1358,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                   <select
                     value={createDuracionDias}
                     onChange={(e) => setCreateDuracionDias(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 bg-white"
+                    className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   >
                     <option value="30">30 días (1 mes)</option>
                     <option value="60">60 días (2 meses)</option>
@@ -1374,7 +1386,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                   rows={3}
                   value={createCondiciones}
                   onChange={(e) => setCreateCondiciones(e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full p-2 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
 
@@ -1389,7 +1401,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 <button
                   type="submit"
                   disabled={ordenesEntregadas.length === 0}
-                  className="px-4 py-2 bg-[#0d5c58] hover:bg-[#0a4845] disabled:opacity-50 text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Emitir póliza de garantía
                 </button>

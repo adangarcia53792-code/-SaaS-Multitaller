@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 48" fill="none">
+  <!-- Símbolo antena claro -->
+  <g transform="translate(4, 6)" stroke="#98DAE9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 32V17" />
+    <path d="M13 32h10" />
+    <circle cx="18" cy="15" r="2.2" fill="#98DAE9" stroke="none" />
+    <path d="M12.5 10.5a8 8 0 0 1 11 0" />
+    <path d="M8 6a14.5 14.5 0 0 1 20 0" />
+  </g>
+  <!-- Texto IOT (blanco) -->
+  <text x="48" y="32" font-family="'Open Sans', 'Roboto', sans-serif" font-size="26" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5">IOT</text>
+  <!-- Texto TECHNOLOGIES (azul claro #98DAE9) -->
+  <text x="102" y="31" font-family="'Open Sans', 'Roboto', sans-serif" font-size="16" font-weight="700" fill="#98DAE9" letter-spacing="3.5">TECHNOLOGIES</text>
+</svg>

@@ -23,6 +23,7 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  ListOrdered,
 } from 'lucide-react';
 import {
   Prospecto,
@@ -593,7 +594,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       case 'Sin respuesta':
         return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'Cita agendada':
-        return 'bg-teal-50 text-[#0d5c58] border-teal-200';
+        return 'bg-sky-50 text-sky-700 border-sky-200';
       case 'No interesado':
         return 'bg-rose-50 text-rose-800 border-rose-200';
       case 'Convertido en cliente':
@@ -605,21 +606,26 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Prospectos
-          </h2>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Registro y seguimiento de personas interesadas que aún no cuentan con atención formal.
-          </p>
+      {/* Encabezado IOT Technologies para Prospectos */}
+      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+            <ListOrdered className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+              Prospectos y seguimientos
+            </h2>
+            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+              Registro y seguimiento de oportunidades comerciales y personas interesadas.
+            </p>
+          </div>
         </div>
 
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar prospecto</span>
@@ -628,8 +634,8 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
 
       {/* Feedback banner */}
       {feedbackMsg && (
-        <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-lg text-sm text-[#0d5c58] flex items-center gap-2.5 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0d5c58]" />
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800 flex items-center gap-2.5 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
           <span>{feedbackMsg}</span>
         </div>
       )}
@@ -644,7 +650,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, teléfono o servicio..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] focus:bg-white transition-all"
           />
         </div>
 
@@ -656,7 +662,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
           <select
             value={filterEstado}
             onChange={(e) => setFilterEstado(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58] focus:bg-white transition-all cursor-pointer"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] focus:bg-white transition-all cursor-pointer"
           >
             <option value="todos">Todos los estados ({prospectos.length})</option>
             {ESTADOS_PROSPECTO.map((est) => {
@@ -712,7 +718,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                               title={isExpanded ? 'Ocultar apartado de detalles' : 'Desplegar detalles e historial'}
                             >
                               {isExpanded ? (
-                                <ChevronUp className="w-4 h-4 text-[#0d5c58]" />
+                                <ChevronUp className="w-4 h-4 text-[#1D7EAE]" />
                               ) : (
                                 <ChevronDown className="w-4 h-4" />
                               )}
@@ -761,7 +767,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                           {p.proximaAccionFecha ? (
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-                                <Calendar className="w-3.5 h-3.5 text-[#0d5c58]" />
+                                <Calendar className="w-3.5 h-3.5 text-[#1D7EAE]" />
                                 <span>
                                   {p.proximaAccionFecha} {p.proximaAccionHora ? `(${p.proximaAccionHora})` : ''}
                                 </span>
@@ -792,10 +798,10 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                               <button
                                 type="button"
                                 onClick={() => onNavigateToClientes && onNavigateToClientes()}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#0d5c58] bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-md transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors cursor-pointer"
                                 title="Ver cliente en el directorio"
                               >
-                                <User className="w-3.5 h-3.5" />
+                                <User className="w-3.5 h-3.5 text-emerald-600" />
                                 <span>Ver cliente</span>
                               </button>
                             )}
@@ -861,9 +867,9 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                                         setOpenMenuId(null);
                                         if (onNavigateToClientes) onNavigateToClientes();
                                       }}
-                                      className="w-full px-3.5 py-2 text-[#0d5c58] hover:bg-teal-50 font-medium flex items-center gap-2 transition-colors cursor-pointer border-t border-slate-100"
+                                      className="w-full px-3.5 py-2 text-emerald-700 hover:bg-emerald-50 font-medium flex items-center gap-2 transition-colors cursor-pointer border-t border-slate-100"
                                     >
-                                      <User className="w-3.5 h-3.5 text-[#0d5c58]" />
+                                      <User className="w-3.5 h-3.5 text-emerald-600" />
                                       <span>
                                         Ver cliente {linkedClient ? `(${linkedClient.nombre})` : ''}
                                       </span>
@@ -906,7 +912,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => onNavigateToClientes && onNavigateToClientes()}
-                                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#0d5c58] hover:underline"
+                                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#1D7EAE] hover:underline"
                                     >
                                       <User className="w-3.5 h-3.5" />
                                       <span>Ver en Clientes</span>
@@ -980,7 +986,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                                       <button
                                         type="button"
                                         onClick={() => handleOpenReschedule(p)}
-                                        className="text-xs text-[#0d5c58] font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                                        className="text-xs text-[#1D7EAE] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                                       >
                                         <Calendar className="w-3 h-3" />
                                         <span>Reprogramar</span>
@@ -1044,7 +1050,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                                       <button
                                         type="button"
                                         onClick={() => handleOpenReschedule(p)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0d5c58] hover:bg-[#0a4845] text-white rounded text-xs font-semibold cursor-pointer transition-colors"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded text-xs font-semibold cursor-pointer transition-colors"
                                       >
                                         <Calendar className="w-3.5 h-3.5" />
                                         <span>Programar próxima acción</span>
@@ -1155,7 +1161,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(p)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#0d5c58] bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                         <span>Editar</span>
@@ -1216,9 +1222,9 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                                   setOpenMenuId(null);
                                   onNavigateToClientes && onNavigateToClientes();
                                 }}
-                                className="w-full px-3.5 py-2.5 text-[#0d5c58] hover:bg-teal-50 font-medium flex items-center gap-2 border-t border-slate-100"
+                                className="w-full px-3.5 py-2.5 text-emerald-700 hover:bg-emerald-50 font-medium flex items-center gap-2 border-t border-slate-100"
                               >
-                                <User className="w-4 h-4 text-[#0d5c58]" />
+                                <User className="w-4 h-4 text-emerald-600" />
                                 <span>Ir a Clientes</span>
                               </button>
                             )}
@@ -1246,10 +1252,12 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {isFormModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
-                <UserPlus className="w-5 h-5 text-teal-300" />
-                <h3 className="text-base font-bold text-white">
+                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-[#231F20]">
                   {editingProspecto ? 'Editar prospecto' : 'Agregar prospecto'}
                 </h3>
               </div>
@@ -1292,7 +1300,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       type="checkbox"
                       checked={duplicateWarningAck}
                       onChange={(e) => setDuplicateWarningAck(e.target.checked)}
-                      className="rounded border-amber-400 text-[#0d5c58] focus:ring-[#0d5c58]"
+                      className="rounded border-amber-400 text-[#1D7EAE] focus:ring-[#1D7EAE]"
                     />
                     <span>Deseo registrarlo de todas formas con este número telefónico.</span>
                   </label>
@@ -1313,7 +1321,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                     if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: '' });
                   }}
                   placeholder="Ej. Mariana Ríos"
-                  className={`w-full px-3 py-2 border rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
+                  className={`w-full px-3 py-2 border rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] ${
                     formErrors.nombre ? 'border-red-400 bg-red-50/30' : 'border-slate-200'
                   }`}
                 />
@@ -1337,7 +1345,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       setDuplicateWarningAck(false);
                     }}
                     placeholder="Ej. 555-345-6789"
-                    className={`w-full px-3 py-2 border rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
+                    className={`w-full px-3 py-2 border rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] ${
                       formErrors.telefono ? 'border-red-400 bg-red-50/30' : 'border-slate-200'
                     }`}
                   />
@@ -1358,7 +1366,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       if (formErrors.correo) setFormErrors({ ...formErrors, correo: '' });
                     }}
                     placeholder="Ej. mariana@email.com"
-                    className={`w-full px-3 py-2 border rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] ${
+                    className={`w-full px-3 py-2 border rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] ${
                       formErrors.correo ? 'border-red-400 bg-red-50/30' : 'border-slate-200'
                     }`}
                   />
@@ -1379,7 +1387,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                     value={formServicioInteres}
                     onChange={(e) => setFormServicioInteres(e.target.value)}
                     placeholder="Ej. Afinación mayor, frenos, diagnóstico..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   />
                   {servicios.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap text-xs text-slate-500">
@@ -1408,7 +1416,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                   <select
                     value={formOrigen}
                     onChange={(e) => setFormOrigen(e.target.value as OrigenProspecto)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] bg-white cursor-pointer"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] bg-white cursor-pointer"
                   >
                     {ORIGENES_PROSPECTO.map((o) => (
                       <option key={o} value={o}>
@@ -1425,7 +1433,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                   <select
                     value={formEstado}
                     onChange={(e) => setFormEstado(e.target.value as EstadoProspecto)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58] bg-white cursor-pointer"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] bg-white cursor-pointer"
                   >
                     {ESTADOS_PROSPECTO.map((est) => (
                       <option key={est} value={est}>
@@ -1446,14 +1454,14 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                   value={formNotas}
                   onChange={(e) => setFormNotas(e.target.value)}
                   placeholder="Detalles sobre las dudas o necesidades del prospecto..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
 
               {/* Próxima acción (opcional) */}
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                  <Calendar className="w-3.5 h-3.5 text-[#0d5c58]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#1D7EAE]" />
                   <span>Programar próxima acción comercial (Opcional)</span>
                 </div>
 
@@ -1464,7 +1472,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       type="date"
                       value={formProximaFecha}
                       onChange={(e) => setFormProximaFecha(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                     />
                   </div>
 
@@ -1474,7 +1482,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       type="time"
                       value={formProximaHora}
                       onChange={(e) => setFormProximaHora(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                     />
                   </div>
                 </div>
@@ -1489,7 +1497,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                       value={formProximaNota}
                       onChange={(e) => setFormProximaNota(e.target.value)}
                       placeholder="Ej. Llamar para resolver dudas sobre el presupuesto..."
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                     />
                     <p className="text-[11px] text-slate-400 mt-1">
                       Se generará automáticamente un seguimiento visible en Calendario y Seguimientos.
@@ -1519,7 +1527,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-medium rounded-lg shadow-xs transition-colors min-h-[44px]"
+                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[44px]"
                 >
                   Guardar
                 </button>
@@ -1578,7 +1586,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                         name="clientOption"
                         checked={useExistingClient}
                         onChange={() => setUseExistingClient(true)}
-                        className="text-[#0d5c58] focus:ring-[#0d5c58]"
+                        className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
                       />
                       <span>Vincular a este cliente existente (Evita duplicados)</span>
                     </label>
@@ -1588,7 +1596,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                         name="clientOption"
                         checked={!useExistingClient}
                         onChange={() => setUseExistingClient(false)}
-                        className="text-[#0d5c58] focus:ring-[#0d5c58]"
+                        className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
                       />
                       <span>Crear como nuevo cliente independiente</span>
                     </label>
@@ -1609,7 +1617,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                         setConvertClientNombre(e.target.value);
                         if (convertErrors.nombre) setConvertErrors({ ...convertErrors, nombre: '' });
                       }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                     />
                     {convertErrors.nombre && (
                       <p className="text-xs text-red-600 mt-1">{convertErrors.nombre}</p>
@@ -1628,7 +1636,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                         if (convertErrors.telefono)
                           setConvertErrors({ ...convertErrors, telefono: '' });
                       }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                     />
                     {convertErrors.telefono && (
                       <p className="text-xs text-red-600 mt-1">{convertErrors.telefono}</p>
@@ -1646,7 +1654,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                         setConvertClientCorreo(e.target.value);
                         if (convertErrors.correo) setConvertErrors({ ...convertErrors, correo: '' });
                       }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                     />
                     {convertErrors.correo && (
                       <p className="text-xs text-red-600 mt-1">{convertErrors.correo}</p>
@@ -1685,17 +1693,19 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {viewingProspecto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-teal-300" />
-                <h3 className="text-base font-bold text-white">
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                  <History className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-[#231F20]">
                   Historial: {viewingProspecto.nombre}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setViewingProspecto(null)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1864,17 +1874,19 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {reschedulingProspecto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-amber-300" />
-                <h3 className="text-base font-bold text-white">
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-[#231F20]">
                   Programar acción: {reschedulingProspecto.nombre}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setReschedulingProspecto(null)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1890,7 +1902,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                     type="date"
                     value={rescheduleDate}
                     onChange={(e) => setRescheduleDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   />
                 </div>
 
@@ -1902,7 +1914,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                     type="time"
                     value={rescheduleTime}
                     onChange={(e) => setRescheduleTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                   />
                 </div>
               </div>
@@ -1916,7 +1928,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                   value={rescheduleNote}
                   onChange={(e) => setRescheduleNote(e.target.value)}
                   placeholder="Ej. Volver a llamar tras revisión del presupuesto..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0d5c58]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
                 />
               </div>
 
@@ -1932,13 +1944,13 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setReschedulingProspecto(null)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer min-h-[42px]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#0d5c58] hover:bg-[#0a4845] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Guardar fecha
                 </button>
