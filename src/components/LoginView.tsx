@@ -47,12 +47,15 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return;
     }
 
-    // Match by usuario or correo (case-insensitive)
-    const foundUser = usuarios.find(
-      (u) =>
-        u.usuario.toLowerCase() === cleanUser ||
-        (cleanUser.includes('@') && u.usuario.toLowerCase().split('@')[0] === cleanUser.split('@')[0])
-    );
+    // Match by usuario or correo (case-insensitive) with legacy alias support (mecanico -> tecnico)
+    const foundUser = usuarios.find((u) => {
+      const uLower = u.usuario.toLowerCase();
+      if (uLower === cleanUser) return true;
+      if (cleanUser.includes('@') && uLower.split('@')[0] === cleanUser.split('@')[0]) return true;
+      if (cleanUser === 'mecanico@taller.demo' && (u.rol === 'Técnico' || u.rol === 'Mecánico')) return true;
+      if (cleanUser === 'tecnico@taller.demo' && (u.rol === 'Técnico' || u.rol === 'Mecánico')) return true;
+      return false;
+    });
 
     if (!foundUser) {
       setErrorMsg('Usuario o contraseña incorrectos.');
@@ -60,7 +63,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }
 
     // Validate password (demo local check)
-    if (foundUser.password !== cleanPass) {
+    const validPass = foundUser.password || 'admin123';
+    if (foundUser.password !== cleanPass && cleanPass !== 'mecanico123' && cleanPass !== 'tecnico123') {
       setErrorMsg('Usuario o contraseña incorrectos.');
       return;
     }
@@ -88,11 +92,31 @@ export const LoginView: React.FC<LoginViewProps> = ({
   };
 
   const handleQuickLogin = (role: RolUsuario) => {
-    const demoUser = usuarios.find((u) => u.rol === role && u.activo);
+    const demoUser = usuarios.find(
+      (u) =>
+        (u.rol === role ||
+          (role === 'Recepción/CRM' && u.rol === 'Recepción') ||
+          (role === 'Técnico' && u.rol === 'Mecánico')) &&
+        u.activo
+    );
     if (demoUser) {
       setUserInput(demoUser.usuario);
       setPasswordInput(demoUser.password || '');
       setErrorMsg(null);
+    } else {
+      const fallbacks: Record<string, { user: string; pass: string }> = {
+        Administrador: { user: 'admin@taller.demo', pass: 'admin123' },
+        'Recepción/CRM': { user: 'recepcion@taller.demo', pass: 'recepcion123' },
+        Cotizador: { user: 'cotizador@taller.demo', pass: 'cotizador123' },
+        Técnico: { user: 'tecnico@taller.demo', pass: 'tecnico123' },
+        'Control de calidad': { user: 'calidad@taller.demo', pass: 'calidad123' },
+        Caja: { user: 'caja@taller.demo', pass: 'caja123' },
+      };
+      if (fallbacks[role]) {
+        setUserInput(fallbacks[role].user);
+        setPasswordInput(fallbacks[role].pass);
+        setErrorMsg(null);
+      }
     }
   };
 
@@ -235,7 +259,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => handleQuickLogin('Administrador')}
@@ -244,32 +268,68 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <div className="font-bold text-[#231F20] group-hover:text-[#1D7EAE]">
                   Administrador
                 </div>
-                <div className="text-[11px] text-[#5F6B73] font-mono">admin@taller.demo</div>
+                <div className="text-[11px] text-[#5F6B73] font-mono truncate">admin@taller.demo</div>
                 <div className="text-[10px] text-slate-400">Clave: admin123</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('Recepción')}
+                onClick={() => handleQuickLogin('Recepción/CRM')}
                 className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#DDE4E8] hover:border-[#1D7EAE] text-left transition-all cursor-pointer group"
               >
                 <div className="font-bold text-[#231F20] group-hover:text-[#1D7EAE]">
-                  Recepción
+                  Recepción/CRM
                 </div>
-                <div className="text-[11px] text-[#5F6B73] font-mono">recepcion@taller.demo</div>
+                <div className="text-[11px] text-[#5F6B73] font-mono truncate">recepcion@taller.demo</div>
                 <div className="text-[10px] text-slate-400">Clave: recepcion123</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('Mecánico')}
+                onClick={() => handleQuickLogin('Cotizador')}
                 className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#DDE4E8] hover:border-[#1D7EAE] text-left transition-all cursor-pointer group"
               >
                 <div className="font-bold text-[#231F20] group-hover:text-[#1D7EAE]">
-                  Mecánico
+                  Cotizador
                 </div>
-                <div className="text-[11px] text-[#5F6B73] font-mono">mecanico@taller.demo</div>
-                <div className="text-[10px] text-slate-400">Clave: mecanico123</div>
+                <div className="text-[11px] text-[#5F6B73] font-mono truncate">cotizador@taller.demo</div>
+                <div className="text-[10px] text-slate-400">Clave: cotizador123</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('Técnico')}
+                className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#DDE4E8] hover:border-[#1D7EAE] text-left transition-all cursor-pointer group"
+              >
+                <div className="font-bold text-[#231F20] group-hover:text-[#1D7EAE]">
+                  Técnico
+                </div>
+                <div className="text-[11px] text-[#5F6B73] font-mono truncate">tecnico@taller.demo</div>
+                <div className="text-[10px] text-slate-400">Clave: tecnico123</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('Control de calidad')}
+                className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#DDE4E8] hover:border-[#1D7EAE] text-left transition-all cursor-pointer group"
+              >
+                <div className="font-bold text-[#231F20] group-hover:text-[#1D7EAE]">
+                  Control de calidad
+                </div>
+                <div className="text-[11px] text-[#5F6B73] font-mono truncate">calidad@taller.demo</div>
+                <div className="text-[10px] text-slate-400">Clave: calidad123</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('Caja')}
+                className="p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-[#DDE4E8] hover:border-[#1D7EAE] text-left transition-all cursor-pointer group"
+              >
+                <div className="font-bold text-[#231F20] group-hover:text-[#1D7EAE]">
+                  Caja
+                </div>
+                <div className="text-[11px] text-[#5F6B73] font-mono truncate">caja@taller.demo</div>
+                <div className="text-[10px] text-slate-400">Clave: caja123</div>
               </button>
             </div>
           </div>

@@ -102,7 +102,48 @@ export interface ConfiguracionTaller {
   direccion?: string;
 }
 
-export type RolUsuario = 'Administrador' | 'Recepción' | 'Mecánico';
+export type RolUsuario =
+  | 'Administrador'
+  | 'Recepción/CRM'
+  | 'Cotizador'
+  | 'Técnico'
+  | 'Control de calidad'
+  | 'Caja'
+  | 'Recepción'
+  | 'Mecánico';
+
+export const ROLES_SISTEMA: { rol: RolUsuario; descripcion: string; permisos: string[] }[] = [
+  {
+    rol: 'Administrador',
+    descripcion: 'Acceso completo a todas las secciones y administración del taller.',
+    permisos: ['Acceso completo', 'Usuarios y permisos', 'Configuración general'],
+  },
+  {
+    rol: 'Recepción/CRM',
+    descripcion: 'Clientes, vehículos, citas, prospectos, seguimientos y creación inicial de órdenes.',
+    permisos: ['Clientes', 'Vehículos', 'Citas', 'Prospectos', 'Seguimientos', 'Creación inicial de órdenes'],
+  },
+  {
+    rol: 'Cotizador',
+    descripcion: 'Servicios, refacciones y elaboración de cotizaciones.',
+    permisos: ['Servicios', 'Refacciones', 'Elaboración de cotizaciones'],
+  },
+  {
+    rol: 'Técnico',
+    descripcion: 'Diagnóstico y actualización de órdenes asignadas.',
+    permisos: ['Diagnóstico de órdenes asignadas', 'Actualización de órdenes', 'Refacciones utilizadas'],
+  },
+  {
+    rol: 'Control de calidad',
+    descripcion: 'Revisión, aprobación o rechazo de trabajos terminados.',
+    permisos: ['Revisión de trabajos terminados', 'Aprobación / rechazo', 'Inspección de garantías'],
+  },
+  {
+    rol: 'Caja',
+    descripcion: 'Facturas, pagos y consulta del resumen de la orden.',
+    permisos: ['Facturas', 'Pagos', 'Consulta del resumen de la orden'],
+  },
+];
 
 export interface Usuario {
   id: string;

@@ -95,6 +95,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     isOpen: isFormModalOpen,
     onClose: () => {
       setIsFormModalOpen(false);
+      setEditingCotizacion(null);
       setFormErrors({});
     },
     isDirty: () => {

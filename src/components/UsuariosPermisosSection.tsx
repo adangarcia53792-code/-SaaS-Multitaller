@@ -15,7 +15,7 @@ import {
   Info,
   Check,
 } from 'lucide-react';
-import { Usuario, RolUsuario, Empleado, SesionUsuario } from '../types';
+import { Usuario, RolUsuario, Empleado, SesionUsuario, ROLES_SISTEMA } from '../types';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface UsuariosPermisosSectionProps {
@@ -48,7 +48,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
   const [formNombre, setFormNombre] = useState('');
   const [formUsuario, setFormUsuario] = useState('');
   const [formPassword, setFormPassword] = useState('');
-  const [formRol, setFormRol] = useState<RolUsuario>('Recepción');
+  const [formRol, setFormRol] = useState<RolUsuario>('Recepción/CRM');
   const [formEmpleadoId, setFormEmpleadoId] = useState<string>('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -114,7 +114,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
     setFormNombre('');
     setFormUsuario('');
     setFormPassword('');
-    setFormRol('Recepción');
+    setFormRol('Recepción/CRM');
     setFormEmpleadoId('');
     setFormErrors({});
     setIsAddModalOpen(true);
@@ -241,9 +241,17 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
       case 'Administrador':
         return 'bg-purple-50 text-purple-800 border-purple-200';
       case 'Recepción':
+      case 'Recepción/CRM':
         return 'bg-blue-50 text-blue-800 border-blue-200';
+      case 'Cotizador':
+        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
       case 'Mecánico':
+      case 'Técnico':
         return 'bg-amber-50 text-amber-800 border-amber-200';
+      case 'Control de calidad':
+        return 'bg-indigo-50 text-indigo-800 border-indigo-200';
+      case 'Caja':
+        return 'bg-teal-50 text-teal-800 border-teal-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
@@ -387,7 +395,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
 
                       {/* Empleado vinculado */}
                       <td className="py-3 px-4 text-slate-600">
-                        {u.rol === 'Mecánico' ? (
+                        {u.rol === 'Mecánico' || u.rol === 'Técnico' ? (
                           linkedEmpleado ? (
                             <span className="font-medium text-slate-800">
                               {linkedEmpleado.nombre}
@@ -463,6 +471,35 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Matriz y descripción de roles y permisos */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#1D7EAE]" />
+              <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wide">
+                Guía de roles y permisos del sistema
+              </h5>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {ROLES_SISTEMA.map((item) => (
+                <div key={item.rol} className="bg-white p-3 rounded-lg border border-slate-200 text-xs space-y-1.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-block px-2 py-0.5 rounded-full font-bold text-[10px] border ${getRolBadge(item.rol)}`}>
+                      {item.rol}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-snug">
+                    {item.descripcion}
+                  </p>
+                  <ul className="text-[10px] text-slate-500 list-disc list-inside space-y-0.5 pt-1 border-t border-slate-100">
+                    {item.permisos.map((p, idx) => (
+                      <li key={idx} className="truncate">{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-lg text-[11px] text-slate-500 space-y-1">
@@ -578,20 +615,23 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                   }}
                   className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] bg-white cursor-pointer"
                 >
-                  <option value="Administrador">Administrador (Acceso total)</option>
-                  <option value="Recepción">Recepción (Atención, citas y clientes)</option>
-                  <option value="Mecánico">Mecánico (Órdenes asignadas y diagnóstico)</option>
+                  <option value="Administrador">Administrador — Acceso completo</option>
+                  <option value="Recepción/CRM">Recepción/CRM — Clientes, vehículos, citas, prospectos, seguimientos y creación inicial de órdenes</option>
+                  <option value="Cotizador">Cotizador — Servicios, refacciones y elaboración de cotizaciones</option>
+                  <option value="Técnico">Técnico — Diagnóstico y actualización de órdenes asignadas</option>
+                  <option value="Control de calidad">Control de calidad — Revisión, aprobación o rechazo de trabajos terminados</option>
+                  <option value="Caja">Caja — Facturas, pagos y consulta del resumen de la orden</option>
                 </select>
                 {formErrors.rol && (
                   <p className="text-xs text-red-600 mt-1">{formErrors.rol}</p>
                 )}
               </div>
 
-              {/* Si es mecánico, permitir vincular con un Empleado */}
-              {formRol === 'Mecánico' && (
+              {/* Si es técnico / mecánico, permitir vincular con un Empleado */}
+              {(formRol === 'Técnico' || formRol === 'Mecánico') && (
                 <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg space-y-1.5">
                   <label className="block font-semibold text-amber-900">
-                    Vincular con empleado mecánico en Personal (Opcional):
+                    Vincular con empleado técnico en Personal (Opcional):
                   </label>
                   <select
                     value={formEmpleadoId}

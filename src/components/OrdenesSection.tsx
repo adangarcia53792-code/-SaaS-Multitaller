@@ -154,18 +154,22 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [formMecanicoNombre, setFormMecanicoNombre] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const isMecanico = currentUser?.rol === 'Mecánico';
-  const isRecepcion = currentUser?.rol === 'Recepción';
+  const isMecanico = currentUser?.rol === 'Mecánico' || currentUser?.rol === 'Técnico';
+  const isRecepcion = currentUser?.rol === 'Recepción' || currentUser?.rol === 'Recepción/CRM';
+  const isCaja = currentUser?.rol === 'Caja';
+  const isControlCalidad = currentUser?.rol === 'Control de calidad';
+  const isAdmin = currentUser?.rol === 'Administrador';
+  const canCreateOrden = isAdmin || isRecepcion;
 
   const availableMecanicos = useMemo(() => {
     const list: { id: string; nombre: string }[] = [];
     usuarios
-      .filter((u) => u.rol === 'Mecánico' && u.activo)
+      .filter((u) => (u.rol === 'Mecánico' || u.rol === 'Técnico') && u.activo)
       .forEach((u) => {
         list.push({ id: u.id, nombre: u.nombre });
       });
     empleados
-      .filter((e) => e.activo && (e.puesto.toLowerCase().includes('mecánic') || e.puesto.toLowerCase().includes('taller')))
+      .filter((e) => e.activo && (e.puesto.toLowerCase().includes('mecánic') || e.puesto.toLowerCase().includes('técnic') || e.puesto.toLowerCase().includes('taller')))
       .forEach((e) => {
         if (!list.some((m) => m.nombre === e.nombre)) {
           list.push({ id: e.id, nombre: e.nombre });
@@ -196,6 +200,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     isOpen: isFormModalOpen,
     onClose: () => {
       setIsFormModalOpen(false);
+      setEditingOrden(null);
       setFormErrors({});
     },
     isDirty: () => {
@@ -961,23 +966,37 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               </h2>
               {isMecanico && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                  Mecánico
+                  Técnico
                 </span>
               )}
               {isRecepcion && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
-                  Recepción
+                  Recepción/CRM
+                </span>
+              )}
+              {isControlCalidad && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                  Control de calidad
+                </span>
+              )}
+              {isCaja && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200">
+                  Caja
                 </span>
               )}
             </div>
             <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
               {isMecanico
                 ? `Órdenes asignadas a ${currentUser?.nombre}. Registra diagnóstico, observaciones, refacciones y finaliza trabajos.`
+                : isControlCalidad
+                ? 'Revisión y validación de trabajos terminados.'
+                : isCaja
+                ? 'Consulta del resumen de órdenes para facturación y cobro.'
                 : 'Control de recepción, diagnóstico, progreso y entrega de vehículos.'}
             </p>
           </div>
         </div>
-        {!isMecanico && (
+        {canCreateOrden && (
           <div className="shrink-0">
             <button
               type="button"
@@ -1174,10 +1193,19 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         </div>
                       </td>
 
-                      {/* Acciones: Botón principal CONTINUAR o REGISTRAR TRABAJO */}
+                      {/* Acciones: Botón principal según rol */}
                       <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
                         <div className="inline-flex items-center gap-2">
-                          {isMecanico ? (
+                          {isCaja ? (
+                            <button
+                              type="button"
+                              onClick={() => setPrintingOrden(ord)}
+                              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#1D7EAE] bg-[#1D7EAE]/10 hover:bg-[#1D7EAE]/20 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Ver resumen</span>
+                            </button>
+                          ) : isMecanico ? (
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(ord)}
@@ -1192,7 +1220,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                               onClick={() => handleOpenContinuar(ord)}
                               className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1D7EAE] hover:bg-[#0032A0] rounded-lg shadow-xs transition-colors cursor-pointer"
                             >
-                              <span>Continuar</span>
+                              <span>{isControlCalidad ? 'Revisar orden' : 'Continuar'}</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           )}
@@ -1214,17 +1242,19 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                   onClick={() => setOpenMenuId(null)}
                                 />
                                 <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleOpenEdit(ord);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <Pencil className="w-4 h-4 text-slate-500" />
-                                    <span>Editar orden</span>
-                                  </button>
+                                  {!isCaja && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        handleOpenEdit(ord);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                    >
+                                      <Pencil className="w-4 h-4 text-slate-500" />
+                                      <span>Editar orden</span>
+                                    </button>
+                                  )}
 
                                   <button
                                     type="button"
@@ -1235,10 +1265,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                     className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                   >
                                     <FileText className="w-4 h-4 text-slate-500" />
-                                    <span>Ver / imprimir</span>
+                                    <span>{isCaja ? 'Ver resumen' : 'Ver / imprimir'}</span>
                                   </button>
 
-                                  {ord.entregado && !isMecanico && onRegistrarGarantia && (
+                                  {ord.entregado && !isMecanico && !isCaja && onRegistrarGarantia && (
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1338,7 +1368,16 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {isMecanico ? (
+                      {isCaja ? (
+                        <button
+                          type="button"
+                          onClick={() => setPrintingOrden(ord)}
+                          className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#1D7EAE] bg-[#1D7EAE]/10 hover:bg-[#1D7EAE]/20 rounded-lg transition-colors cursor-pointer shadow-xs"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Resumen</span>
+                        </button>
+                      ) : isMecanico ? (
                         <button
                           type="button"
                           onClick={() => handleOpenContinuar(ord)}
@@ -1353,8 +1392,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           onClick={() => handleOpenContinuar(ord)}
                           className="inline-flex items-center gap-1 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1D7EAE] hover:bg-[#0032A0] rounded-lg transition-colors cursor-pointer shadow-xs"
                         >
+                          <span>{isControlCalidad ? 'Revisar' : 'Continuar'}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
-                          <span>Continuar</span>
                         </button>
                       )}
 
@@ -1375,17 +1414,19 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                               onClick={() => setOpenMenuId(null)}
                             />
                             <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleOpenEdit(ord);
-                                }}
-                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <Pencil className="w-4 h-4 text-slate-500" />
-                                <span>Editar orden</span>
-                              </button>
+                              {!isCaja && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    handleOpenEdit(ord);
+                                  }}
+                                  className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Pencil className="w-4 h-4 text-slate-500" />
+                                  <span>Editar orden</span>
+                                </button>
+                              )}
 
                               <button
                                 type="button"
@@ -1396,10 +1437,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                                 className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                               >
                                 <FileText className="w-4 h-4 text-slate-500" />
-                                <span>Ver / imprimir</span>
+                                <span>{isCaja ? 'Ver resumen' : 'Ver / imprimir'}</span>
                               </button>
 
-                              {ord.entregado && !isMecanico && onRegistrarGarantia && (
+                              {ord.entregado && !isMecanico && !isCaja && onRegistrarGarantia && (
                                 <button
                                   type="button"
                                   onClick={() => {

@@ -309,6 +309,12 @@ const getFechaHoraLocal = (): string => {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
 
+export const migrateRolUsuario = (rol: string): RolUsuario => {
+  if (rol === 'Recepción') return 'Recepción/CRM';
+  if (rol === 'Mecánico') return 'Técnico';
+  return rol as RolUsuario;
+};
+
 const INITIAL_USUARIOS: Usuario[] = [
   {
     id: 'usr-admin',
@@ -324,19 +330,46 @@ const INITIAL_USUARIOS: Usuario[] = [
     nombre: 'Sofía Ramírez',
     usuario: 'recepcion@taller.demo',
     password: 'recepcion123',
-    rol: 'Recepción',
+    rol: 'Recepción/CRM',
     activo: true,
     empleadoId: 'emp-3',
     creadoEn: '2026-09-01T08:00:00Z',
   },
   {
-    id: 'usr-mecanico',
+    id: 'usr-cotizador',
+    nombre: 'Carlos Valdés',
+    usuario: 'cotizador@taller.demo',
+    password: 'cotizador123',
+    rol: 'Cotizador',
+    activo: true,
+    creadoEn: '2026-09-01T08:00:00Z',
+  },
+  {
+    id: 'usr-tecnico',
     nombre: 'Roberto Sánchez',
-    usuario: 'mecanico@taller.demo',
-    password: 'mecanico123',
-    rol: 'Mecánico',
+    usuario: 'tecnico@taller.demo',
+    password: 'tecnico123',
+    rol: 'Técnico',
     activo: true,
     empleadoId: 'emp-1',
+    creadoEn: '2026-09-01T08:00:00Z',
+  },
+  {
+    id: 'usr-calidad',
+    nombre: 'Elena Morales',
+    usuario: 'calidad@taller.demo',
+    password: 'calidad123',
+    rol: 'Control de calidad',
+    activo: true,
+    creadoEn: '2026-09-01T08:00:00Z',
+  },
+  {
+    id: 'usr-caja',
+    nombre: 'Patricia Domínguez',
+    usuario: 'caja@taller.demo',
+    password: 'caja123',
+    rol: 'Caja',
+    activo: true,
     creadoEn: '2026-09-01T08:00:00Z',
   },
 ];
@@ -682,7 +715,33 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEY_USUARIOS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          let hasMigrated = false;
+          const migratedUsers = parsed.map((u: Usuario) => {
+            const newRol = migrateRolUsuario(u.rol);
+            if (newRol !== u.rol) {
+              hasMigrated = true;
+              return { ...u, rol: newRol };
+            }
+            return u;
+          });
+
+          // Asegurar que las cuentas demo para todos los roles estén disponibles para pruebas inmediatas
+          const existingRoles = new Set(migratedUsers.map((u: Usuario) => u.rol));
+          const missingDemoUsers = INITIAL_USUARIOS.filter(
+            (demo) => !existingRoles.has(demo.rol) && !migratedUsers.some((u: Usuario) => u.usuario === demo.usuario)
+          );
+
+          const finalUsers = [...migratedUsers, ...missingDemoUsers];
+          if (hasMigrated || missingDemoUsers.length > 0) {
+            try {
+              localStorage.setItem(STORAGE_KEY_USUARIOS, JSON.stringify(finalUsers));
+            } catch {
+              // ignore
+            }
+          }
+          return finalUsers;
+        }
       }
     } catch {
       // fallback
@@ -695,12 +754,26 @@ export default function App() {
       const current = sessionStorage.getItem(STORAGE_KEY_SESION);
       if (current) {
         const parsed = JSON.parse(current);
-        if (parsed && parsed.usuarioId) return parsed;
+        if (parsed && parsed.usuarioId) {
+          const newRol = migrateRolUsuario(parsed.rol);
+          const migratedSesion = { ...parsed, rol: newRol };
+          if (newRol !== parsed.rol) {
+            sessionStorage.setItem(STORAGE_KEY_SESION, JSON.stringify(migratedSesion));
+          }
+          return migratedSesion;
+        }
       }
       const remembered = localStorage.getItem(STORAGE_KEY_SESION);
       if (remembered) {
         const parsed = JSON.parse(remembered);
-        if (parsed && parsed.usuarioId) return parsed;
+        if (parsed && parsed.usuarioId) {
+          const newRol = migrateRolUsuario(parsed.rol);
+          const migratedSesion = { ...parsed, rol: newRol };
+          if (newRol !== parsed.rol) {
+            localStorage.setItem(STORAGE_KEY_SESION, JSON.stringify(migratedSesion));
+          }
+          return migratedSesion;
+        }
       }
     } catch {
       // fallback
@@ -1727,7 +1800,9 @@ export default function App() {
   const isSectionAllowed = (section: SectionId, rol?: RolUsuario): boolean => {
     if (!rol) return false;
     if (rol === 'Administrador') return true;
-    if (rol === 'Recepción') {
+
+    // Recepción/CRM: clientes, vehículos, citas, prospectos, seguimientos y creación inicial de órdenes
+    if (rol === 'Recepción/CRM' || rol === 'Recepción') {
       return [
         'dashboard',
         'nueva-atencion',
@@ -1735,17 +1810,49 @@ export default function App() {
         'vehiculos',
         'citas',
         'ordenes',
-        'cotizaciones',
         'calendario',
         'prospectos',
         'atencion-asistida',
-        'garantias',
-        'bitacora',
       ].includes(section);
     }
-    if (rol === 'Mecánico') {
-      return ['dashboard', 'ordenes', 'vehiculos', 'garantias', 'bitacora'].includes(section);
+
+    // Cotizador: servicios, refacciones y elaboración de cotizaciones
+    if (rol === 'Cotizador') {
+      return [
+        'dashboard',
+        'cotizaciones',
+        'servicios',
+        'inventario',
+      ].includes(section);
     }
+
+    // Técnico: diagnóstico y actualización de órdenes asignadas
+    if (rol === 'Técnico' || rol === 'Mecánico') {
+      return [
+        'dashboard',
+        'ordenes',
+        'vehiculos',
+      ].includes(section);
+    }
+
+    // Control de calidad: revisión, aprobación o rechazo de trabajos terminados
+    if (rol === 'Control de calidad') {
+      return [
+        'dashboard',
+        'ordenes',
+        'garantias',
+      ].includes(section);
+    }
+
+    // Caja: facturas, pagos y consulta del resumen de la orden
+    if (rol === 'Caja') {
+      return [
+        'dashboard',
+        'facturacion',
+        'ordenes',
+      ].includes(section);
+    }
+
     return false;
   };
 
@@ -1797,8 +1904,11 @@ export default function App() {
     const hoyStr = getHoyDateString();
     const en7DiasStr = getEnDiasDateString(7);
     const rol = sesion.rol;
-    const isMecanico = rol === 'Mecánico';
-    const isRecepcion = rol === 'Recepción';
+    const isMecanico = rol === 'Mecánico' || rol === 'Técnico';
+    const isRecepcion = rol === 'Recepción' || rol === 'Recepción/CRM';
+    const isCotizador = rol === 'Cotizador';
+    const isControlCalidad = rol === 'Control de calidad';
+    const isCaja = rol === 'Caja';
     const isAdmin = rol === 'Administrador';
 
     const avisosGenerados: (AvisoPendiente & { fechaSort: string })[] = [];
@@ -1995,7 +2105,7 @@ export default function App() {
       return a.fechaSort.localeCompare(b.fechaSort);
     });
 
-    return avisosGenerados;
+    return avisosGenerados.filter((a) => isSectionAllowed(a.seccionDestino, rol));
   }, [sesion, citas, ordenes, cotizaciones, seguimientos, refacciones, garantias, vehiculos, clientes]);
 
   const avisosVisiblesNoVistos = useMemo(() => {

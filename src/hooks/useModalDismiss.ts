@@ -91,25 +91,8 @@ export function useModalDismiss({
     }
   }, [isOpen]);
 
-  // Main close function with dirty check & cleanup
+  // Main close function with cleanup
   const handleClose = useCallback(() => {
-    const dirty =
-      typeof isDirtyRef.current === 'function'
-        ? isDirtyRef.current()
-        : Boolean(isDirtyRef.current);
-
-    if (dirty) {
-      let confirmDiscard = true;
-      try {
-        confirmDiscard = window.confirm(confirmMessageRef.current);
-      } catch {
-        confirmDiscard = true;
-      }
-      if (!confirmDiscard) {
-        return;
-      }
-    }
-
     // Run custom cleanup (stop camera, clear timers, clear errors, etc.)
     if (onCleanupRef.current) {
       try {
