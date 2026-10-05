@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Cliente, Vehiculo, Cita, ServicioCatalogo } from '../types';
 import { Search, Plus, Pencil, X, Calendar as CalendarIcon, Clock, AlertTriangle, MoreVertical, ChevronDown, Ban } from 'lucide-react';
 
@@ -41,6 +41,16 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
   // Cancel Confirmation State
   const [citaToCancel, setCitaToCancel] = useState<Cita | null>(null);
 
+  // Baseline form values reference to detect unsaved changes accurately
+  const initialFormValuesRef = useRef({
+    clientId: '',
+    vehiculoId: '',
+    catalogId: '',
+    servicio: '',
+    fecha: '',
+    hora: '',
+  });
+
   // Mappings for lookup
   const clienteMap = useMemo(() => {
     const map = new Map<string, Cliente>();
@@ -74,12 +84,21 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
     const defaultClient = clientes[0]?.id || '';
     setFormClientId(defaultClient);
     const defaultVehs = vehiculos.filter((v) => v.clienteId === defaultClient);
-    setFormVehiculoId(defaultVehs[0]?.id || '');
+    const defaultVeh = defaultVehs[0]?.id || '';
+    setFormVehiculoId(defaultVeh);
     setSelectedCatalogId('');
     setFormServicio('');
     setFormFecha('');
     setFormHora('');
     setFormErrors({});
+    initialFormValuesRef.current = {
+      clientId: defaultClient,
+      vehiculoId: defaultVeh,
+      catalogId: '',
+      servicio: '',
+      fecha: '',
+      hora: '',
+    };
     setIsModalOpen(true);
   };
 
@@ -93,8 +112,55 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
     setFormFecha(cita.fecha);
     setFormHora(cita.hora);
     setFormErrors({});
+    initialFormValuesRef.current = {
+      clientId: cita.clienteId,
+      vehiculoId: cita.vehiculoId,
+      catalogId: '',
+      servicio: cita.servicio,
+      fecha: cita.fecha,
+      hora: cita.hora,
+    };
     setIsModalOpen(true);
   };
+
+  // Handle closing modal with dirty check
+  const handleCloseModal = useCallback(() => {
+    const init = initialFormValuesRef.current;
+    const isDirty =
+      formClientId !== init.clientId ||
+      formVehiculoId !== init.vehiculoId ||
+      selectedCatalogId !== init.catalogId ||
+      formServicio.trim() !== init.servicio.trim() ||
+      formFecha !== init.fecha ||
+      formHora !== init.hora;
+
+    if (isDirty) {
+      const confirmDiscard = window.confirm('¿Deseas descartar los cambios sin guardar?');
+      if (!confirmDiscard) {
+        return;
+      }
+    }
+    setIsModalOpen(false);
+    setFormErrors({});
+  }, [formClientId, formVehiculoId, selectedCatalogId, formServicio, formFecha, formHora]);
+
+  // Close with Escape key
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCloseModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isModalOpen, handleCloseModal]);
 
   const handleSelectCatalogService = (servId: string) => {
     setSelectedCatalogId(servId);
@@ -559,18 +625,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               </h3>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formClientId !== (editingCita?.clienteId || clientes[0]?.id || '') ||
-                    formVehiculoId !== (editingCita?.vehiculoId || '') ||
-                    formServicio.trim() !== (editingCita?.servicio || '') ||
-                    formFecha !== (editingCita?.fecha || '') ||
-                    formHora !== (editingCita?.hora || '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsModalOpen(false);
-                }}
+                onClick={handleCloseModal}
                 className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
@@ -747,18 +802,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formClientId !== (editingCita?.clienteId || clientes[0]?.id || '') ||
-                      formVehiculoId !== (editingCita?.vehiculoId || '') ||
-                      formServicio.trim() !== (editingCita?.servicio || '') ||
-                      formFecha !== (editingCita?.fecha || '') ||
-                      formHora !== (editingCita?.hora || '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsModalOpen(false);
-                  }}
+                  onClick={handleCloseModal}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
