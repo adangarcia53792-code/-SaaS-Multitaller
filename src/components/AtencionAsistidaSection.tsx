@@ -33,6 +33,7 @@ import {
   X,
   Layers,
 } from 'lucide-react';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface AtencionAsistidaSectionProps {
   clientes: Cliente[];
@@ -103,7 +104,25 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
   const [isSeguimientoModalOpen, setIsSeguimientoModalOpen] = useState<boolean>(false);
   const [fechaSeguimiento, setFechaSeguimiento] = useState<string>('');
   const [horaSeguimiento, setHoraSeguimiento] = useState<string>('');
+  const [initialSeguimientoData, setInitialSeguimientoData] = useState<{ fecha: string; hora: string }>({ fecha: '', hora: '' });
   const [seguimientoError, setSeguimientoError] = useState<string | null>(null);
+
+  const isSeguimientoDirty = useMemo(() => {
+    if (!isSeguimientoModalOpen) return false;
+    return fechaSeguimiento !== initialSeguimientoData.fecha || horaSeguimiento !== initialSeguimientoData.hora;
+  }, [isSeguimientoModalOpen, fechaSeguimiento, horaSeguimiento, initialSeguimientoData]);
+
+  const seguimientoModalDismiss = useModalDismiss({
+    isOpen: isSeguimientoModalOpen,
+    onClose: () => {
+      setIsSeguimientoModalOpen(false);
+      setSeguimientoError(null);
+    },
+    isDirty: isSeguimientoDirty,
+    onCleanup: () => {
+      setSeguimientoError(null);
+    },
+  });
 
   // Collapsible accordion sections
   const [isDetallesOpen, setIsDetallesOpen] = useState<boolean>(false);
@@ -408,8 +427,11 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
     const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
     const dd = String(tomorrow.getDate()).padStart(2, '0');
 
-    setFechaSeguimiento(`${yyyy}-${mm}-${dd}`);
-    setHoraSeguimiento('10:00');
+    const defaultDate = `${yyyy}-${mm}-${dd}`;
+    const defaultTime = '10:00';
+    setFechaSeguimiento(defaultDate);
+    setHoraSeguimiento(defaultTime);
+    setInitialSeguimientoData({ fecha: defaultDate, hora: defaultTime });
     setSeguimientoError(null);
     setIsSeguimientoModalOpen(true);
   };
@@ -1199,8 +1221,14 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
 
       {/* MODAL: GUARDAR COMO SEGUIMIENTO (SOLICITA FECHA Y HORA FUTURAS) */}
       {isSeguimientoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto"
+          onClick={seguimientoModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 bg-[#0d1b2a] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CalendarPlus className="w-5 h-5 text-[#1D7EAE]" />
@@ -1208,8 +1236,9 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
               </div>
               <button
                 type="button"
-                onClick={() => setIsSeguimientoModalOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors"
+                onClick={seguimientoModalDismiss.handleClose}
+                className="text-slate-400 hover:text-white transition-colors p-1"
+                aria-label="Cerrar modal"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1263,7 +1292,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsSeguimientoModalOpen(false)}
+                  onClick={seguimientoModalDismiss.handleClose}
                   className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   Cancelar

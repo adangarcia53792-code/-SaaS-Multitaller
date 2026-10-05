@@ -36,6 +36,7 @@ import {
   EventoBitacora,
 } from '../types';
 import { UsuariosPermisosSection } from './UsuariosPermisosSection';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface ConfiguracionSectionProps {
   configuracion: ConfiguracionTaller;
@@ -105,6 +106,19 @@ export function ConfiguracionSection({
   const [parsedBackup, setParsedBackup] = useState<RespaldoDemo | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [restoreSuccess, setRestoreSuccess] = useState(false);
+
+  const backupModalDismiss = useModalDismiss({
+    isOpen: Boolean(parsedBackup),
+    onClose: () => {
+      setParsedBackup(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    onCleanup: () => {
+      setValidationError(null);
+    },
+  });
 
   // Sync internal state if props change
   React.useEffect(() => {
@@ -773,8 +787,14 @@ export function ConfiguracionSection({
 
       {/* MODAL: RESUMEN Y CONFIRMACIÓN DE RESTAURACIÓN */}
       {parsedBackup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={backupModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <FileJson className="w-5 h-5 text-slate-700" />
@@ -784,8 +804,9 @@ export function ConfiguracionSection({
               </div>
               <button
                 type="button"
-                onClick={() => setParsedBackup(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={backupModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                aria-label="Cerrar modal"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -914,7 +935,7 @@ export function ConfiguracionSection({
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setParsedBackup(null)}
+                  onClick={backupModalDismiss.handleClose}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-xs md:text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   Cancelar

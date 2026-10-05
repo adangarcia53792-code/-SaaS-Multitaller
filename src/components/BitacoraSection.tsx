@@ -23,6 +23,7 @@ import {
   SesionUsuario,
   ConfiguracionTaller,
 } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface BitacoraSectionProps {
   bitacora: EventoBitacora[];
@@ -57,6 +58,12 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
   const [fechaFin, setFechaFin] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
   const [selectedEvento, setSelectedEvento] = useState<EventoBitacora | null>(null);
+
+  const eventoModalDismiss = useModalDismiss({
+    isOpen: Boolean(selectedEvento),
+    onClose: () => setSelectedEvento(null),
+    closeOnBackdrop: true,
+  });
 
   const rol = currentUser?.rol || 'Administrador';
 
@@ -539,8 +546,14 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
 
       {/* Modal de Detalle de Evento */}
       {selectedEvento && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 border border-slate-200">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto"
+          onClick={eventoModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 border border-slate-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Encabezado modal */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
               <div className="flex items-center gap-2.5">
@@ -558,7 +571,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedEvento(null)}
+                onClick={eventoModalDismiss.handleClose}
                 className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -670,7 +683,7 @@ export const BitacoraSection: React.FC<BitacoraSectionProps> = ({
             <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 flex justify-end">
               <button
                 type="button"
-                onClick={() => setSelectedEvento(null)}
+                onClick={eventoModalDismiss.handleClose}
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-medium text-xs transition-colors"
               >
                 Cerrar

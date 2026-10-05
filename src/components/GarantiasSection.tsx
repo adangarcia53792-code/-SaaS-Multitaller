@@ -32,6 +32,7 @@ import {
   SesionUsuario,
 } from '../types';
 import { IotLogo } from './IotLogo';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface GarantiasSectionProps {
   garantias: Garantia[];
@@ -154,6 +155,52 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
   // Collapsible sections in detail modal
   const [openCondicionesAccordion, setOpenCondicionesAccordion] = useState(true);
   const [openObservacionesAccordion, setOpenObservacionesAccordion] = useState(true);
+
+  const detailModalDismiss = useModalDismiss({
+    isOpen: Boolean(selectedGarantia) && !isApplyModalOpen && !isCancelModalOpen,
+    onClose: () => {
+      setSelectedGarantia(null);
+      setObsInput('');
+    },
+    closeOnBackdrop: true,
+  });
+
+  const applyModalDismiss = useModalDismiss({
+    isOpen: isApplyModalOpen && Boolean(selectedGarantia),
+    onClose: () => {
+      setIsApplyModalOpen(false);
+      setApplyMotivo('');
+      setApplyObs('');
+      setApplyConfirmed(false);
+      setApplyError(null);
+    },
+    isDirty: Boolean(applyMotivo.trim() || applyObs.trim()),
+    dirtyMessage: '¿Deseas descartar el trámite de aplicación de garantía?',
+    closeOnBackdrop: true,
+  });
+
+  const cancelModalDismiss = useModalDismiss({
+    isOpen: isCancelModalOpen && Boolean(selectedGarantia),
+    onClose: () => {
+      setIsCancelModalOpen(false);
+      setCancelMotivo('');
+      setCancelError(null);
+    },
+    isDirty: Boolean(cancelMotivo.trim()),
+    dirtyMessage: '¿Deseas descartar la cancelación de la garantía?',
+    closeOnBackdrop: true,
+  });
+
+  const createModalDismiss = useModalDismiss({
+    isOpen: isCreateModalOpen,
+    onClose: () => {
+      setIsCreateModalOpen(false);
+      setCreateError(null);
+    },
+    isDirty: Boolean(createTrabajo.trim()),
+    dirtyMessage: '¿Deseas descartar la creación de la póliza de garantía?',
+    closeOnBackdrop: true,
+  });
 
   // Delivered orders without active warranty
   const ordenesEntregadas = useMemo(() => {
@@ -738,8 +785,14 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       {/* MODAL: DETALLE Y FICHA DE GARANTÍA (VISTA E IMPRESIÓN LIMPIA) */}
       {/* ========================================================================= */}
       {selectedGarantia && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 border border-slate-200">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in"
+          onClick={detailModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 border border-slate-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header (Hidden on Print) */}
             <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between no-print">
               <div className="flex items-center gap-2.5">
@@ -762,7 +815,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedGarantia(null)}
+                  onClick={detailModalDismiss.handleClose}
                   className="p-1 rounded-md text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -1063,7 +1116,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
 
               <button
                 type="button"
-                onClick={() => setSelectedGarantia(null)}
+                onClick={detailModalDismiss.handleClose}
                 className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Cerrar
@@ -1077,8 +1130,14 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       {/* MODAL: SOLICITAR APLICACIÓN DE GARANTÍA */}
       {/* ========================================================================= */}
       {isApplyModalOpen && selectedGarantia && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8 border border-[#DDE4E8]">
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in"
+          onClick={applyModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8 border border-[#DDE4E8]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
@@ -1090,7 +1149,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsApplyModalOpen(false)}
+                onClick={applyModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1172,7 +1231,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsApplyModalOpen(false)}
+                  onClick={applyModalDismiss.handleClose}
                   className="px-3.5 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
@@ -1196,8 +1255,14 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
       {/* MODAL: CANCELAR GARANTÍA */}
       {/* ========================================================================= */}
       {isCancelModalOpen && selectedGarantia && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8 border border-[#DDE4E8]">
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in"
+          onClick={cancelModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8 border border-[#DDE4E8]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
@@ -1207,7 +1272,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsCancelModalOpen(false)}
+                onClick={cancelModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1245,7 +1310,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
               <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsCancelModalOpen(false)}
+                  onClick={cancelModalDismiss.handleClose}
                   className="px-3.5 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Volver

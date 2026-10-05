@@ -17,6 +17,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { AvisoPendiente } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface CentroAvisosDrawerProps {
   isOpen: boolean;
@@ -42,6 +43,12 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  const drawerDismiss = useModalDismiss({
+    isOpen,
+    onClose,
+    closeOnBackdrop: true,
+  });
+
   // Focus close button on open
   useEffect(() => {
     if (isOpen) {
@@ -52,17 +59,6 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
-
-  // Handle ESC key to close
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -130,7 +126,7 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
       {/* Telón de fondo */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
+        onClick={drawerDismiss.handleClose}
         aria-hidden="true"
       />
 
@@ -159,7 +155,7 @@ export const CentroAvisosDrawer: React.FC<CentroAvisosDrawerProps> = ({
               <button
                 ref={closeButtonRef}
                 type="button"
-                onClick={onClose}
+                onClick={drawerDismiss.handleClose}
                 className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors"
                 aria-label="Cerrar panel de avisos"
               >

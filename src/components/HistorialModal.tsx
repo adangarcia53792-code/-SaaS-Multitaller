@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Cliente, Vehiculo, Cita, Cotizacion, OrdenTrabajo } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
   X,
   History,
@@ -57,6 +58,18 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
 
   // Modal for detail view
   const [viewingDetailItem, setViewingDetailItem] = useState<HistorialItem | null>(null);
+
+  const mainModalDismiss = useModalDismiss({
+    isOpen: true,
+    onClose,
+    closeOnBackdrop: true,
+  });
+
+  const detailModalDismiss = useModalDismiss({
+    isOpen: Boolean(viewingDetailItem),
+    onClose: () => setViewingDetailItem(null),
+    closeOnBackdrop: true,
+  });
 
   // Lookups
   const clienteMap = useMemo(() => {
@@ -315,7 +328,10 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 overflow-y-auto no-print animate-in fade-in duration-100">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 overflow-y-auto no-print animate-in fade-in duration-100"
+      onClick={mainModalDismiss.handleBackdropClick}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[92vh] my-4">
         {/* Header Modal */}
         <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
@@ -334,8 +350,9 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={mainModalDismiss.handleClose}
             className="p-1.5 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
+            aria-label="Cerrar ventana"
           >
             <X className="w-5 h-5" />
           </button>
@@ -642,8 +659,8 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
         <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
           <button
             type="button"
-            onClick={onClose}
-            className="px-5 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+            onClick={mainModalDismiss.handleClose}
+            className="px-5 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Cerrar historial
           </button>
@@ -655,7 +672,10 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
       {/* Reutiliza las vistas existentes de forma limpia */}
       {/* ======================================================== */}
       {viewingDetailItem && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in duration-100">
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 overflow-y-auto animate-in fade-in duration-100"
+          onClick={detailModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[88vh]">
             {/* Modal Detail Header */}
             <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
@@ -671,8 +691,9 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setViewingDetailItem(null)}
+                onClick={detailModalDismiss.handleClose}
                 className="p-1.5 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
+                aria-label="Cerrar detalle"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -928,8 +949,8 @@ export const HistorialModal: React.FC<HistorialModalProps> = ({
             <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
               <button
                 type="button"
-                onClick={() => setViewingDetailItem(null)}
-                className="px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors"
+                onClick={detailModalDismiss.handleClose}
+                className="px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
               >
                 Volver al historial
               </button>

@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Cliente, Vehiculo, Cita, ServicioCatalogo } from '../types';
 import { Search, Plus, Pencil, X, Calendar as CalendarIcon, Clock, AlertTriangle, MoreVertical, ChevronDown, Ban } from 'lucide-react';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface CitasSectionProps {
   citas: Cita[];
@@ -123,44 +124,32 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
     setIsModalOpen(true);
   };
 
-  // Handle closing modal with dirty check
-  const handleCloseModal = useCallback(() => {
-    const init = initialFormValuesRef.current;
-    const isDirty =
-      formClientId !== init.clientId ||
-      formVehiculoId !== init.vehiculoId ||
-      selectedCatalogId !== init.catalogId ||
-      formServicio.trim() !== init.servicio.trim() ||
-      formFecha !== init.fecha ||
-      formHora !== init.hora;
+  // Modal dismiss handlers
+  const citaFormDismiss = useModalDismiss({
+    isOpen: isModalOpen,
+    onClose: () => {
+      setIsModalOpen(false);
+      setFormErrors({});
+    },
+    isDirty: () => {
+      const init = initialFormValuesRef.current;
+      return (
+        formClientId !== init.clientId ||
+        formVehiculoId !== init.vehiculoId ||
+        selectedCatalogId !== init.catalogId ||
+        formServicio.trim() !== init.servicio.trim() ||
+        formFecha !== init.fecha ||
+        formHora !== init.hora
+      );
+    },
+    closeOnBackdrop: true,
+  });
 
-    if (isDirty) {
-      const confirmDiscard = window.confirm('¿Deseas descartar los cambios sin guardar?');
-      if (!confirmDiscard) {
-        return;
-      }
-    }
-    setIsModalOpen(false);
-    setFormErrors({});
-  }, [formClientId, formVehiculoId, selectedCatalogId, formServicio, formFecha, formHora]);
-
-  // Close with Escape key
-  useEffect(() => {
-    if (!isModalOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        handleCloseModal();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isModalOpen, handleCloseModal]);
+  const cancelConfirmDismiss = useModalDismiss({
+    isOpen: Boolean(citaToCancel),
+    onClose: () => setCitaToCancel(null),
+    closeOnBackdrop: true,
+  });
 
   const handleSelectCatalogService = (servId: string) => {
     setSelectedCatalogId(servId);
@@ -617,7 +606,10 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
       {/* MODAL: AGENDAR / EDITAR CITA */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={citaFormDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[90vh] flex flex-col">
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#231F20]">
@@ -625,7 +617,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               </h3>
               <button
                 type="button"
-                onClick={handleCloseModal}
+                onClick={citaFormDismiss.handleClose}
                 className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
@@ -802,7 +794,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
-                  onClick={handleCloseModal}
+                  onClick={citaFormDismiss.handleClose}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
@@ -822,7 +814,10 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
       {/* MODAL DE CONFIRMACIÓN PARA CANCELAR CITA */}
       {citaToCancel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={cancelConfirmDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4">
             <div className="flex items-center gap-3 text-amber-600">
               <div className="p-2 bg-amber-50 rounded-full border border-amber-200">
@@ -837,7 +832,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setCitaToCancel(null)}
+                onClick={cancelConfirmDismiss.handleClose}
                 className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
               >
                 No, volver

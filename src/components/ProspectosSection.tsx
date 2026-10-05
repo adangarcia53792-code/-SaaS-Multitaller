@@ -34,6 +34,7 @@ import {
   Seguimiento,
   HistorialProspectoItem,
 } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface ProspectosSectionProps {
   prospectos: Prospecto[];
@@ -136,6 +137,90 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
     setFeedbackMsg(msg);
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
+
+  const isFormDirty = useMemo(() => {
+    if (!isFormModalOpen) return false;
+    if (editingProspecto) {
+      return (
+        formNombre.trim() !== (editingProspecto.nombre || '') ||
+        formTelefono.trim() !== (editingProspecto.telefono || '') ||
+        formCorreo.trim() !== (editingProspecto.correo || '') ||
+        formNotas.trim() !== (editingProspecto.notas || '') ||
+        formServicioInteres !== (editingProspecto.servicioInteres || '') ||
+        formOrigen !== editingProspecto.origen ||
+        formEstado !== editingProspecto.estado ||
+        formProximaFecha !== (editingProspecto.proximaAccionFecha || '')
+      );
+    }
+    return Boolean(
+      formNombre.trim() ||
+      formTelefono.trim() ||
+      formCorreo.trim() ||
+      formNotas.trim() ||
+      formServicioInteres ||
+      formProximaFecha
+    );
+  }, [
+    isFormModalOpen,
+    editingProspecto,
+    formNombre,
+    formTelefono,
+    formCorreo,
+    formNotas,
+    formServicioInteres,
+    formOrigen,
+    formEstado,
+    formProximaFecha,
+  ]);
+
+  const formModalDismiss = useModalDismiss({
+    isOpen: isFormModalOpen,
+    onClose: () => {
+      setIsFormModalOpen(false);
+      setEditingProspecto(null);
+      setFormErrors({});
+      setDuplicateWarningAck(false);
+    },
+    isDirty: isFormDirty,
+    dirtyMessage: '¿Deseas descartar los cambios del prospecto sin guardar?',
+    closeOnBackdrop: true,
+  });
+
+  const isConvertDirty = useMemo(() => {
+    if (!convertingProspecto) return false;
+    return (
+      convertClientNombre.trim() !== (convertingProspecto.nombre || '') ||
+      convertClientTelefono.trim() !== (convertingProspecto.telefono || '') ||
+      convertClientCorreo.trim() !== (convertingProspecto.correo || '')
+    );
+  }, [convertingProspecto, convertClientNombre, convertClientTelefono, convertClientCorreo]);
+
+  const convertModalDismiss = useModalDismiss({
+    isOpen: Boolean(convertingProspecto),
+    onClose: () => {
+      setConvertingProspecto(null);
+      setConvertErrors({});
+      setMatchedExistingClientId(null);
+    },
+    isDirty: isConvertDirty,
+    dirtyMessage: '¿Deseas cancelar la conversión a cliente?',
+    closeOnBackdrop: true,
+  });
+
+  const viewingModalDismiss = useModalDismiss({
+    isOpen: Boolean(viewingProspecto),
+    onClose: () => setViewingProspecto(null),
+    closeOnBackdrop: true,
+  });
+
+  const rescheduleModalDismiss = useModalDismiss({
+    isOpen: Boolean(reschedulingProspecto),
+    onClose: () => {
+      setReschedulingProspecto(null);
+      setRescheduleError(null);
+    },
+    closeOnBackdrop: true,
+  });
 
   // Duplicate phone detection for form
   const duplicatePhoneProspect = useMemo(() => {
@@ -1250,8 +1335,14 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {/* MODAL: FORMULARIO AGREGAR / EDITAR PROSPECTO */}
       {/* ========================================================================= */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in"
+          onClick={formModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
@@ -1263,17 +1354,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formNombre.trim() !== (editingProspecto?.nombre || '') ||
-                    formTelefono.trim() !== (editingProspecto?.telefono || '') ||
-                    formCorreo.trim() !== (editingProspecto?.correo || '') ||
-                    formNotas.trim() !== (editingProspecto?.notas || '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsFormModalOpen(false);
-                }}
+                onClick={formModalDismiss.handleClose}
                 className="text-slate-400 hover:text-white transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                 aria-label="Cerrar ventana"
               >
@@ -1510,18 +1591,8 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formNombre.trim() !== (editingProspecto?.nombre || '') ||
-                      formTelefono.trim() !== (editingProspecto?.telefono || '') ||
-                      formCorreo.trim() !== (editingProspecto?.correo || '') ||
-                      formNotas.trim() !== (editingProspecto?.notas || '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsFormModalOpen(false);
-                  }}
-                  className="px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
+                  onClick={formModalDismiss.handleClose}
+                  className="px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px] cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1541,8 +1612,14 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {/* MODAL: CONVERTIR EN CLIENTE */}
       {/* ========================================================================= */}
       {convertingProspecto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in"
+          onClick={convertModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-emerald-800 text-white">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-emerald-200" />
@@ -1550,7 +1627,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setConvertingProspecto(null)}
+                onClick={convertModalDismiss.handleClose}
                 className="text-emerald-200 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1670,7 +1747,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setConvertingProspecto(null)}
+                  onClick={convertModalDismiss.handleClose}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
@@ -1691,8 +1768,14 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {/* MODAL: VER DETALLES E HISTORIAL DEL PROSPECTO */}
       {/* ========================================================================= */}
       {viewingProspecto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8 flex flex-col max-h-[90vh]">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in"
+          onClick={viewingModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-8 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
@@ -1704,7 +1787,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setViewingProspecto(null)}
+                onClick={viewingModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1858,7 +1941,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
             <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
               <button
                 type="button"
-                onClick={() => setViewingProspecto(null)}
+                onClick={viewingModalDismiss.handleClose}
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               >
                 Cerrar
@@ -1872,8 +1955,14 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
       {/* MODAL: REPROGRAMAR PRÓXIMA ACCIÓN */}
       {/* ========================================================================= */}
       {reschedulingProspecto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in"
+          onClick={rescheduleModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
@@ -1885,7 +1974,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setReschedulingProspecto(null)}
+                onClick={rescheduleModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1943,7 +2032,7 @@ export const ProspectosSection: React.FC<ProspectosSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setReschedulingProspecto(null)}
+                  onClick={rescheduleModalDismiss.handleClose}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer min-h-[42px]"
                 >
                   Cancelar

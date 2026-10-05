@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Users,
   UserPlus,
@@ -16,6 +16,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Usuario, RolUsuario, Empleado, SesionUsuario } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface UsuariosPermisosSectionProps {
   usuarios: Usuario[];
@@ -54,6 +55,49 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
   // Password modal form
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const isUserFormDirty = useMemo(() => {
+    if (!isAddModalOpen) return false;
+    if (editingUsuario) {
+      return (
+        formNombre !== editingUsuario.nombre ||
+        formUsuario !== editingUsuario.usuario ||
+        formRol !== editingUsuario.rol ||
+        formEmpleadoId !== (editingUsuario.empleadoId || '') ||
+        Boolean(formPassword.trim())
+      );
+    }
+    return Boolean(formNombre.trim() || formUsuario.trim() || formPassword.trim() || formEmpleadoId);
+  }, [isAddModalOpen, editingUsuario, formNombre, formUsuario, formRol, formEmpleadoId, formPassword]);
+
+  const userFormDismiss = useModalDismiss({
+    isOpen: isAddModalOpen,
+    onClose: () => {
+      setIsAddModalOpen(false);
+      setEditingUsuario(null);
+      setFormErrors({});
+    },
+    isDirty: isUserFormDirty,
+    dirtyMessage: '¿Deseas descartar los cambios del usuario sin guardar?',
+    closeOnBackdrop: true,
+  });
+
+  const isPasswordFormDirty = useMemo(() => {
+    if (!passwordTargetUsuario) return false;
+    return Boolean(newPasswordInput.trim());
+  }, [passwordTargetUsuario, newPasswordInput]);
+
+  const passwordModalDismiss = useModalDismiss({
+    isOpen: Boolean(passwordTargetUsuario),
+    onClose: () => {
+      setPasswordTargetUsuario(null);
+      setNewPasswordInput('');
+      setPasswordError(null);
+    },
+    isDirty: isPasswordFormDirty,
+    dirtyMessage: '¿Deseas descartar el cambio de contraseña?',
+    closeOnBackdrop: true,
+  });
 
   // Feedback banner
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
@@ -433,8 +477,11 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
       {/* MODAL: AGREGAR / EDITAR USUARIO */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in"
+          onClick={userFormDismiss.handleBackdropClick}
+        >
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
@@ -446,7 +493,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
               </div>
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={userFormDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -567,7 +614,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={userFormDismiss.handleClose}
                   className="px-3.5 py-2 min-h-[42px] border border-[#DDE4E8] rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
@@ -588,8 +635,11 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
       {/* MODAL: CAMBIAR CONTRASEÑA */}
       {/* ========================================================================= */}
       {passwordTargetUsuario && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto animate-in fade-in"
+          onClick={passwordModalDismiss.handleBackdropClick}
+        >
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
@@ -601,7 +651,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
               </div>
               <button
                 type="button"
-                onClick={() => setPasswordTargetUsuario(null)}
+                onClick={passwordModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -631,7 +681,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
               <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setPasswordTargetUsuario(null)}
+                  onClick={passwordModalDismiss.handleClose}
                   className="px-3.5 py-1.5 min-h-[42px] border border-[#DDE4E8] rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar

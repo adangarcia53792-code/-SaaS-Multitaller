@@ -26,6 +26,7 @@ import {
   EstadoFactura,
 } from '../types';
 import { IotLogo } from './IotLogo';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface FacturacionSectionProps {
   facturas: Factura[];
@@ -71,6 +72,45 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
   const [cancelError, setCancelError] = useState<string | null>(null);
 
   const [viewingFactura, setViewingFactura] = useState<Factura | null>(null);
+
+  const createModalDismiss = useModalDismiss({
+    isOpen: isCreateModalOpen,
+    onClose: () => {
+      setIsCreateModalOpen(false);
+      setCreateError(null);
+    },
+    closeOnBackdrop: true,
+  });
+
+  const payingModalDismiss = useModalDismiss({
+    isOpen: Boolean(payingFactura),
+    onClose: () => {
+      setPayingFactura(null);
+      setNotasPago('');
+      setPagoError(null);
+    },
+    isDirty: Boolean(notasPago.trim()),
+    dirtyMessage: '¿Deseas descartar los datos del pago sin registrar?',
+    closeOnBackdrop: true,
+  });
+
+  const cancelingModalDismiss = useModalDismiss({
+    isOpen: Boolean(cancelingFactura),
+    onClose: () => {
+      setCancelingFactura(null);
+      setMotivoCancelacion('');
+      setCancelError(null);
+    },
+    isDirty: Boolean(motivoCancelacion.trim()),
+    dirtyMessage: '¿Deseas descartar el motivo de cancelación?',
+    closeOnBackdrop: true,
+  });
+
+  const viewingFacturaDismiss = useModalDismiss({
+    isOpen: Boolean(viewingFactura),
+    onClose: () => setViewingFactura(null),
+    closeOnBackdrop: true,
+  });
 
   // Maps for lookups
   const clienteMap = useMemo(() => {
@@ -590,8 +630,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
 
       {/* MODAL: CREAR FACTURA DE PRUEBA */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={createModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-[#0032A0]" />
@@ -601,8 +647,8 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={createModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -694,7 +740,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   <div className="flex items-center justify-end gap-3 pt-2">
                     <button
                       type="button"
-                      onClick={() => setIsCreateModalOpen(false)}
+                      onClick={createModalDismiss.handleClose}
                       className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                     >
                       Cancelar
@@ -722,8 +768,8 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"
+                    onClick={createModalDismiss.handleClose}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
                   >
                     Entendido
                   </button>
@@ -736,8 +782,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
 
       {/* MODAL: REGISTRAR PAGO */}
       {payingFactura && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={payingModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-emerald-600" />
@@ -747,8 +799,8 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setPayingFactura(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={payingModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -823,14 +875,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setPayingFactura(null)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                  onClick={payingModalDismiss.handleClose}
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-xs transition-colors"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Confirmar pago
                 </button>
@@ -842,8 +894,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
 
       {/* MODAL: CANCELAR FACTURA */}
       {cancelingFactura && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={cancelingModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2 text-rose-600">
                 <Ban className="w-5 h-5" />
@@ -853,8 +911,8 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setCancelingFactura(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={cancelingModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -886,14 +944,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setCancelingFactura(null)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                  onClick={cancelingModalDismiss.handleClose}
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Volver
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg shadow-xs transition-colors"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Confirmar cancelación
                 </button>
@@ -905,8 +963,14 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
 
       {/* MODAL: VER / IMPRIMIR COMPROBANTE DE FACTURACIÓN */}
       {viewingFactura && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={viewingFacturaDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Top Bar for Screen only */}
             <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-6 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Vista previa de comprobante</span>
@@ -921,7 +985,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewingFactura(null)}
+                  onClick={viewingFacturaDismiss.handleClose}
                   className="p-1.5 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />

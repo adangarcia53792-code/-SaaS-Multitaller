@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Cliente, Vehiculo, Cotizacion, OrdenTrabajo, ServicioCatalogo, ConfiguracionTaller } from '../types';
 import { IotLogo } from './IotLogo';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
   Search,
   Plus,
@@ -82,6 +83,57 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   // Modal: Ver orden vinculada
   const [viewingLinkedOrden, setViewingLinkedOrden] = useState<OrdenTrabajo | null>(null);
 
+  const initialCotizacionValuesRef = useRef({
+    clientId: '',
+    vehiculoId: '',
+    descripcion: '',
+    refacciones: '0',
+    manoObra: '0',
+  });
+
+  const cotizacionFormDismiss = useModalDismiss({
+    isOpen: isFormModalOpen,
+    onClose: () => {
+      setIsFormModalOpen(false);
+      setFormErrors({});
+    },
+    isDirty: () => {
+      const init = initialCotizacionValuesRef.current;
+      return (
+        formClientId !== init.clientId ||
+        formVehiculoId !== init.vehiculoId ||
+        formDescripcion.trim() !== init.descripcion.trim() ||
+        formRefacciones !== init.refacciones ||
+        formManoObra !== init.manoObra
+      );
+    },
+    closeOnBackdrop: true,
+  });
+
+  const printingModalDismiss = useModalDismiss({
+    isOpen: Boolean(printingCotizacion),
+    onClose: () => setPrintingCotizacion(null),
+    closeOnBackdrop: true,
+  });
+
+  const statusConfirmDismiss = useModalDismiss({
+    isOpen: Boolean(statusConfirm),
+    onClose: () => setStatusConfirm(null),
+    closeOnBackdrop: true,
+  });
+
+  const linkingModalDismiss = useModalDismiss({
+    isOpen: Boolean(linkingCotizacion),
+    onClose: () => setLinkingCotizacion(null),
+    closeOnBackdrop: true,
+  });
+
+  const viewingLinkedOrdenDismiss = useModalDismiss({
+    isOpen: Boolean(viewingLinkedOrden),
+    onClose: () => setViewingLinkedOrden(null),
+    closeOnBackdrop: true,
+  });
+
   // Lookup maps
   const clienteMap = useMemo(() => {
     const map = new Map<string, Cliente>();
@@ -158,12 +210,20 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     const defClient = clientes[0]?.id || '';
     setFormClientId(defClient);
     const clientVehs = vehiculos.filter((v) => v.clienteId === defClient);
-    setFormVehiculoId(clientVehs[0]?.id || '');
+    const defVeh = clientVehs[0]?.id || '';
+    setFormVehiculoId(defVeh);
     setSelectedCatalogId('');
     setFormDescripcion('');
     setFormRefacciones('0');
     setFormManoObra('0');
     setFormErrors({});
+    initialCotizacionValuesRef.current = {
+      clientId: defClient,
+      vehiculoId: defVeh,
+      descripcion: '',
+      refacciones: '0',
+      manoObra: '0',
+    };
     setIsFormModalOpen(true);
   };
 
@@ -177,6 +237,13 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     setFormManoObra(cot.importeManoObra.toString());
     setFormErrors({});
     setOpenMenuId(null);
+    initialCotizacionValuesRef.current = {
+      clientId: cot.clienteId,
+      vehiculoId: cot.vehiculoId,
+      descripcion: cot.descripcion,
+      refacciones: cot.importeRefacciones.toString(),
+      manoObra: cot.importeManoObra.toString(),
+    };
     setIsFormModalOpen(true);
   };
 
@@ -816,7 +883,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
       {/* MODAL: CREAR O VINCULAR ORDEN (ETAPA 7) */}
       {linkingCotizacion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={linkingModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -829,8 +899,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setLinkingCotizacion(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={linkingModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -898,8 +969,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <div className="flex justify-end pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setLinkingCotizacion(null)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  onClick={linkingModalDismiss.handleClose}
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -911,7 +982,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
       {/* MODAL: VER DETALLE DE ORDEN VINCULADA */}
       {viewingLinkedOrden && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={viewingLinkedOrdenDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
@@ -924,8 +998,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setViewingLinkedOrden(null)}
-                className="text-slate-400 hover:text-slate-600"
+                onClick={viewingLinkedOrdenDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -950,7 +1025,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setViewingLinkedOrden(null)}
+                onClick={viewingLinkedOrdenDismiss.handleClose}
                 className="px-4 py-2 border border-[#DDE4E8] rounded-lg text-xs font-medium text-[#5F6B73] hover:bg-slate-50 cursor-pointer"
               >
                 Cerrar
@@ -975,8 +1050,14 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
       {/* MODAL: FORMULARIO AGREGAR / EDITAR */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[90vh] flex flex-col">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={cotizacionFormDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
@@ -988,19 +1069,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formClientId !== (editingCotizacion?.clienteId || clientes[0]?.id || '') ||
-                    formVehiculoId !== (editingCotizacion?.vehiculoId || '') ||
-                    formDescripcion.trim() !== (editingCotizacion?.descripcion || '') ||
-                    formRefacciones !== (editingCotizacion?.importeRefacciones?.toString() || '0') ||
-                    formManoObra !== (editingCotizacion?.importeManoObra?.toString() || '0');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsFormModalOpen(false);
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                onClick={cotizacionFormDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -1181,18 +1251,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formClientId !== (editingCotizacion?.clienteId || clientes[0]?.id || '') ||
-                      formVehiculoId !== (editingCotizacion?.vehiculoId || '') ||
-                      formDescripcion.trim() !== (editingCotizacion?.descripcion || '') ||
-                      formRefacciones !== (editingCotizacion?.importeRefacciones?.toString() || '0') ||
-                      formManoObra !== (editingCotizacion?.importeManoObra?.toString() || '0');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsFormModalOpen(false);
-                  }}
+                  onClick={cotizacionFormDismiss.handleClose}
                   className="px-4 py-2.5 min-h-[42px] border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
@@ -1212,7 +1271,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
       {/* MODAL: CONFIRMAR CAMBIO DE ESTADO (APROBAR / RECHAZAR) */}
       {statusConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={statusConfirmDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4">
             <div className="flex items-center gap-3">
               {statusConfirm.action === 'Aprobada' ? (
@@ -1238,15 +1300,15 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setStatusConfirm(null)}
-                className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                onClick={statusConfirmDismiss.handleClose}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmStatus}
-                className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-xs transition-colors ${
+                className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-xs transition-colors cursor-pointer ${
                   statusConfirm.action === 'Aprobada'
                     ? 'bg-emerald-600 hover:bg-emerald-700'
                     : 'bg-rose-600 hover:bg-rose-700'
@@ -1261,7 +1323,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
       {/* MODAL / VISTA DE IMPRESIÓN (VER / IMPRIMIR) */}
       {printingCotizacion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={printingModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area">
             <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-6 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Vista previa de cotización</span>
@@ -1276,8 +1341,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPrintingCotizacion(null)}
+                  onClick={printingModalDismiss.handleClose}
                   className="p-1.5 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
+                  aria-label="Cerrar ventana"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1427,7 +1493,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             <div className="no-print bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setPrintingCotizacion(null)}
+                onClick={printingModalDismiss.handleClose}
                 className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors min-h-[38px] cursor-pointer"
               >
                 Cerrar

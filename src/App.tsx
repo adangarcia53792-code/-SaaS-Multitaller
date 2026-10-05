@@ -84,6 +84,7 @@ import { BitacoraSection } from './components/BitacoraSection';
 import { LoginView } from './components/LoginView';
 import { CentroAvisosDrawer } from './components/CentroAvisosDrawer';
 import { IotLogo } from './components/IotLogo';
+import { useModalDismiss, notifySectionChange } from './hooks/useModalDismiss';
 
 interface MenuItem {
   id: SectionId;
@@ -266,9 +267,6 @@ const INITIAL_ORDENES: OrdenTrabajo[] = [
     mecanicoId: 'emp-2',
     mecanicoNombre: 'Miguel Ángel Gómez',
     fechaEntregaPrometida: getHoyDateString(),
-    codigoConsulta: '7F9K2A',
-    mensajePublico: 'El vehículo se encuentra en servicio de afinación y reemplazo de filtros en rampa.',
-    actualizadoEn: '2026-09-28T11:30:00Z',
     refaccionesUtilizadas: [
       {
         id: 'ru-init-1',
@@ -1656,6 +1654,34 @@ export default function App() {
   const [openClienteMenuId, setOpenClienteMenuId] = useState<string | null>(null);
   const [openVehiculoMenuId, setOpenVehiculoMenuId] = useState<string | null>(null);
 
+  const clienteModalDismiss = useModalDismiss({
+    isOpen: isClienteModalOpen,
+    onClose: () => {
+      setIsClienteModalOpen(false);
+      setClienteErrors({});
+    },
+    isDirty: () =>
+      clienteForm.nombre.trim() !== (editingCliente?.nombre || '') ||
+      clienteForm.telefono.trim() !== (editingCliente?.telefono || '') ||
+      clienteForm.correo.trim() !== (editingCliente?.correo || ''),
+    closeOnBackdrop: true,
+  });
+
+  const vehiculoModalDismiss = useModalDismiss({
+    isOpen: isVehiculoModalOpen,
+    onClose: () => {
+      setIsVehiculoModalOpen(false);
+      setVehiculoErrors({});
+    },
+    isDirty: () =>
+      vehiculoForm.clienteId !== (editingVehiculo?.clienteId || clientes[0]?.id || '') ||
+      vehiculoForm.marca.trim() !== (editingVehiculo?.marca || '') ||
+      vehiculoForm.modelo.trim() !== (editingVehiculo?.modelo || '') ||
+      vehiculoForm.placas.trim() !== (editingVehiculo?.placas || '') ||
+      vehiculoForm.año.trim() !== (editingVehiculo?.año || ''),
+    closeOnBackdrop: true,
+  });
+
   const handleSaveConfiguracion = (newConf: ConfiguracionTaller) => {
     const oldConf = configuracion;
     setConfiguracion(newConf);
@@ -1724,8 +1750,14 @@ export default function App() {
   };
 
   const handleSelectSection = (id: SectionId) => {
+    notifySectionChange();
     setActiveSection(id);
     setIsMobileMenuOpen(false);
+    setIsClienteModalOpen(false);
+    setIsVehiculoModalOpen(false);
+    setHistorialTarget(null);
+    setIsCentroAvisosOpen(false);
+    document.body.style.overflow = '';
     if (CATALOGOS_ITEMS.some((i) => i.id === id)) {
       setOpenDropdown('catalogos');
     } else if (ADMINISTRACION_ITEMS.some((i) => i.id === id)) {
@@ -3873,7 +3905,10 @@ export default function App() {
 
       {/* MODAL: CLIENTE */}
       {isClienteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={clienteModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#231F20]">
@@ -3881,16 +3916,7 @@ export default function App() {
               </h3>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    clienteForm.nombre.trim() !== (editingCliente?.nombre || '') ||
-                    clienteForm.telefono.trim() !== (editingCliente?.telefono || '') ||
-                    clienteForm.correo.trim() !== (editingCliente?.correo || '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsClienteModalOpen(false);
-                }}
+                onClick={clienteModalDismiss.handleClose}
                 className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
@@ -3961,16 +3987,7 @@ export default function App() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      clienteForm.nombre.trim() !== (editingCliente?.nombre || '') ||
-                      clienteForm.telefono.trim() !== (editingCliente?.telefono || '') ||
-                      clienteForm.correo.trim() !== (editingCliente?.correo || '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsClienteModalOpen(false);
-                  }}
+                  onClick={clienteModalDismiss.handleClose}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
@@ -3989,7 +4006,10 @@ export default function App() {
 
       {/* MODAL: VEHÍCULO */}
       {isVehiculoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={vehiculoModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#231F20]">
@@ -3997,18 +4017,7 @@ export default function App() {
               </h3>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    vehiculoForm.clienteId !== (editingVehiculo?.clienteId || clientes[0]?.id || '') ||
-                    vehiculoForm.marca.trim() !== (editingVehiculo?.marca || '') ||
-                    vehiculoForm.modelo.trim() !== (editingVehiculo?.modelo || '') ||
-                    vehiculoForm.placas.trim() !== (editingVehiculo?.placas || '') ||
-                    vehiculoForm.año.trim() !== (editingVehiculo?.año || '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsVehiculoModalOpen(false);
-                }}
+                onClick={vehiculoModalDismiss.handleClose}
                 className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
@@ -4130,18 +4139,7 @@ export default function App() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      vehiculoForm.clienteId !== (editingVehiculo?.clienteId || clientes[0]?.id || '') ||
-                      vehiculoForm.marca.trim() !== (editingVehiculo?.marca || '') ||
-                      vehiculoForm.modelo.trim() !== (editingVehiculo?.modelo || '') ||
-                      vehiculoForm.placas.trim() !== (editingVehiculo?.placas || '') ||
-                      vehiculoForm.año.trim() !== (editingVehiculo?.año || '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsVehiculoModalOpen(false);
-                  }}
+                  onClick={vehiculoModalDismiss.handleClose}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar

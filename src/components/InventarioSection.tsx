@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Refaccion, MovimientoInventario } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
   Search,
   Plus,
@@ -54,6 +55,35 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
   // Modal: Ver Movimientos
   const [viewingHistoryRefaccion, setViewingHistoryRefaccion] = useState<Refaccion | null>(null);
+
+  const refaccionFormDismiss = useModalDismiss({
+    isOpen: isFormModalOpen,
+    onClose: () => {
+      setIsFormModalOpen(false);
+      setFormErrors({});
+    },
+    isDirty: () =>
+      formCodigo.trim() !== (editingRefaccion?.codigo || '') ||
+      formNombre.trim() !== (editingRefaccion?.nombre || '') ||
+      formMinimo !== (editingRefaccion?.minimo?.toString() || '5') ||
+      formCostoUnitario !== (editingRefaccion?.costoUnitario !== undefined ? editingRefaccion.costoUnitario.toString() : ''),
+    closeOnBackdrop: true,
+  });
+
+  const movementDismiss = useModalDismiss({
+    isOpen: Boolean(movementModal),
+    onClose: () => {
+      setMovementModal(null);
+      setMovError('');
+    },
+    closeOnBackdrop: true,
+  });
+
+  const historyDismiss = useModalDismiss({
+    isOpen: Boolean(viewingHistoryRefaccion),
+    onClose: () => setViewingHistoryRefaccion(null),
+    closeOnBackdrop: true,
+  });
 
   // Action processing lock
   const [isProcessing, setIsProcessing] = useState(false);
@@ -585,7 +615,10 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       {/* MODAL: FORMULARIO AGREGAR / EDITAR REFACCIÓN */}
       {/* ======================================================== */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={refaccionFormDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -600,18 +633,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formCodigo.trim() !== (editingRefaccion?.codigo || '') ||
-                    formNombre.trim() !== (editingRefaccion?.nombre || '') ||
-                    formMinimo !== (editingRefaccion?.minimo?.toString() || '3') ||
-                    formCostoUnitario !== (editingRefaccion?.costoUnitario !== undefined ? editingRefaccion.costoUnitario.toString() : '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsFormModalOpen(false);
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                onClick={refaccionFormDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -741,17 +764,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formCodigo.trim() !== (editingRefaccion?.codigo || '') ||
-                      formNombre.trim() !== (editingRefaccion?.nombre || '') ||
-                      formMinimo !== (editingRefaccion?.minimo?.toString() || '3') ||
-                      formCostoUnitario !== (editingRefaccion?.costoUnitario !== undefined ? editingRefaccion.costoUnitario.toString() : '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsFormModalOpen(false);
-                  }}
+                  onClick={refaccionFormDismiss.handleClose}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
@@ -772,7 +785,10 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       {/* MODAL: REGISTRAR ENTRADA / SALIDA */}
       {/* ======================================================== */}
       {movementModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={movementDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -785,8 +801,9 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setMovementModal(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={movementDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -836,15 +853,15 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setMovementModal(null)}
-                  className="px-3 py-1.5 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 font-medium"
+                  onClick={movementDismiss.handleClose}
+                  className="px-3 py-1.5 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className={`px-4 py-1.5 text-white rounded font-semibold transition-colors disabled:opacity-50 ${
+                  className={`px-4 py-1.5 text-white rounded font-semibold transition-colors disabled:opacity-50 cursor-pointer ${
                     movementModal.tipo === 'Entrada'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : 'bg-rose-600 hover:bg-rose-700'
@@ -862,7 +879,10 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       {/* MODAL: VER MOVIMIENTOS HISTÓRICOS */}
       {/* ======================================================== */}
       {viewingHistoryRefaccion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={historyDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -875,8 +895,9 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setViewingHistoryRefaccion(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={historyDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>

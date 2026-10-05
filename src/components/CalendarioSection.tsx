@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Cliente, Vehiculo, Cita, ServicioCatalogo, Seguimiento } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
   CalendarDays,
   ChevronLeft,
@@ -79,6 +80,54 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
   const [formFecha, setFormFecha] = useState('');
   const [formHora, setFormHora] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const citaDetailDismiss = useModalDismiss({
+    isOpen: Boolean(selectedCita),
+    onClose: () => setSelectedCita(null),
+    closeOnBackdrop: true,
+  });
+
+  const seguimientoDetailDismiss = useModalDismiss({
+    isOpen: Boolean(selectedSeguimiento),
+    onClose: () => {
+      setSelectedSeguimiento(null);
+      setIsRescheduling(false);
+    },
+    closeOnBackdrop: true,
+  });
+
+  const dayModalDismiss = useModalDismiss({
+    isOpen: Boolean(dayModalDate),
+    onClose: () => setDayModalDate(null),
+    closeOnBackdrop: true,
+  });
+
+  const initialCitaValuesRef = useRef({
+    clientId: '',
+    vehiculoId: '',
+    servicio: '',
+    fecha: '',
+    hora: '',
+  });
+
+  const citaFormDismiss = useModalDismiss({
+    isOpen: isFormModalOpen,
+    onClose: () => {
+      setIsFormModalOpen(false);
+      setFormErrors({});
+    },
+    isDirty: () => {
+      const init = initialCitaValuesRef.current;
+      return (
+        formClientId !== init.clientId ||
+        formVehiculoId !== init.vehiculoId ||
+        formServicio.trim() !== init.servicio.trim() ||
+        formFecha !== init.fecha ||
+        formHora !== init.hora
+      );
+    },
+    closeOnBackdrop: true,
+  });
 
   // Lookup maps
   const clienteMap = useMemo(() => {
@@ -270,12 +319,21 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
     const defaultClient = clientes[0]?.id || '';
     setFormClientId(defaultClient);
     const defaultVehs = vehiculos.filter((v) => v.clienteId === defaultClient);
-    setFormVehiculoId(defaultVehs[0]?.id || '');
+    const defVeh = defaultVehs[0]?.id || '';
+    setFormVehiculoId(defVeh);
     setSelectedCatalogId('');
     setFormServicio('');
-    setFormFecha(prefilledDate || '');
+    const targetDate = prefilledDate || '';
+    setFormFecha(targetDate);
     setFormHora('');
     setFormErrors({});
+    initialCitaValuesRef.current = {
+      clientId: defaultClient,
+      vehiculoId: defVeh,
+      servicio: '',
+      fecha: targetDate,
+      hora: '',
+    };
     setIsFormModalOpen(true);
   };
 
@@ -290,6 +348,13 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
     setFormErrors({});
     setSelectedCita(null);
     setDayModalDate(null);
+    initialCitaValuesRef.current = {
+      clientId: cita.clienteId,
+      vehiculoId: cita.vehiculoId,
+      servicio: cita.servicio,
+      fecha: cita.fecha,
+      hora: cita.hora,
+    };
     setIsFormModalOpen(true);
   };
 
@@ -821,7 +886,10 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
           - Botón “Editar cita” que abra el formulario existente." */}
       {/* ======================================================== */}
       {selectedCita && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100"
+          onClick={citaDetailDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
@@ -832,8 +900,9 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedCita(null)}
+                onClick={citaDetailDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -943,7 +1012,10 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
       {/* MODAL: DETALLE DE SEGUIMIENTO SELECCIONADO */}
       {/* ======================================================== */}
       {selectedSeguimiento && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100"
+          onClick={seguimientoDetailDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div className="flex items-center gap-2.5">
@@ -954,8 +1026,9 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedSeguimiento(null)}
+                onClick={seguimientoDetailDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1173,7 +1246,10 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
       {/* MODAL: VER MÁS CITAS DE UN DÍA ESPECÍFICO (Desktop) */}
       {/* ======================================================== */}
       {dayModalDate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100"
+          onClick={dayModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
             <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
               <div>
@@ -1186,8 +1262,9 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setDayModalDate(null)}
+                onClick={dayModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] rounded-lg transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1335,7 +1412,10 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
       {/* "Reutilice el formulario de Citas. Si se pulsa desde un día seleccionado, completa la fecha, pero permite elegir la hora antes de guardar. Conserva las validaciones existentes." */}
       {/* ======================================================== */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print animate-in fade-in duration-100"
+          onClick={citaFormDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 max-h-[92vh] flex flex-col">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -1350,8 +1430,9 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setIsFormModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={citaFormDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1508,7 +1589,7 @@ export const CalendarioSection: React.FC<CalendarioSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
-                  onClick={() => setIsFormModalOpen(false)}
+                  onClick={citaFormDismiss.handleClose}
                   className="px-4 py-2.5 min-h-[42px] border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar

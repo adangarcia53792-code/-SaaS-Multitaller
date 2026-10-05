@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Cliente,
   Vehiculo,
@@ -13,7 +13,6 @@ import {
   Empleado,
   Usuario,
   SesionUsuario,
-  generarCodigoConsulta,
 } from '../types';
 import {
   Search,
@@ -36,11 +35,9 @@ import {
   RotateCcw,
   Wrench,
   ClipboardList,
-  KeyRound,
-  Copy,
-  RotateCw,
 } from 'lucide-react';
 import { IotLogo } from './IotLogo';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface OrdenesSectionProps {
   ordenes: OrdenTrabajo[];
@@ -149,7 +146,6 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [formFechaEntregaPrometida, setFormFechaEntregaPrometida] = useState('');
   const [formDiagnostico, setFormDiagnostico] = useState('');
   const [formObsMecanico, setFormObsMecanico] = useState('');
-  const [formMensajePublico, setFormMensajePublico] = useState('');
   const [formTrabajoTerminado, setFormTrabajoTerminado] = useState(false);
   const [formRevisionFinal, setFormRevisionFinal] = useState(false);
   const [formEntregado, setFormEntregado] = useState(false);
@@ -157,11 +153,6 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [formMecanicoId, setFormMecanicoId] = useState('');
   const [formMecanicoNombre, setFormMecanicoNombre] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
-  // Modal para consultar datos del código de seguimiento
-  const [datosConsultaModal, setDatosConsultaModal] = useState<OrdenTrabajo | null>(null);
-  const [copiadoId, setCopiadoId] = useState<string | null>(null);
-  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   const isMecanico = currentUser?.rol === 'Mecánico';
   const isRecepcion = currentUser?.rol === 'Recepción';
@@ -185,6 +176,59 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
 
   // View / Print modal state
   const [printingOrden, setPrintingOrden] = useState<OrdenTrabajo | null>(null);
+
+  const initialFormValuesRef = useRef({
+    clientId: '',
+    vehiculoId: '',
+    servicio: '',
+    km: '',
+    daños: '',
+    fechaEntrega: '',
+    diagnostico: '',
+    obsMecanico: '',
+    mecanicoId: '',
+    trabajoTerminado: false,
+    revisionFinal: false,
+    entregado: false,
+  });
+
+  const orderFormDismiss = useModalDismiss({
+    isOpen: isFormModalOpen,
+    onClose: () => {
+      setIsFormModalOpen(false);
+      setFormErrors({});
+    },
+    isDirty: () => {
+      const init = initialFormValuesRef.current;
+      return (
+        formClientId !== init.clientId ||
+        formVehiculoId !== init.vehiculoId ||
+        formServicio.trim() !== init.servicio.trim() ||
+        formKm.trim() !== init.km.trim() ||
+        formDaños.trim() !== init.daños.trim() ||
+        formFechaEntregaPrometida !== init.fechaEntrega ||
+        formDiagnostico.trim() !== init.diagnostico.trim() ||
+        formObsMecanico.trim() !== init.obsMecanico.trim() ||
+        formMecanicoId !== init.mecanicoId ||
+        formTrabajoTerminado !== init.trabajoTerminado ||
+        formRevisionFinal !== init.revisionFinal ||
+        formEntregado !== init.entregado
+      );
+    },
+    closeOnBackdrop: true,
+  });
+
+  const continuarModalDismiss = useModalDismiss({
+    isOpen: Boolean(continuarOrden),
+    onClose: () => setContinuarOrden(null),
+    closeOnBackdrop: true,
+  });
+
+  const printingModalDismiss = useModalDismiss({
+    isOpen: Boolean(printingOrden),
+    onClose: () => setPrintingOrden(null),
+    closeOnBackdrop: true,
+  });
 
   // Double-click protection
   const [isActionProcessing, setIsActionProcessing] = useState(false);
@@ -416,6 +460,20 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setOpenTrabajo(false);
     setOpenRevision(false);
     setFormErrors({});
+    initialFormValuesRef.current = {
+      clientId: defClient,
+      vehiculoId: clientVehs[0]?.id || '',
+      servicio: '',
+      km: '',
+      daños: '',
+      fechaEntrega: '',
+      diagnostico: '',
+      obsMecanico: '',
+      mecanicoId: '',
+      trabajoTerminado: false,
+      revisionFinal: false,
+      entregado: false,
+    };
     setIsFormModalOpen(true);
   };
 
@@ -452,6 +510,20 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
 
     setFormErrors({});
     setOpenMenuId(null);
+    initialFormValuesRef.current = {
+      clientId: orden.clienteId,
+      vehiculoId: orden.vehiculoId,
+      servicio: orden.servicio,
+      km: orden.kilometraje || '',
+      daños: orden.dañosVisibles || '',
+      fechaEntrega: orden.fechaEntregaPrometida || '',
+      diagnostico: orden.diagnostico || '',
+      obsMecanico: orden.observacionesMecanico || orden.observaciones || '',
+      mecanicoId: orden.mecanicoId || '',
+      trabajoTerminado: Boolean(orden.trabajoTerminado),
+      revisionFinal: Boolean(orden.revisionFinal),
+      entregado: Boolean(orden.entregado),
+    };
     setIsFormModalOpen(true);
   };
 
@@ -1365,7 +1437,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       {/* MODAL: CONTINUAR WORKFLOW (ETAPA 7) */}
       {/* ======================================================== */}
       {continuarOrden && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto no-print">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto no-print"
+          onClick={continuarModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-150 my-6 flex flex-col">
             {/* Header: Folio, Cliente, Vehículo */}
             <div className="px-6 py-4 bg-white border-b border-[#DDE4E8] text-[#231F20] flex items-center justify-between">
@@ -1385,8 +1460,9 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => setContinuarOrden(null)}
+                onClick={continuarModalDismiss.handleClose}
                 className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
+                aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2155,8 +2231,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
 
               <button
                 type="button"
-                onClick={() => setContinuarOrden(null)}
-                className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                onClick={continuarModalDismiss.handleClose}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Cerrar vista
               </button>
@@ -2169,8 +2245,14 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       {/* MODAL: FORMULARIO AGREGAR / EDITAR */}
       {/* ======================================================== */}
       {isFormModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[92vh] flex flex-col">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={orderFormDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[92vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
@@ -2182,18 +2264,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formClientId !== (editingOrden?.clienteId || clientes[0]?.id || '') ||
-                    formVehiculoId !== (editingOrden?.vehiculoId || '') ||
-                    formServicio.trim() !== (editingOrden?.servicio || '') ||
-                    formKm.trim() !== (editingOrden?.kilometraje || '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsFormModalOpen(false);
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                onClick={orderFormDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -2702,17 +2774,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formClientId !== (editingOrden?.clienteId || clientes[0]?.id || '') ||
-                      formVehiculoId !== (editingOrden?.vehiculoId || '') ||
-                      formServicio.trim() !== (editingOrden?.servicio || '') ||
-                      formKm.trim() !== (editingOrden?.kilometraje || '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsFormModalOpen(false);
-                  }}
+                  onClick={orderFormDismiss.handleClose}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
@@ -2734,7 +2796,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       {/* MODAL: VER / IMPRIMIR */}
       {/* ======================================================== */}
       {printingOrden && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={printingModalDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden my-6 print-area">
             <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-6 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Vista previa de orden de trabajo</span>
@@ -2749,8 +2814,9 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPrintingOrden(null)}
+                  onClick={printingModalDismiss.handleClose}
                   className="p-1.5 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
+                  aria-label="Cerrar ventana"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2994,7 +3060,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             <div className="no-print bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setPrintingOrden(null)}
+                onClick={printingModalDismiss.handleClose}
                 className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors min-h-[38px] cursor-pointer"
               >
                 Cerrar

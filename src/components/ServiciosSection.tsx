@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ServicioCatalogo } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 import { Search, Plus, Pencil, X, CheckCircle2, AlertCircle, Sparkles, Wrench } from 'lucide-react';
 
 interface ServiciosSectionProps {
@@ -25,6 +26,20 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
   const [formManoObra, setFormManoObra] = useState<string>('0');
   const [formActivo, setFormActivo] = useState<boolean>(true);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const serviceFormDismiss = useModalDismiss({
+    isOpen: isModalOpen,
+    onClose: () => {
+      setIsModalOpen(false);
+      setFormErrors({});
+    },
+    isDirty: () =>
+      formNombre.trim() !== (editingServicio?.nombre || '') ||
+      formDescripcion.trim() !== (editingServicio?.descripcion || '') ||
+      formRefacciones !== (editingServicio?.importeRefacciones !== undefined ? editingServicio.importeRefacciones.toString() : '0') ||
+      formManoObra !== (editingServicio?.importeManoObra !== undefined ? editingServicio.importeManoObra.toString() : '0'),
+    closeOnBackdrop: true,
+  });
 
   // Cent calculations helper to avoid decimal floating point errors
   const parseToCents = (valStr: string): number => {
@@ -323,7 +338,10 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
       {/* MODAL: AGENDAR / EDITAR SERVICIO */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={serviceFormDismiss.handleBackdropClick}
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -336,18 +354,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formNombre.trim() !== (editingServicio?.nombre || '') ||
-                    formDescripcion.trim() !== (editingServicio?.descripcion || '') ||
-                    formRefacciones !== (editingServicio?.importeRefacciones?.toString() || '0') ||
-                    formManoObra !== (editingServicio?.importeManoObra?.toString() || '0');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsModalOpen(false);
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                onClick={serviceFormDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -486,17 +494,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formNombre.trim() !== (editingServicio?.nombre || '') ||
-                      formDescripcion.trim() !== (editingServicio?.descripcion || '') ||
-                      formRefacciones !== (editingServicio?.importeRefacciones?.toString() || '0') ||
-                      formManoObra !== (editingServicio?.importeManoObra?.toString() || '0');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsModalOpen(false);
-                  }}
+                  onClick={serviceFormDismiss.handleClose}
                   className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar

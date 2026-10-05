@@ -31,6 +31,7 @@ import {
   ConfiguracionTaller,
 } from '../types';
 import { IotLogo } from './IotLogo';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface PersonalAsistenciaSectionProps {
   empleados: Empleado[];
@@ -154,6 +155,52 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
     setScanNotice(null);
     setConfirmError(null);
   };
+
+  const isEmployeeFormDirty = useMemo(() => {
+    if (!isEmployeeModalOpen) return false;
+    if (editingEmployee) {
+      return (
+        formNombre !== editingEmployee.nombre ||
+        formPuesto !== editingEmployee.puesto ||
+        formActivo !== editingEmployee.activo
+      );
+    }
+    return Boolean(formNombre.trim() || formPuesto.trim());
+  }, [isEmployeeModalOpen, editingEmployee, formNombre, formPuesto, formActivo]);
+
+  const employeeFormDismiss = useModalDismiss({
+    isOpen: isEmployeeModalOpen,
+    onClose: () => {
+      setIsEmployeeModalOpen(false);
+      setEditingEmployee(null);
+      setFormError(null);
+    },
+    isDirty: isEmployeeFormDirty,
+    dirtyMessage: '¿Deseas descartar los cambios del empleado sin guardar?',
+    closeOnBackdrop: true,
+  });
+
+  const credencialDismiss = useModalDismiss({
+    isOpen: Boolean(viewingCredentialEmp),
+    onClose: () => {
+      setViewingCredentialEmp(null);
+      setCredentialQrDataUrl('');
+    },
+    closeOnBackdrop: true,
+  });
+
+  const singleEmpHistoryDismiss = useModalDismiss({
+    isOpen: Boolean(singleEmpHistory),
+    onClose: () => setSingleEmpHistory(null),
+    closeOnBackdrop: true,
+  });
+
+  const scannerDismiss = useModalDismiss({
+    isOpen: isScannerModalOpen,
+    onClose: closeScannerModal,
+    onCleanup: stopCamera,
+    closeOnBackdrop: true,
+  });
 
   // Stop camera if unmounted or tab changes
   useEffect(() => {
@@ -1140,24 +1187,22 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
 
       {/* MODAL: FORMULARIO AGREGAR / EDITAR EMPLEADO */}
       {isEmployeeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={employeeFormDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <h3 className="font-bold text-slate-900 text-base">
                 {editingEmployee ? 'Editar empleado' : 'Agregar empleado'}
               </h3>
               <button
                 type="button"
-                onClick={() => {
-                  const dirty =
-                    formNombre.trim() !== (editingEmployee?.nombre || '') ||
-                    formPuesto.trim() !== (editingEmployee?.puesto || '');
-                  if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                    return;
-                  }
-                  setIsEmployeeModalOpen(false);
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                onClick={employeeFormDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -1242,22 +1287,14 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    const dirty =
-                      formNombre.trim() !== (editingEmployee?.nombre || '') ||
-                      formPuesto.trim() !== (editingEmployee?.puesto || '');
-                    if (dirty && !window.confirm('¿Deseas descartar los cambios sin guardar?')) {
-                      return;
-                    }
-                    setIsEmployeeModalOpen(false);
-                  }}
-                  className="px-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
+                  onClick={employeeFormDismiss.handleClose}
+                  className="px-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[44px]"
+                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[44px] cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -1269,8 +1306,14 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
 
       {/* MODAL: VER CREDENCIAL / DESCARGAR QR */}
       {viewingCredentialEmp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-150 print-area">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={credencialDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-150 print-area"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Controls (No print) */}
             <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-5 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Credencial del empleado</span>
@@ -1285,7 +1328,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewingCredentialEmp(null)}
+                  onClick={credencialDismiss.handleClose}
                   className="p-1 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -1353,8 +1396,14 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
 
       {/* MODAL: HISTORIAL ESPECÍFICO DEL EMPLEADO */}
       {singleEmpHistory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={singleEmpHistoryDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">
@@ -1364,8 +1413,8 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
               </div>
               <button
                 type="button"
-                onClick={() => setSingleEmpHistory(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={singleEmpHistoryDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1421,8 +1470,14 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
 
       {/* MODAL: ESCANEAR CÓDIGO QR / REGISTRAR ASISTENCIA */}
       {isScannerModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto"
+          onClick={scannerDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
@@ -1433,8 +1488,8 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
               </div>
               <button
                 type="button"
-                onClick={closeScannerModal}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={scannerDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
