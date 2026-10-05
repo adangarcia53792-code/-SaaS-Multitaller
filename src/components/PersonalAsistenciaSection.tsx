@@ -1300,7 +1300,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                   <IotLogo size="sm" variant="dark" />
                 </div>
                 <span className="text-xs uppercase tracking-widest text-[#1D7EAE] font-bold block">
-                  {configuracion?.nombre || 'Taller mecánico'}
+                  {configuracion?.nombre || 'IOT Technologies'}
                 </span>
                 <span className="text-[11px] text-slate-400">Credencial de identificación</span>
               </div>

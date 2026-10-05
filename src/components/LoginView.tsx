@@ -7,6 +7,7 @@ import {
   EyeOff,
   ArrowRight,
   Info,
+  Search,
 } from 'lucide-react';
 import { Usuario, SesionUsuario, RolUsuario } from '../types';
 import { IotLogo } from './IotLogo';
@@ -15,12 +16,14 @@ interface LoginViewProps {
   workshopName: string;
   usuarios: Usuario[];
   onLogin: (sesion: SesionUsuario) => void;
+  onConsultarVehiculo?: () => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({
   workshopName,
   usuarios,
   onLogin,
+  onConsultarVehiculo,
 }) => {
   const [userInput, setUserInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -112,7 +115,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <span>Sistema de Talleres Mecánicos</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#231F20]">
-            {workshopName || 'Taller mecánico'}
+            {workshopName || 'IOT Technologies'}
           </h1>
           <p className="text-xs sm:text-sm text-[#5F6B73]">
             Gestión integral de citas, cotizaciones, órdenes y taller
@@ -205,6 +208,20 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <span>Ingresar al sistema</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+
+            {/* Enlace secundario para clientes: Consultar estado de mi vehículo */}
+            {onConsultarVehiculo && (
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={onConsultarVehiculo}
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#1D7EAE] hover:text-[#0032A0] hover:underline cursor-pointer py-1.5 transition-colors"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Consultar estado de mi vehículo</span>
+                </button>
+              </div>
+            )}
           </form>
 
           {/* Credenciales de demostración */}

@@ -13,6 +13,7 @@ import {
   Empleado,
   Usuario,
   SesionUsuario,
+  generarCodigoConsulta,
 } from '../types';
 import {
   Search,
@@ -35,6 +36,9 @@ import {
   RotateCcw,
   Wrench,
   ClipboardList,
+  KeyRound,
+  Copy,
+  RotateCw,
 } from 'lucide-react';
 import { IotLogo } from './IotLogo';
 
@@ -145,6 +149,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [formFechaEntregaPrometida, setFormFechaEntregaPrometida] = useState('');
   const [formDiagnostico, setFormDiagnostico] = useState('');
   const [formObsMecanico, setFormObsMecanico] = useState('');
+  const [formMensajePublico, setFormMensajePublico] = useState('');
   const [formTrabajoTerminado, setFormTrabajoTerminado] = useState(false);
   const [formRevisionFinal, setFormRevisionFinal] = useState(false);
   const [formEntregado, setFormEntregado] = useState(false);
@@ -152,6 +157,11 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [formMecanicoId, setFormMecanicoId] = useState('');
   const [formMecanicoNombre, setFormMecanicoNombre] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Modal para consultar datos del código de seguimiento
+  const [datosConsultaModal, setDatosConsultaModal] = useState<OrdenTrabajo | null>(null);
+  const [copiadoId, setCopiadoId] = useState<string | null>(null);
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   const isMecanico = currentUser?.rol === 'Mecánico';
   const isRecepcion = currentUser?.rol === 'Recepción';
@@ -2754,7 +2764,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                     <IotLogo size="sm" variant="dark" />
                   </div>
                   <h1 className="text-xl font-bold text-[#231F20] tracking-tight">
-                    {configuracion?.nombre || 'Taller mecánico'}
+                    {configuracion?.nombre || 'IOT Technologies'}
                   </h1>
                   {configuracion?.telefono && (
                     <p className="text-xs text-slate-500">Tel: {configuracion.telefono}</p>
@@ -2977,7 +2987,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               </div>
 
               <div className="pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
-                Este documento es una orden de trabajo de Taller mecánico con fines de demostración.
+                Este documento es una orden de trabajo de {configuracion?.nombre || 'IOT Technologies'} con fines de demostración.
               </div>
             </div>
 

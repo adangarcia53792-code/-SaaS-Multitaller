@@ -231,11 +231,18 @@ const INITIAL_COTIZACIONES: Cotizacion[] = [
     folio: 'COT-002',
     clienteId: 'cli-2',
     vehiculoId: 'veh-2',
+    ordenId: 'ord-init-1',
     descripcion: 'Afinación integral con cambio de bujías y filtros',
     importeRefacciones: 2200,
     importeManoObra: 1300,
     total: 3500,
     estado: 'Aprobada',
+    autorizacion: {
+      autorizadoPor: 'Lucía Fernández (Cliente)',
+      fechaHora: '28/09/2026, 16:30',
+      trabajoAutorizado: 'Afinación integral con cambio de bujías y filtros',
+      totalAutorizado: 3500,
+    },
     creadoEn: '2026-09-27T16:00:00Z',
   },
 ];
@@ -244,20 +251,24 @@ const INITIAL_ORDENES: OrdenTrabajo[] = [
   {
     id: 'ord-init-1',
     folio: 'ORD-001',
-    clienteId: 'cli-1',
-    vehiculoId: 'veh-1',
-    servicio: 'Diagnóstico de ruidos en tren delantero y cambio de bujes',
-    kilometraje: '75,400 km',
-    dañosVisibles: 'Leve raspadura en fascia trasera derecha',
-    diagnostico: 'Bujes de horquilla agrietados, amortiguadores en buen estado',
-    observacionesMecanico: 'Reemplazo de bujes completado exitosamente',
-    trabajoTerminado: true,
-    revisionFinal: true,
-    entregado: true,
-    fechaHoraEntrega: '29/09/2026, 17:00:00',
-    estado: 'Terminado',
-    mecanicoId: 'emp-1',
-    mecanicoNombre: 'Roberto Sánchez',
+    clienteId: 'cli-2',
+    vehiculoId: 'veh-2',
+    cotizacionId: 'cot-init-2',
+    servicio: 'Afinación integral con cambio de bujías y filtros',
+    kilometraje: '42,100 km',
+    dañosVisibles: 'Sin daños visibles en carrocería',
+    diagnostico: 'Bujías con desgaste y filtros saturados. Sistema de frenos e inyección en buen estado.',
+    observacionesMecanico: 'Reemplazo de bujías y filtros en proceso en rampa de servicio.',
+    trabajoTerminado: false,
+    revisionFinal: false,
+    entregado: false,
+    estado: 'En proceso',
+    mecanicoId: 'emp-2',
+    mecanicoNombre: 'Miguel Ángel Gómez',
+    fechaEntregaPrometida: getHoyDateString(),
+    codigoConsulta: '7F9K2A',
+    mensajePublico: 'El vehículo se encuentra en servicio de afinación y reemplazo de filtros en rampa.',
+    actualizadoEn: '2026-09-28T11:30:00Z',
     refaccionesUtilizadas: [
       {
         id: 'ru-init-1',
@@ -267,48 +278,7 @@ const INITIAL_ORDENES: OrdenTrabajo[] = [
         fechaHora: '28/09/2026, 08:30:00',
       },
     ],
-    creadoEn: '2026-09-28T08:30:00Z',
-  },
-  {
-    id: 'ord-init-2',
-    folio: 'ORD-002',
-    clienteId: 'cli-2',
-    vehiculoId: 'veh-2',
-    servicio: 'Mantenimiento preventivo general y cambio de banda de accesorios',
-    kilometraje: '42,100 km',
-    estado: 'En proceso',
-    trabajoTerminado: false,
-    revisionFinal: false,
-    entregado: false,
-    mecanicoId: 'emp-2',
-    mecanicoNombre: 'Miguel Ángel Gómez',
-    fechaEntregaPrometida: getAyerDateString(),
     creadoEn: '2026-09-28T11:15:00Z',
-  },
-  {
-    id: 'ord-init-3',
-    folio: 'ORD-003',
-    clienteId: 'cli-1',
-    vehiculoId: 'veh-1',
-    servicio: 'Reparación de fuga en cilindro maestro y purga de frenos',
-    kilometraje: '75,800 km',
-    estado: 'En proceso',
-    trabajoTerminado: false,
-    revisionFinal: false,
-    entregado: false,
-    mecanicoId: 'emp-1',
-    mecanicoNombre: 'Roberto Sánchez',
-    fechaEntregaPrometida: getAyerDateString(),
-    refaccionesUtilizadas: [
-      {
-        id: 'ru-init-2',
-        refaccionId: 'ref-4',
-        cantidad: 1,
-        devueltas: 0,
-        fechaHora: '28/09/2026, 09:00:00',
-      },
-    ],
-    creadoEn: '2026-09-28T09:00:00Z',
   },
 ];
 
@@ -373,81 +343,12 @@ const INITIAL_USUARIOS: Usuario[] = [
   },
 ];
 
-const INITIAL_GARANTIAS: Garantia[] = [
-  {
-    id: 'gar-init-1',
-    folio: 'GAR-001',
-    ordenId: 'ord-init-1',
-    ordenFolio: 'ORD-001',
-    clienteId: 'cli-1',
-    clienteNombre: 'Carlos Mendoza',
-    clienteTelefono: '555-123-4567',
-    vehiculoId: 'veh-1',
-    vehiculoDescripcion: 'Toyota Corolla',
-    vehiculoPlacas: 'ABC-123',
-    mecanicoId: 'emp-1',
-    mecanicoNombre: 'Roberto Sánchez',
-    trabajoCubierto: 'Reemplazo de bujes de horquilla y corrección de ruidos en tren delantero.',
-    fechaInicio: '2026-09-29',
-    duracionDias: 90,
-    fechaVencimiento: getEnDiasDateString(4),
-    condiciones:
-      'Cubre mano de obra y refacciones instaladas por defectos de manufactura o ensamble bajo condiciones normales de uso. No aplica en negligencia, colisión o manipulación por terceros.',
-    estado: 'Vigente',
-    creadoEn: '2026-09-29T17:30:00Z',
-  },
-];
+const INITIAL_GARANTIAS: Garantia[] = [];
 
 const INITIAL_BITACORA: EventoBitacora[] = [
   {
-    id: 'ev-init-8',
-    fechaHora: '2026-09-29 17:30',
-    usuarioId: 'usr-admin',
-    usuarioNombre: 'Administrador Demo',
-    usuarioRol: 'Administrador',
-    tipoAccion: 'Registro de garantía',
-    seccion: 'Garantías',
-    registroId: 'gar-init-1',
-    registroFolio: 'GAR-001',
-    descripcion: 'Registro de póliza de garantía GAR-001 por 90 días para orden ORD-001',
-    detalles: [
-      { etiqueta: 'Orden asociada', nuevo: 'ORD-001' },
-      { etiqueta: 'Vigencia', nuevo: '90 días' },
-    ],
-  },
-  {
-    id: 'ev-init-7',
-    fechaHora: '2026-09-29 17:15',
-    usuarioId: 'usr-admin',
-    usuarioNombre: 'Administrador Demo',
-    usuarioRol: 'Administrador',
-    tipoAccion: 'Entrega de trabajo',
-    seccion: 'Órdenes',
-    registroId: 'ord-init-1',
-    registroFolio: 'ORD-001',
-    descripcion: 'Entrega de vehículo realizada para la orden ORD-001',
-    detalles: [
-      { etiqueta: 'Estado', anterior: 'Terminado', nuevo: 'Entregado' },
-    ],
-  },
-  {
-    id: 'ev-init-6',
-    fechaHora: '2026-09-29 16:00',
-    usuarioId: 'usr-mecanico',
-    usuarioNombre: 'Roberto Sánchez',
-    usuarioRol: 'Mecánico',
-    tipoAccion: 'Terminación de trabajo',
-    seccion: 'Órdenes',
-    registroId: 'ord-init-1',
-    registroFolio: 'ORD-001',
-    descripcion: 'Trabajo marcado como terminado y revisión final aprobada en orden ORD-001',
-    detalles: [
-      { etiqueta: 'Estado', anterior: 'En proceso', nuevo: 'Terminado' },
-    ],
-  },
-  {
     id: 'ev-init-5',
-    fechaHora: '2026-09-29 11:30',
+    fechaHora: '2026-09-28 11:30',
     usuarioId: 'usr-mecanico',
     usuarioNombre: 'Roberto Sánchez',
     usuarioRol: 'Mecánico',
@@ -455,14 +356,14 @@ const INITIAL_BITACORA: EventoBitacora[] = [
     seccion: 'Órdenes',
     registroId: 'ord-init-1',
     registroFolio: 'ORD-001',
-    descripcion: 'Inicio de trabajos en la orden ORD-001',
+    descripcion: 'Inicio de trabajos en la orden ORD-001 (En proceso)',
     detalles: [
       { etiqueta: 'Estado', anterior: 'Pendiente', nuevo: 'En proceso' },
     ],
   },
   {
     id: 'ev-init-4',
-    fechaHora: '2026-09-29 10:15',
+    fechaHora: '2026-09-28 10:15',
     usuarioId: 'usr-recepcion',
     usuarioNombre: 'Sofía Ramírez',
     usuarioRol: 'Recepción',
@@ -470,47 +371,47 @@ const INITIAL_BITACORA: EventoBitacora[] = [
     seccion: 'Órdenes',
     registroId: 'ord-init-1',
     registroFolio: 'ORD-001',
-    descripcion: 'Apertura de orden de trabajo ORD-001 vinculada a cotización COT-001',
+    descripcion: 'Apertura de orden de trabajo ORD-001 vinculada a cotización aprobada COT-002',
   },
   {
     id: 'ev-init-3',
-    fechaHora: '2026-09-29 09:45',
+    fechaHora: '2026-09-28 09:45',
     usuarioId: 'usr-recepcion',
     usuarioNombre: 'Sofía Ramírez',
     usuarioRol: 'Recepción',
     tipoAccion: 'Aprobación de cotización',
     seccion: 'Cotizaciones',
-    registroId: 'cot-init-1',
-    registroFolio: 'COT-001',
-    descripcion: 'Aprobación de la cotización COT-001',
+    registroId: 'cot-init-2',
+    registroFolio: 'COT-002',
+    descripcion: 'Aprobación de la cotización COT-002 por parte del cliente Lucía Fernández',
     detalles: [
       { etiqueta: 'Estado', anterior: 'Por autorizar', nuevo: 'Aprobada' },
-      { etiqueta: 'Total', nuevo: '$2,850.00' },
+      { etiqueta: 'Total', nuevo: '$3,500.00' },
     ],
   },
   {
     id: 'ev-init-2',
-    fechaHora: '2026-09-29 09:10',
+    fechaHora: '2026-09-28 09:10',
     usuarioId: 'usr-recepcion',
     usuarioNombre: 'Sofía Ramírez',
     usuarioRol: 'Recepción',
     tipoAccion: 'Creación de vehículo',
     seccion: 'Vehículos',
-    registroId: 'veh-1',
-    registroFolio: 'ABC-123',
-    descripcion: 'Registro del vehículo Toyota Corolla (ABC-123)',
+    registroId: 'veh-2',
+    registroFolio: 'XYZ-789',
+    descripcion: 'Registro del vehículo Nissan Versa (XYZ-789)',
   },
   {
     id: 'ev-init-1',
-    fechaHora: '2026-09-29 09:05',
+    fechaHora: '2026-09-28 09:05',
     usuarioId: 'usr-recepcion',
     usuarioNombre: 'Sofía Ramírez',
     usuarioRol: 'Recepción',
     tipoAccion: 'Creación de cliente',
     seccion: 'Clientes',
-    registroId: 'cli-1',
-    registroFolio: 'Carlos Mendoza',
-    descripcion: 'Registro de nuevo cliente Carlos Mendoza',
+    registroId: 'cli-2',
+    registroFolio: 'Lucía Fernández',
+    descripcion: 'Registro de nueva clienta Lucía Fernández',
   },
 ];
 
@@ -526,41 +427,11 @@ const INITIAL_SEGUIMIENTOS: Seguimiento[] = [
     registroTipo: 'cotizacion',
     registroRef: 'Cotización COT-001',
     mensaje:
-      'Hola Carlos Mendoza, nos comunicamos de Taller mecánico para dar seguimiento a la cotización COT-001 de tu Toyota Corolla.',
-    fecha: getAyerDateString(),
+      'Hola Carlos Mendoza, nos comunicamos de IOT Technologies para dar seguimiento a la cotización COT-001 de tu Toyota Corolla.',
+    fecha: getHoyDateString(),
     hora: '10:30',
     estado: 'Pendiente',
     creadoEn: '2026-09-28T10:00:00Z',
-  },
-  {
-    id: 'seg-init-2',
-    clienteId: 'cli-2',
-    vehiculoId: 'veh-2',
-    motivo: 'recordatorio_cita',
-    motivoLabel: 'Recordatorio de cita',
-    registroTipo: 'cita',
-    registroRef: 'Cita 05/10/2026',
-    mensaje:
-      'Hola Lucía Fernández, te recordamos tu cita en Taller mecánico programada para el día de hoy a las 15:30 hrs para tu Nissan Versa.',
-    fecha: getHoyDateString(),
-    hora: '11:00',
-    estado: 'Pendiente',
-    creadoEn: '2026-09-28T10:00:00Z',
-  },
-  {
-    id: 'seg-init-3',
-    clienteId: '',
-    prospectoId: 'pros-init-1',
-    prospectoNombre: 'Mariana Ríos',
-    motivo: 'seguimiento_prospecto',
-    motivoLabel: 'Contacto comercial',
-    registroTipo: 'prospecto',
-    registroRef: 'Prospecto: Mariana Ríos',
-    mensaje: 'Llamar para confirmar cotización y agendar visita para afinación mayor.',
-    fecha: getHoyDateString(),
-    hora: '11:00',
-    estado: 'Pendiente',
-    creadoEn: '2026-09-28T09:35:00Z',
   },
 ];
 
@@ -681,9 +552,9 @@ const INITIAL_ASISTENCIAS: RegistroAsistencia[] = [
 ];
 
 const INITIAL_CONFIGURACION: ConfiguracionTaller = {
-  nombre: 'Taller mecánico',
-  telefono: '',
-  direccion: '',
+  nombre: 'IOT Technologies',
+  telefono: '555-432-1000',
+  direccion: 'Av. Tecnológico 1000, Edificio IOT',
 };
 
 const INITIAL_REFACCIONES: Refaccion[] = [
@@ -718,7 +589,7 @@ const INITIAL_REFACCIONES: Refaccion[] = [
     id: 'ref-4',
     codigo: 'LQD-FRN-DOT4',
     nombre: 'Líquido para frenos DOT-4 (1 litro)',
-    existencias: 2,
+    existencias: 6,
     minimo: 4,
     costoUnitario: 110,
     creadoEn: '2026-09-28T08:00:00Z',
@@ -887,9 +758,9 @@ export default function App() {
   const [empleados, setEmpleados] = useState<Empleado[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_EMPLEADOS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // fallback
@@ -901,7 +772,7 @@ export default function App() {
   const [asistencias, setAsistencias] = useState<RegistroAsistencia[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_ASISTENCIAS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
@@ -915,7 +786,7 @@ export default function App() {
   const [seguimientos, setSeguimientos] = useState<Seguimiento[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_SEGUIMIENTOS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
@@ -929,9 +800,9 @@ export default function App() {
   const [prospectos, setProspectos] = useState<Prospecto[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PROSPECTOS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // fallback
@@ -943,7 +814,7 @@ export default function App() {
   const [configuracion, setConfiguracion] = useState<ConfiguracionTaller>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CONFIGURACION);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed.nombre === 'string') return parsed;
       }
@@ -998,9 +869,9 @@ export default function App() {
   const [clientes, setClientes] = useState<Cliente[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CLIENTES);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // fallback
@@ -1012,9 +883,9 @@ export default function App() {
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_VEHICULOS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // fallback
@@ -1026,7 +897,7 @@ export default function App() {
   const [citas, setCitas] = useState<Cita[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CITAS);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
@@ -1040,7 +911,7 @@ export default function App() {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_COTIZACIONES);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
@@ -1054,7 +925,7 @@ export default function App() {
   const [ordenes, setOrdenes] = useState<OrdenTrabajo[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_ORDENES);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }

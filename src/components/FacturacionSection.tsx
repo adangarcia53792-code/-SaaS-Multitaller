@@ -938,7 +938,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                     <IotLogo size="sm" variant="dark" />
                   </div>
                   <h1 className="text-xl font-bold text-[#231F20] tracking-tight">
-                    {configuracion?.nombre || 'Taller mecánico'}
+                    {configuracion?.nombre || 'IOT Technologies'}
                   </h1>
                   {configuracion?.telefono && (
                     <p className="text-xs text-slate-500">Tel: {configuracion.telefono}</p>

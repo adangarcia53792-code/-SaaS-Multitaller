@@ -779,7 +779,7 @@ export const GarantiasSection: React.FC<GarantiasSectionProps> = ({
                     <IotLogo size="sm" variant="dark" />
                   </div>
                   <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
-                    {configuracion.nombre || 'Taller mecánico'}
+                    {configuracion.nombre || 'IOT Technologies'}
                   </h1>
                   {configuracion.direccion && (
                     <p className="text-xs text-slate-500 mt-0.5">{configuracion.direccion}</p>

@@ -392,8 +392,20 @@ export interface OrdenTrabajo {
   mecanicoId?: string;
   mecanicoNombre?: string;
   fechaEntregaPrometida?: string; // YYYY-MM-DD
+  codigoConsulta?: string;
+  mensajePublico?: string;
+  actualizadoEn?: string;
   creadoEn: string;
 }
+
+export const generarCodigoConsulta = (): string => {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
 
 export type NivelAviso = 'Información' | 'Atención' | 'Urgente';
 

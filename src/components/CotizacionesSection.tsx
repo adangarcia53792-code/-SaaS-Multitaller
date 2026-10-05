@@ -1291,7 +1291,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     <IotLogo size="sm" variant="dark" />
                   </div>
                   <h1 className="text-xl font-bold text-[#231F20] tracking-tight">
-                    {configuracion?.nombre || 'Taller mecánico'}
+                    {configuracion?.nombre || 'IOT Technologies'}
                   </h1>
                   {configuracion?.telefono && (
                     <p className="text-xs text-slate-500">Tel: {configuracion.telefono}</p>
@@ -1420,7 +1420,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               )}
 
               <div className="pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
-                Este documento es una estimación de servicios expedida por Taller mecánico con fines de demostración.
+                Este documento es una estimación de servicios expedida por {configuracion?.nombre || 'IOT Technologies'} con fines de demostración.
               </div>
             </div>
 

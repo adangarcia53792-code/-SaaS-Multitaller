@@ -94,7 +94,7 @@ export function ConfiguracionSection({
   onChangePasswordUsuario,
 }: ConfiguracionSectionProps) {
   // Section 1: Workshop data form
-  const [nombre, setNombre] = useState(configuracion.nombre || 'Taller mecánico');
+  const [nombre, setNombre] = useState(configuracion.nombre || 'IOT Technologies');
   const [telefono, setTelefono] = useState(configuracion.telefono || '');
   const [direccion, setDireccion] = useState(configuracion.direccion || '');
   const [nombreError, setNombreError] = useState<string | null>(null);
@@ -108,7 +108,7 @@ export function ConfiguracionSection({
 
   // Sync internal state if props change
   React.useEffect(() => {
-    setNombre(configuracion.nombre || 'Taller mecánico');
+    setNombre(configuracion.nombre || 'IOT Technologies');
     setTelefono(configuracion.telefono || '');
     setDireccion(configuracion.direccion || '');
   }, [configuracion]);
@@ -137,7 +137,7 @@ export function ConfiguracionSection({
       version: '1.0',
       fechaExportacion: new Date().toISOString(),
       configuracion: {
-        nombre: nombre.trim() || 'Taller mecánico',
+        nombre: nombre.trim() || 'IOT Technologies',
         telefono: telefono.trim() || undefined,
         direccion: direccion.trim() || undefined,
       },
@@ -657,7 +657,7 @@ export function ConfiguracionSection({
                 setNombre(e.target.value);
                 if (nombreError) setNombreError(null);
               }}
-              placeholder="Ej. Taller mecánico"
+              placeholder="Ej. IOT Technologies"
               className={`w-full px-3.5 py-2.5 bg-white border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all ${
                 nombreError ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
               }`}

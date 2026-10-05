@@ -318,7 +318,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
               <IotLogo size="sm" variant="dark" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {configuracion.nombre || 'Taller mecánico'}
+              {configuracion.nombre || 'IOT Technologies'}
             </h1>
             <div className="mt-1 flex items-center gap-2">
               <span className="inline-block px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 text-[#1D7EAE] border border-slate-300 rounded">
@@ -1054,7 +1054,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       <div className="hidden print:block pt-6 mt-6 border-t border-slate-300 text-center text-xs text-slate-500">
         <p className="font-semibold text-slate-700">Reporte de demostración operativa</p>
         <p className="text-[11px] text-slate-400 mt-0.5">
-          Generado por Sistema de Talleres Mecánicos - IOT Technologies para {configuracion.nombre || 'Taller mecánico'}. Sin validez legal ni contable.
+          Generado por Sistema de Talleres Mecánicos - IOT Technologies para {configuracion.nombre || 'IOT Technologies'}. Sin validez legal ni contable.
         </p>
       </div>
     </section>

@@ -187,7 +187,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
       return;
     }
 
-    const tallerNombre = configuracion.nombre || 'Taller mecánico';
+    const tallerNombre = configuracion.nombre || 'IOT Technologies';
     const clienteNombre = currentCliente.nombre;
     const comentarioLimpio = comentarioCliente.trim();
     let textoGenerado = '';

@@ -420,7 +420,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
               Dashboard
             </h2>
             <p className="text-xs md:text-sm text-[#5F6368] mt-0.5">
-              Estado general y actividades del día en el taller mecánico.
+              Estado general y actividades del día en IOT Technologies.
             </p>
           </div>
         </div>
