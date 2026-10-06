@@ -3,6 +3,8 @@ export type SectionId =
   | 'nueva-atencion'
   | 'clientes'
   | 'vehiculos'
+  | 'flotillas'
+  | 'historial-vehicular'
   | 'citas'
   | 'ordenes'
   | 'cotizaciones'
@@ -236,14 +238,18 @@ export interface RespaldoDemo {
   prospectos?: Prospecto[];
   garantias?: Garantia[];
   bitacora?: EventoBitacora[];
+  flotillas?: Flotilla[];
+  ordenesCompra?: OrdenCompra[];
 }
 
 export type SeccionBitacora =
   | 'Clientes'
   | 'Vehículos'
+  | 'Flotillas'
   | 'Citas'
   | 'Cotizaciones'
   | 'Órdenes'
+  | 'Servicios'
   | 'Inventario'
   | 'Facturación'
   | 'Garantías'
@@ -337,7 +343,34 @@ export interface Refaccion {
   nombre: string;
   existencias: number;
   minimo: number;
-  costoUnitario?: number;
+  costoUnitario?: number; // legacy alias de precioCompra
+  precioCompra: number; // Precio de compra
+  precioVenta: number; // Precio de venta
+  proveedor?: string;
+  telefonoProveedor?: string;
+  fechaUltimaCompra?: string; // YYYY-MM-DD
+  diasEntregaEstimados?: number;
+  compatibilidad?: string; // Marcas, modelos y años compatibles
+  creadoEn: string;
+}
+
+export type EstadoOrdenCompra = 'Pendiente' | 'Recibida';
+
+export interface OrdenCompra {
+  id: string;
+  folio: string; // OC-001
+  refaccionId: string;
+  refaccionNombre: string;
+  refaccionCodigo?: string;
+  cantidad: number;
+  proveedor: string;
+  telefonoProveedor?: string;
+  fecha: string; // YYYY-MM-DD
+  costoUnitario: number;
+  total: number;
+  estado: EstadoOrdenCompra;
+  recibidaEn?: string;
+  notas?: string;
   creadoEn: string;
 }
 
@@ -353,10 +386,29 @@ export interface ServicioCatalogo {
   id: string;
   nombre: string;
   descripcion?: string;
+  // Costos internos de taller
+  costoRefacciones: number;
+  costoManoObra: number;
+  // Precios de venta al público
   importeRefacciones: number;
   importeManoObra: number;
   total: number;
   activo: boolean; // Activo o Inactivo
+  creadoEn: string;
+}
+
+export type EstadoFlotilla = 'Activa' | 'Inactiva';
+
+export interface Flotilla {
+  id: string;
+  nombre: string; // Nombre de la flotilla
+  empresa: string; // Empresa o razón social
+  contacto: string; // Persona de contacto
+  telefono: string; // Teléfono
+  correo?: string; // Correo electrónico
+  notas?: string; // Notas adicionales
+  estado: EstadoFlotilla; // 'Activa' | 'Inactiva'
+  vehiculoIds: string[]; // IDs de vehículos asignados
   creadoEn: string;
 }
 
@@ -433,6 +485,13 @@ export interface OrdenTrabajo {
   mecanicoId?: string;
   mecanicoNombre?: string;
   fechaEntregaPrometida?: string; // YYYY-MM-DD
+  // Costeo real y rentabilidad:
+  costoRealRefacciones?: number;
+  costoRealManoObra?: number;
+  costoRealTotal?: number;
+  precioCobrado?: number;
+  utilidadReal?: number;
+  margenRealPorcentaje?: number;
   codigoConsulta?: string;
   mensajePublico?: string;
   actualizadoEn?: string;

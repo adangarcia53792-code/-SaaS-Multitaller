@@ -35,17 +35,20 @@ import {
   Building2,
   CheckCircle,
   Bell,
+  Truck,
 } from 'lucide-react';
 import {
   SectionId,
   Cliente,
   Vehiculo,
+  Flotilla,
   Cita,
   Cotizacion,
   OrdenTrabajo,
   ServicioCatalogo,
   Refaccion,
   MovimientoInventario,
+  OrdenCompra,
   RefaccionUtilizadaOrden,
   ConfiguracionTaller,
   RespaldoDemo,
@@ -81,6 +84,8 @@ import { ReportesSection } from './components/ReportesSection';
 import { ProspectosSection } from './components/ProspectosSection';
 import { GarantiasSection } from './components/GarantiasSection';
 import { BitacoraSection } from './components/BitacoraSection';
+import { FlotillasSection } from './components/FlotillasSection';
+import { HistorialVehicularSection } from './components/HistorialVehicularSection';
 import { LoginView } from './components/LoginView';
 import { CentroAvisosDrawer } from './components/CentroAvisosDrawer';
 import { IotLogo } from './components/IotLogo';
@@ -97,6 +102,8 @@ const TOP_LEVEL_MENU_ITEMS: MenuItem[] = [
   { id: 'nueva-atencion', label: 'Nueva atención', icon: PlusCircle },
   { id: 'clientes', label: 'Clientes', icon: Users },
   { id: 'vehiculos', label: 'Vehículos', icon: Car },
+  { id: 'flotillas', label: 'Flotillas', icon: Truck },
+  { id: 'historial-vehicular', label: 'Historial vehicular', icon: History },
   { id: 'citas', label: 'Citas', icon: Calendar },
   { id: 'ordenes', label: 'Órdenes de trabajo', icon: Wrench },
   { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText },
@@ -282,12 +289,14 @@ const INITIAL_ORDENES: OrdenTrabajo[] = [
 
 const STORAGE_KEY_CLIENTES = 'taller_clientes_data';
 const STORAGE_KEY_VEHICULOS = 'taller_vehiculos_data';
+const STORAGE_KEY_FLOTILLAS = 'taller_flotillas_data';
 const STORAGE_KEY_CITAS = 'taller_citas_data';
 const STORAGE_KEY_COTIZACIONES = 'taller_cotizaciones_data';
 const STORAGE_KEY_ORDENES = 'taller_ordenes_data';
 const STORAGE_KEY_SERVICIOS = 'taller_servicios_data';
 const STORAGE_KEY_REFACCIONES = 'taller_refacciones_data';
 const STORAGE_KEY_MOVIMIENTOS = 'taller_movimientos_inventario_data';
+const STORAGE_KEY_ORDENES_COMPRA = 'taller_ordenes_compra_data';
 const STORAGE_KEY_CONFIGURACION = 'taller_configuracion_data';
 const STORAGE_KEY_FACTURAS = 'taller_facturas_data';
 const STORAGE_KEY_EMPLEADOS = 'taller_empleados_data';
@@ -588,6 +597,33 @@ const INITIAL_CONFIGURACION: ConfiguracionTaller = {
   direccion: 'Av. Tecnológico 1000, Edificio IOT',
 };
 
+const INITIAL_FLOTILLAS: Flotilla[] = [
+  {
+    id: 'flot-1',
+    nombre: 'Flotilla Ejecutiva Monterrey',
+    empresa: 'Transportes Rápidos del Norte S.A. de C.V.',
+    contacto: 'Ing. Roberto Garza',
+    telefono: '818-234-5678',
+    correo: 'contacto@transportesnorte.com',
+    notas: 'Mantenimiento preventivo mensual de vehículos utilitarios.',
+    estado: 'Activa',
+    vehiculoIds: ['veh-1'],
+    creadoEn: '2026-09-15T08:00:00Z',
+  },
+  {
+    id: 'flot-2',
+    nombre: 'Distribución Metropolitana',
+    empresa: 'Logística y Envíos Express',
+    contacto: 'Lic. Andrea Morales',
+    telefono: '555-876-5432',
+    correo: 'flotilla@enviosexpress.com',
+    notas: 'Horario de recepción matutino antes de las 9:00 AM.',
+    estado: 'Activa',
+    vehiculoIds: [],
+    creadoEn: '2026-09-20T08:00:00Z',
+  },
+];
+
 const INITIAL_REFACCIONES: Refaccion[] = [
   {
     id: 'ref-1',
@@ -596,6 +632,13 @@ const INITIAL_REFACCIONES: Refaccion[] = [
     existencias: 8,
     minimo: 4,
     costoUnitario: 520,
+    precioCompra: 520,
+    precioVenta: 780,
+    proveedor: 'Frenos y Partes de México',
+    telefonoProveedor: '555-444-1122',
+    fechaUltimaCompra: '2026-09-20',
+    diasEntregaEstimados: 2,
+    compatibilidad: 'Toyota Corolla 2018-2024, Nissan Versa 2020-2024',
     creadoEn: '2026-09-28T08:00:00Z',
   },
   {
@@ -605,6 +648,13 @@ const INITIAL_REFACCIONES: Refaccion[] = [
     existencias: 3,
     minimo: 5,
     costoUnitario: 140,
+    precioCompra: 140,
+    precioVenta: 220,
+    proveedor: 'Distribuidora Automotriz del Centro',
+    telefonoProveedor: '555-321-7788',
+    fechaUltimaCompra: '2026-09-25',
+    diasEntregaEstimados: 1,
+    compatibilidad: 'Nissan Versa, Sentra, Tiida 1.6L y 1.8L',
     creadoEn: '2026-09-28T08:00:00Z',
   },
   {
@@ -614,6 +664,13 @@ const INITIAL_REFACCIONES: Refaccion[] = [
     existencias: 12,
     minimo: 6,
     costoUnitario: 380,
+    precioCompra: 380,
+    precioVenta: 560,
+    proveedor: 'Encendido y Sensores Nacional',
+    telefonoProveedor: '555-778-9900',
+    fechaUltimaCompra: '2026-09-18',
+    diasEntregaEstimados: 3,
+    compatibilidad: 'Universal / Motores 4 cilindros japoneses y americanos',
     creadoEn: '2026-09-28T08:00:00Z',
   },
   {
@@ -623,7 +680,50 @@ const INITIAL_REFACCIONES: Refaccion[] = [
     existencias: 6,
     minimo: 4,
     costoUnitario: 110,
+    precioCompra: 110,
+    precioVenta: 180,
+    proveedor: 'Lubricantes y Químicos del Bajío',
+    telefonoProveedor: '555-889-1234',
+    fechaUltimaCompra: '2026-09-15',
+    diasEntregaEstimados: 2,
+    compatibilidad: 'Multimarca estándar DOT-4',
     creadoEn: '2026-09-28T08:00:00Z',
+  },
+];
+
+const INITIAL_ORDENES_COMPRA: OrdenCompra[] = [
+  {
+    id: 'oc-init-1',
+    folio: 'OC-001',
+    refaccionId: 'ref-2',
+    refaccionNombre: 'Filtro de aceite sintético para motor 4 cil',
+    refaccionCodigo: 'FIL-ACE-01',
+    cantidad: 10,
+    proveedor: 'Distribuidora Automotriz del Centro',
+    telefonoProveedor: '555-321-7788',
+    fecha: '2026-09-25',
+    costoUnitario: 140,
+    total: 1400,
+    estado: 'Recibida',
+    recibidaEn: '2026-09-27T10:00:00Z',
+    notas: 'Pedido de reposición mensual.',
+    creadoEn: '2026-09-25T09:00:00Z',
+  },
+  {
+    id: 'oc-init-2',
+    folio: 'OC-002',
+    refaccionId: 'ref-1',
+    refaccionNombre: 'Juego de balatas delanteras cerámicas',
+    refaccionCodigo: 'BAL-DEL-01',
+    cantidad: 5,
+    proveedor: 'Frenos y Partes de México',
+    telefonoProveedor: '555-444-1122',
+    fecha: getHoyDateString(),
+    costoUnitario: 520,
+    total: 2600,
+    estado: 'Pendiente',
+    notas: 'Surtido solicitado para órdenes de la semana.',
+    creadoEn: '2026-09-28T11:00:00Z',
   },
 ];
 
@@ -667,6 +767,8 @@ const INITIAL_SERVICIOS: ServicioCatalogo[] = [
     id: 'serv-1',
     nombre: 'Afinación mayor 4 cilindros',
     descripcion: 'Cambio de filtros (aceite, aire, gasolina), bujías de platino y lavado de inyectores con boya.',
+    costoRefacciones: 650,
+    costoManoObra: 400,
     importeRefacciones: 1250,
     importeManoObra: 850,
     total: 2100,
@@ -677,6 +779,8 @@ const INITIAL_SERVICIOS: ServicioCatalogo[] = [
     id: 'serv-2',
     nombre: 'Cambio de balatas delanteras',
     descripcion: 'Reemplazo de pastillas de freno cerámicas y rectificado de discos.',
+    costoRefacciones: 520,
+    costoManoObra: 300,
     importeRefacciones: 980,
     importeManoObra: 650,
     total: 1630,
@@ -687,6 +791,8 @@ const INITIAL_SERVICIOS: ServicioCatalogo[] = [
     id: 'serv-3',
     nombre: 'Cambio de aceite y filtro sintético',
     descripcion: 'Aceite 100% sintético 5W-30 (hasta 5 litros), filtro de aceite nuevo y revisión de 15 puntos de seguridad.',
+    costoRefacciones: 450,
+    costoManoObra: 150,
     importeRefacciones: 850,
     importeManoObra: 350,
     total: 1200,
@@ -895,13 +1001,33 @@ export default function App() {
     return INITIAL_CONFIGURACION;
   });
 
-  // Servicios State (ETAPA 8)
+  // Flotillas State
+  const [flotillas, setFlotillas] = useState<Flotilla[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_FLOTILLAS);
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_FLOTILLAS;
+  });
+
+  // Servicios State (ETAPA 8 & Costeo)
   const [servicios, setServicios] = useState<ServicioCatalogo[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_SERVICIOS);
       if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.map((s: any) => ({
+            ...s,
+            costoRefacciones: s.costoRefacciones !== undefined ? s.costoRefacciones : Math.round((s.importeRefacciones || 0) * 0.55),
+            costoManoObra: s.costoManoObra !== undefined ? s.costoManoObra : Math.round((s.importeManoObra || 0) * 0.5),
+          }));
+        }
       }
     } catch {
       // fallback
@@ -909,10 +1035,38 @@ export default function App() {
     return INITIAL_SERVICIOS;
   });
 
-  // Inventario & Movimientos State (ETAPA 9)
+  // Inventario & Movimientos State (ETAPA 9 & Costeo)
   const [refacciones, setRefacciones] = useState<Refaccion[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_REFACCIONES);
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((r: any) => {
+            const pCompra = r.precioCompra !== undefined ? r.precioCompra : (r.costoUnitario || 100);
+            return {
+              ...r,
+              precioCompra: pCompra,
+              precioVenta: r.precioVenta !== undefined ? r.precioVenta : Math.round(pCompra * 1.45),
+              proveedor: r.proveedor || 'Proveedor General',
+              telefonoProveedor: r.telefonoProveedor || '',
+              fechaUltimaCompra: r.fechaUltimaCompra || '',
+              diasEntregaEstimados: r.diasEntregaEstimados ?? 2,
+              compatibilidad: r.compatibilidad || 'Multimarca / Universal',
+            };
+          });
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_REFACCIONES;
+  });
+
+  // Órdenes de compra State
+  const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_ORDENES_COMPRA);
       if (saved !== null) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
@@ -920,7 +1074,7 @@ export default function App() {
     } catch {
       // fallback
     }
-    return INITIAL_REFACCIONES;
+    return INITIAL_ORDENES_COMPRA;
   });
 
   const [movimientos, setMovimientos] = useState<MovimientoInventario[]>(() => {
@@ -1070,6 +1224,22 @@ export default function App() {
       console.error(e);
     }
   }, [movimientos]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_FLOTILLAS, JSON.stringify(flotillas));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [flotillas]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_ORDENES_COMPRA, JSON.stringify(ordenesCompra));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [ordenesCompra]);
 
   useEffect(() => {
     try {
@@ -1648,6 +1818,12 @@ export default function App() {
     if (backup.prospectos) {
       setProspectos(backup.prospectos);
     }
+    if (backup.flotillas) {
+      setFlotillas(backup.flotillas);
+    }
+    if (backup.ordenesCompra) {
+      setOrdenesCompra(backup.ordenesCompra);
+    }
 
     try {
       localStorage.setItem(STORAGE_KEY_CONFIGURACION, JSON.stringify(backup.configuracion));
@@ -1667,6 +1843,12 @@ export default function App() {
       }
       if (backup.prospectos) {
         localStorage.setItem(STORAGE_KEY_PROSPECTOS, JSON.stringify(backup.prospectos));
+      }
+      if (backup.flotillas) {
+        localStorage.setItem(STORAGE_KEY_FLOTILLAS, JSON.stringify(backup.flotillas));
+      }
+      if (backup.ordenesCompra) {
+        localStorage.setItem(STORAGE_KEY_ORDENES_COMPRA, JSON.stringify(backup.ordenesCompra));
       }
       if (backup.garantias) {
         setGarantias(backup.garantias);
@@ -1801,13 +1983,15 @@ export default function App() {
     if (!rol) return false;
     if (rol === 'Administrador') return true;
 
-    // Recepción/CRM: clientes, vehículos, citas, prospectos, seguimientos y creación inicial de órdenes
+    // Recepción/CRM: clientes, vehículos, flotillas, citas, prospectos, seguimientos y creación inicial de órdenes
     if (rol === 'Recepción/CRM' || rol === 'Recepción') {
       return [
         'dashboard',
         'nueva-atencion',
         'clientes',
         'vehiculos',
+        'flotillas',
+        'historial-vehicular',
         'citas',
         'ordenes',
         'calendario',
@@ -1823,6 +2007,7 @@ export default function App() {
         'cotizaciones',
         'servicios',
         'inventario',
+        'historial-vehicular',
       ].includes(section);
     }
 
@@ -1832,6 +2017,7 @@ export default function App() {
         'dashboard',
         'ordenes',
         'vehiculos',
+        'historial-vehicular',
       ].includes(section);
     }
 
@@ -1841,6 +2027,7 @@ export default function App() {
         'dashboard',
         'ordenes',
         'garantias',
+        'historial-vehicular',
       ].includes(section);
     }
 
@@ -1850,6 +2037,7 @@ export default function App() {
         'dashboard',
         'facturacion',
         'ordenes',
+        'historial-vehicular',
       ].includes(section);
     }
 
@@ -2851,6 +3039,121 @@ export default function App() {
     );
   };
 
+  // Flotillas handlers
+  const handleSaveFlotilla = (flotilla: Flotilla) => {
+    setFlotillas((prev) => {
+      const exists = prev.some((f) => f.id === flotilla.id);
+      let updated: Flotilla[];
+      if (exists) {
+        updated = prev.map((f) => (f.id === flotilla.id ? flotilla : f));
+      } else {
+        updated = [flotilla, ...prev];
+      }
+      // Regla: Un vehículo no puede pertenecer a dos flotillas al mismo tiempo
+      return updated.map((f) => {
+        if (f.id === flotilla.id) return f;
+        return {
+          ...f,
+          vehiculoIds: f.vehiculoIds.filter((vId) => !flotilla.vehiculoIds.includes(vId)),
+        };
+      });
+    });
+
+    registrarEvento(
+      'Registro de flotilla',
+      'Flotillas',
+      `Guardado de datos de la flotilla "${flotilla.nombre}" (${flotilla.empresa}) con ${flotilla.vehiculoIds.length} vehículos asignados.`,
+      flotilla.id,
+      flotilla.nombre
+    );
+    mostrarMensaje(`Flotilla "${flotilla.nombre}" guardada correctamente.`);
+  };
+
+  const handleDeleteFlotilla = (flotillaId: string) => {
+    const flot = flotillas.find((f) => f.id === flotillaId);
+    setFlotillas((prev) => prev.filter((f) => f.id !== flotillaId));
+    if (flot) {
+      registrarEvento(
+        'Eliminación de flotilla',
+        'Flotillas',
+        `Se eliminó la flotilla "${flot.nombre}" (${flot.empresa}).`,
+        flotillaId,
+        flot.nombre
+      );
+      mostrarMensaje(`Flotilla "${flot.nombre}" eliminada.`);
+    }
+  };
+
+  // Órdenes de compra handlers
+  const handleSaveOrdenCompra = (oc: OrdenCompra) => {
+    setOrdenesCompra((prev) => {
+      const exists = prev.some((o) => o.id === oc.id);
+      if (exists) {
+        return prev.map((o) => (o.id === oc.id ? oc : o));
+      }
+      return [oc, ...prev];
+    });
+
+    registrarEvento(
+      'Creación de orden de compra',
+      'Inventario',
+      `Generación de orden de compra ${oc.folio} para ${oc.cantidad} pzs de "${oc.refaccionNombre}".`,
+      oc.id,
+      oc.folio
+    );
+    mostrarMensaje(`Orden de compra "${oc.folio}" registrada exitosamente.`);
+  };
+
+  const handleMarcarOrdenCompraRecibida = (ocId: string) => {
+    const oc = ordenesCompra.find((o) => o.id === ocId);
+    if (!oc || oc.estado === 'Recibida') return;
+
+    const fechaRecibida = new Date().toISOString();
+
+    // 1. Marcar como recibida una sola vez
+    setOrdenesCompra((prev) =>
+      prev.map((o) => (o.id === ocId ? { ...o, estado: 'Recibida', recibidaEn: fechaRecibida } : o))
+    );
+
+    // 2. Incrementar existencias en almacén y actualizar fecha última compra
+    setRefacciones((prev) =>
+      prev.map((r) =>
+        r.id === oc.refaccionId
+          ? {
+              ...r,
+              existencias: r.existencias + oc.cantidad,
+              fechaUltimaCompra: oc.fecha || new Date().toISOString().split('T')[0],
+            }
+          : r
+      )
+    );
+
+    // 3. Registrar entrada en movimientos de inventario
+    const nuevoMovimiento: MovimientoInventario = {
+      id: `mov-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      refaccionId: oc.refaccionId,
+      tipo: 'Entrada',
+      cantidad: oc.cantidad,
+      motivo: `Recepción de orden de compra ${oc.folio}`,
+      fechaHora: new Date().toLocaleString('es-MX'),
+    };
+    setMovimientos((prev) => [nuevoMovimiento, ...prev]);
+
+    registrarEvento(
+      'Recepción de orden de compra',
+      'Inventario',
+      `Recepción de orden ${oc.folio}. Entrada registrada de ${oc.cantidad} pzas al inventario.`,
+      oc.id,
+      oc.folio,
+      [
+        { etiqueta: 'Refacción', nuevo: oc.refaccionNombre },
+        { etiqueta: 'Cantidad ingresada', nuevo: `+${oc.cantidad} pzas` },
+        { etiqueta: 'Proveedor', nuevo: oc.proveedor },
+      ]
+    );
+    mostrarMensaje(`Orden ${oc.folio} recibida. Se ingresaron ${oc.cantidad} pzs al stock.`);
+  };
+
   // Filtered Clientes and Vehículos
   const filteredClientes = useMemo(() => {
     const q = searchCliente.toLowerCase().trim();
@@ -3760,6 +4063,30 @@ export default function App() {
             </section>
           )}
 
+          {/* FLOTILLAS */}
+          {activeSection === 'flotillas' && (
+            <FlotillasSection
+              flotillas={flotillas}
+              vehiculos={vehiculos}
+              clientes={clientes}
+              onSaveFlotilla={handleSaveFlotilla}
+              onDeleteFlotilla={handleDeleteFlotilla}
+            />
+          )}
+
+          {/* HISTORIAL VEHICULAR */}
+          {activeSection === 'historial-vehicular' && (
+            <HistorialVehicularSection
+              vehiculos={vehiculos}
+              clientes={clientes}
+              citas={citas}
+              cotizaciones={cotizaciones}
+              ordenes={ordenes}
+              flotillas={flotillas}
+              configuracion={configuracion}
+            />
+          )}
+
           {/* CITAS (ETAPA 4) */}
           {activeSection === 'citas' && (
             <CitasSection
@@ -3825,8 +4152,11 @@ export default function App() {
             <InventarioSection
               refacciones={refacciones}
               movimientos={movimientos}
+              ordenesCompra={ordenesCompra}
               onSaveRefaccion={handleSaveRefaccion}
               onRecordMovement={handleRecordMovement}
+              onSaveOrdenCompra={handleSaveOrdenCompra}
+              onMarcarOrdenCompraRecibida={handleMarcarOrdenCompraRecibida}
             />
           )}
 
@@ -3904,6 +4234,8 @@ export default function App() {
               prospectos={prospectos}
               garantias={garantias}
               bitacora={bitacora}
+              flotillas={flotillas}
+              ordenesCompra={ordenesCompra}
               onRestoreData={handleRestoreData}
               usuarios={usuarios}
               currentUser={sesion || undefined}

@@ -34,6 +34,8 @@ import {
   SesionUsuario,
   Garantia,
   EventoBitacora,
+  Flotilla,
+  OrdenCompra,
 } from '../types';
 import { UsuariosPermisosSection } from './UsuariosPermisosSection';
 import { useModalDismiss } from '../hooks/useModalDismiss';
@@ -57,6 +59,8 @@ interface ConfiguracionSectionProps {
   prospectos?: Prospecto[];
   garantias?: Garantia[];
   bitacora?: EventoBitacora[];
+  flotillas?: Flotilla[];
+  ordenesCompra?: OrdenCompra[];
   // Restore all data handler
   onRestoreData: (backup: RespaldoDemo) => void;
   // Usuarios y permisos (ETAPA 20)
@@ -86,6 +90,8 @@ export function ConfiguracionSection({
   prospectos,
   garantias,
   bitacora,
+  flotillas,
+  ordenesCompra,
   onRestoreData,
   usuarios,
   currentUser,
@@ -170,6 +176,8 @@ export function ConfiguracionSection({
       prospectos: prospectos || [],
       garantias: garantias || [],
       bitacora: bitacora || [],
+      flotillas: flotillas || [],
+      ordenesCompra: ordenesCompra || [],
     };
 
     const jsonString = JSON.stringify(backup, null, 2);

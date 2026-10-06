@@ -248,6 +248,11 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [returningError, setReturningError] = useState('');
   const [openRefaccionesInEdit, setOpenRefaccionesInEdit] = useState(false);
 
+  // Costeo real por orden state (Flotillas & Costeo)
+  const [formCostoRealRefacciones, setFormCostoRealRefacciones] = useState('0');
+  const [formCostoRealManoObra, setFormCostoRealManoObra] = useState('0');
+  const [openCosteoRealInEdit, setOpenCosteoRealInEdit] = useState(false);
+
   // Lookup maps
   const clienteMap = useMemo(() => {
     const map = new Map<string, Cliente>();
@@ -272,6 +277,64 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     refacciones.forEach((r) => map.set(r.id, r));
     return map;
   }, [refacciones]);
+
+  // Helper para cálculo de costeo real, comparación con cotización y semáforo discreto
+  const getRentabilidadOrden = (ord: OrdenTrabajo) => {
+    // 1. Costo real de refacciones utilizadas: omitir piezas devueltas
+    let costoRefCalculado = 0;
+    if (ord.refaccionesUtilizadas && ord.refaccionesUtilizadas.length > 0) {
+      ord.refaccionesUtilizadas.forEach((u) => {
+        const netQty = Math.max(0, u.cantidad - (u.devueltas || 0));
+        if (netQty > 0) {
+          const ref = refaccionMap.get(u.refaccionId);
+          const costoUnit = ref?.precioCompra ?? ref?.costoUnitario ?? 0;
+          costoRefCalculado += netQty * costoUnit;
+        }
+      });
+    }
+
+    const costoRefReal = ord.costoRealRefacciones !== undefined ? ord.costoRealRefacciones : costoRefCalculado;
+    const costoMoReal = ord.costoRealManoObra !== undefined ? ord.costoRealManoObra : 0;
+    const costoTotalReal = Math.round((costoRefReal + costoMoReal) * 100) / 100;
+
+    // 2. Comparar con cotización aprobada
+    const linkedCot = ord.cotizacionId
+      ? cotizacionMap.get(ord.cotizacionId)
+      : cotizaciones.find((c) => c.ordenId === ord.id);
+    const isCotAprobada = linkedCot && linkedCot.estado === 'Aprobada';
+    const precioAprobado = isCotAprobada
+      ? linkedCot.total
+      : (ord.precioCobrado || linkedCot?.total || 0);
+
+    // 3. Utilidad y margen real
+    const utilidadReal = Math.round((precioAprobado - costoTotalReal) * 100) / 100;
+    const margenReal = precioAprobado > 0 ? Math.round(((utilidadReal / precioAprobado) * 100) * 10) / 10 : 0;
+
+    // 4. Semáforo discreto: verde para rentable, amarillo para margen bajo y rojo para pérdida
+    let semaforo: 'verde' | 'amarillo' | 'rojo' | 'neutro';
+    if (precioAprobado <= 0) {
+      semaforo = 'neutro';
+    } else if (utilidadReal < 0 || margenReal < 0) {
+      semaforo = 'rojo'; // Pérdida
+    } else if (margenReal < 20) {
+      semaforo = 'amarillo'; // Margen bajo
+    } else {
+      semaforo = 'verde'; // Rentable
+    }
+
+    return {
+      costoRefCalculado,
+      costoRefReal,
+      costoMoReal,
+      costoTotalReal,
+      linkedCot,
+      isCotAprobada,
+      precioAprobado,
+      utilidadReal,
+      margenReal,
+      semaforo,
+    };
+  };
 
   const availableVehicles = useMemo(() => {
     if (!formClientId) return [];
@@ -460,6 +523,9 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setFormFechaHoraEntrega(undefined);
     setFormMecanicoId('');
     setFormMecanicoNombre('');
+    setFormCostoRealRefacciones('0');
+    setFormCostoRealManoObra('0');
+    setOpenCosteoRealInEdit(false);
 
     setOpenRecepcion(true);
     setOpenTrabajo(false);
@@ -501,6 +567,25 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setFormFechaHoraEntrega(orden.fechaHoraEntrega);
     setFormMecanicoId(orden.mecanicoId || '');
     setFormMecanicoNombre(orden.mecanicoNombre || '');
+
+    // Inicializar costos reales
+    let initialCostoRef = orden.costoRealRefacciones;
+    if (initialCostoRef === undefined) {
+      let sum = 0;
+      if (orden.refaccionesUtilizadas && orden.refaccionesUtilizadas.length > 0) {
+        orden.refaccionesUtilizadas.forEach((u) => {
+          const netQty = Math.max(0, u.cantidad - (u.devueltas || 0));
+          if (netQty > 0) {
+            const ref = refaccionMap.get(u.refaccionId);
+            sum += netQty * (ref?.precioCompra ?? ref?.costoUnitario ?? 0);
+          }
+        });
+      }
+      initialCostoRef = sum;
+    }
+    setFormCostoRealRefacciones((initialCostoRef ?? 0).toString());
+    setFormCostoRealManoObra((orden.costoRealManoObra ?? 0).toString());
+    setOpenCosteoRealInEdit(false);
 
     setOpenRecepcion(Boolean(orden.kilometraje || orden.dañosVisibles));
     setOpenTrabajo(Boolean(orden.diagnostico || orden.observacionesMecanico || orden.observaciones));
@@ -610,6 +695,20 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       folio = `ORD-${String(count).padStart(3, '0')}`;
     }
 
+    const cRefVal = parseFloat(formCostoRealRefacciones) || 0;
+    const cMoVal = parseFloat(formCostoRealManoObra) || 0;
+    const cTotalVal = Math.round((cRefVal + cMoVal) * 100) / 100;
+
+    const linkedCot = editingOrden?.cotizacionId
+      ? cotizacionMap.get(editingOrden.cotizacionId)
+      : cotizaciones.find((c) => c.ordenId === editingOrden?.id);
+    const precioBase = linkedCot && linkedCot.estado === 'Aprobada'
+      ? linkedCot.total
+      : (editingOrden?.precioCobrado || linkedCot?.total || 0);
+
+    const utilidadVal = Math.round((precioBase - cTotalVal) * 100) / 100;
+    const margenVal = precioBase > 0 ? Math.round(((utilidadVal / precioBase) * 100) * 10) / 10 : 0;
+
     const savedOrden: OrdenTrabajo = {
       id: editingOrden
         ? editingOrden.id
@@ -630,6 +729,12 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
       entregado: formEntregado,
       fechaHoraEntrega: finalFechaHoraEntrega,
       refaccionesUtilizadas: editingOrden?.refaccionesUtilizadas,
+      costoRealRefacciones: cRefVal,
+      costoRealManoObra: cMoVal,
+      costoRealTotal: cTotalVal,
+      precioCobrado: precioBase,
+      utilidadReal: utilidadVal,
+      margenRealPorcentaje: margenVal,
       mecanicoId: isMecanico && editingOrden ? editingOrden.mecanicoId : (formMecanicoId || undefined),
       mecanicoNombre: isMecanico && editingOrden ? editingOrden.mecanicoNombre : (formMecanicoNombre || undefined),
       creadoEn: editingOrden ? editingOrden.creadoEn : new Date().toISOString(),
@@ -1089,11 +1194,12 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-5">Folio</th>
-                <th className="py-3.5 px-5">Cliente y vehículo</th>
-                <th className="py-3.5 px-5">Trabajo solicitado</th>
-                <th className="py-3.5 px-5">Estado</th>
-                <th className="py-3.5 px-5 text-right">Acciones</th>
+                <th className="py-3.5 px-4">Folio</th>
+                <th className="py-3.5 px-4">Cliente y vehículo</th>
+                <th className="py-3.5 px-4">Trabajo solicitado</th>
+                <th className="py-3.5 px-4 text-center">Costeo y rentabilidad</th>
+                <th className="py-3.5 px-4 text-center">Estado</th>
+                <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -1103,11 +1209,12 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                   const veh = vehiculoMap.get(ord.vehiculoId);
                   const isMenuOpen = openMenuId === ord.id;
                   const linkedCot = ord.cotizacionId ? cotizacionMap.get(ord.cotizacionId) : undefined;
+                  const rent = getRentabilidadOrden(ord);
 
                   return (
                     <tr key={ord.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Folio */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className="font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded text-xs border border-amber-200">
                           {ord.folio}
                         </span>
@@ -1120,7 +1227,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       </td>
 
                       {/* Cliente y vehículo */}
-                      <td className="py-3.5 px-5">
+                      <td className="py-3.5 px-4">
                         <div className="font-medium text-slate-900">
                           {client ? client.nombre : 'Cliente no encontrado'}
                         </div>
@@ -1139,7 +1246,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       </td>
 
                       {/* Trabajo solicitado y Mecánico */}
-                      <td className="py-3.5 px-5 text-slate-700 max-w-xs">
+                      <td className="py-3.5 px-4 text-slate-700 max-w-xs">
                         <span className="line-clamp-2">{ord.servicio}</span>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           {ord.kilometraje && (
@@ -1160,9 +1267,40 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         </div>
                       </td>
 
+                      {/* Costeo real y Semáforo discreto */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        {rent.semaforo === 'verde' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200" title={`Utilidad: +$${rent.utilidadReal.toLocaleString('es-MX')}`}>
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>Rentable ({rent.margenReal}%)</span>
+                          </span>
+                        )}
+                        {rent.semaforo === 'amarillo' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200" title={`Margen estrecho: +$${rent.utilidadReal.toLocaleString('es-MX')}`}>
+                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>Margen bajo ({rent.margenReal}%)</span>
+                          </span>
+                        )}
+                        {rent.semaforo === 'rojo' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-800 border border-rose-200" title={`Pérdida estimada: -$${Math.abs(rent.utilidadReal).toLocaleString('es-MX')}`}>
+                            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>Pérdida ({rent.margenReal}%)</span>
+                          </span>
+                        )}
+                        {rent.semaforo === 'neutro' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-50 text-slate-600 border border-slate-200">
+                            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span>Sin cotización</span>
+                          </span>
+                        )}
+                        <div className="text-[10px] text-slate-400 font-mono mt-1">
+                          Costo ${rent.costoTotalReal.toFixed(2)} / Aprob ${rent.precioAprobado.toFixed(2)}
+                        </div>
+                      </td>
+
                       {/* Estado */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        <div className="flex flex-col gap-1 items-start">
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        <div className="flex flex-col gap-1 items-center">
                           {ord.estado === 'Por autorizar' && (
                             <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                               Por autorizar
@@ -1185,7 +1323,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           )}
 
                           {ord.entregado && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                               <CheckCircle className="w-3 h-3 text-emerald-600" />
                               <span>Entregado</span>
                             </span>
@@ -1194,7 +1332,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       </td>
 
                       {/* Acciones: Botón principal según rol */}
-                      <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap relative">
                         <div className="inline-flex items-center gap-2">
                           {isCaja ? (
                             <button
@@ -1365,6 +1503,43 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           <span>Cotización: {linkedCot.folio}</span>
                         </p>
                       )}
+                      {/* Semáforo discreto y costos en móvil */}
+                      {(() => {
+                        const rentMobile = getRentabilidadOrden(ord);
+                        return (
+                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs flex-wrap gap-1">
+                            <div>
+                              {rentMobile.semaforo === 'verde' && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                  <span>Rentable ({rentMobile.margenReal}%)</span>
+                                </span>
+                              )}
+                              {rentMobile.semaforo === 'amarillo' && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                  <span>Margen bajo ({rentMobile.margenReal}%)</span>
+                                </span>
+                              )}
+                              {rentMobile.semaforo === 'rojo' && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-800 border border-rose-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                  <span>Pérdida ({rentMobile.margenReal}%)</span>
+                                </span>
+                              )}
+                              {rentMobile.semaforo === 'neutro' && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-50 text-slate-600 border border-slate-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                  <span>Sin cotización</span>
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              Costo ${rentMobile.costoTotalReal.toFixed(2)} / Aprob ${rentMobile.precioAprobado.toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -1798,6 +1973,62 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Costeo real y rentabilidad en Continuar Workflow */}
+              {(() => {
+                const rent = getRentabilidadOrden(continuarOrden);
+                return (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs space-y-2">
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <span className="font-semibold text-slate-700">Costeo real y margen de la orden:</span>
+                      {rent.semaforo === 'verde' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          Rentable ({rent.margenReal}%)
+                        </span>
+                      )}
+                      {rent.semaforo === 'amarillo' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+                          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                          Margen bajo ({rent.margenReal}%)
+                        </span>
+                      )}
+                      {rent.semaforo === 'rojo' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                          Pérdida ({rent.margenReal}%)
+                        </span>
+                      )}
+                      {rent.semaforo === 'neutro' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-200 text-slate-700">
+                          <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                          Sin cotización aprobada
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 text-center pt-1.5 border-t border-slate-200">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Costo refacc</span>
+                        <span className="font-bold text-slate-700">${rent.costoRefReal.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Costo MO</span>
+                        <span className="font-bold text-slate-700">${rent.costoMoReal.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Cotizado</span>
+                        <span className="font-bold text-[#1D7EAE]">${rent.precioAprobado.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Utilidad</span>
+                        <span className={`font-bold ${rent.utilidadReal >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                          ${rent.utilidadReal.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ======================================================== */}
               {/* UN SOLO SIGUIENTE PASO VISIBLE (ETAPA 7) */}
@@ -2811,6 +3042,162 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                   )}
                 </div>
               )}
+
+              {/* Apartado desplegable: 5. Costeo real y rentabilidad (solo en edición o creación) */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenCosteoRealInEdit(!openCosteoRealInEdit)}
+                  className="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-semibold text-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>5. Costeo real y rentabilidad de la orden</span>
+                  </div>
+                  {openCosteoRealInEdit ? (
+                    <ChevronUp className="w-4 h-4 text-slate-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                  )}
+                </button>
+
+                {openCosteoRealInEdit && (
+                  <div className="p-4 bg-white space-y-4 border-t border-slate-200 text-xs">
+                    <p className="text-slate-500">
+                      Registra los costos reales incurridos en refacciones y mano de obra para calcular la utilidad y margen frente a la cotización aprobada.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="font-medium text-slate-700">
+                            Costo real refacciones ($ MXN)
+                          </label>
+                          {editingOrden && editingOrden.refaccionesUtilizadas && editingOrden.refaccionesUtilizadas.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                let sum = 0;
+                                editingOrden.refaccionesUtilizadas?.forEach((u) => {
+                                  const net = Math.max(0, u.cantidad - (u.devueltas || 0));
+                                  if (net > 0) {
+                                    const r = refaccionMap.get(u.refaccionId);
+                                    sum += net * (r?.precioCompra ?? r?.costoUnitario ?? 0);
+                                  }
+                                });
+                                setFormCostoRealRefacciones(sum.toFixed(2));
+                              }}
+                              className="text-[10px] text-[#1D7EAE] hover:underline font-semibold"
+                            >
+                              Calcular de piezas
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formCostoRealRefacciones}
+                          onChange={(e) => setFormCostoRealRefacciones(e.target.value)}
+                          className="w-full p-2 border border-slate-200 rounded-md text-slate-800 text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          No cuenta refacciones devueltas al almacén.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block font-medium text-slate-700 mb-1">
+                          Costo real mano de obra ($ MXN)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formCostoRealManoObra}
+                          onChange={(e) => setFormCostoRealManoObra(e.target.value)}
+                          className="w-full p-2 border border-slate-200 rounded-md text-slate-800 text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          Costo directo interno pagado por el servicio realizado.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Resumen de rentabilidad en el modal */}
+                    {(() => {
+                      const cRef = parseFloat(formCostoRealRefacciones) || 0;
+                      const cMo = parseFloat(formCostoRealManoObra) || 0;
+                      const totalCosto = Math.round((cRef + cMo) * 100) / 100;
+
+                      const cot = editingOrden?.cotizacionId
+                        ? cotizacionMap.get(editingOrden.cotizacionId)
+                        : cotizaciones.find((c) => c.ordenId === editingOrden?.id);
+                      const isAprob = cot && cot.estado === 'Aprobada';
+                      const precioAprob = isAprob ? cot.total : (editingOrden?.precioCobrado || cot?.total || 0);
+
+                      const util = Math.round((precioAprob - totalCosto) * 100) / 100;
+                      const marg = precioAprob > 0 ? Math.round(((util / precioAprob) * 100) * 10) / 10 : 0;
+
+                      let semaforo: 'verde' | 'amarillo' | 'rojo' | 'neutro' = 'neutro';
+                      if (precioAprob > 0) {
+                        if (util < 0 || marg < 0) semaforo = 'rojo';
+                        else if (marg < 20) semaforo = 'amarillo';
+                        else semaforo = 'verde';
+                      }
+
+                      return (
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className="font-semibold text-slate-700">Semáforo de rentabilidad:</span>
+                            {semaforo === 'verde' && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                Rentable ({marg}%)
+                              </span>
+                            )}
+                            {semaforo === 'amarillo' && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                Margen bajo ({marg}%)
+                              </span>
+                            )}
+                            {semaforo === 'rojo' && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+                                <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                                Pérdida ({marg}%)
+                              </span>
+                            )}
+                            {semaforo === 'neutro' && (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
+                                <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                                Sin cotización aprobada
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-slate-200">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block uppercase">Costo real</span>
+                              <span className="font-bold text-slate-800">${totalCosto.toFixed(2)}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block uppercase">Precio aprobado</span>
+                              <span className="font-bold text-[#1D7EAE]">${precioAprob.toFixed(2)}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block uppercase">Utilidad real</span>
+                              <span className={`font-bold ${util >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                ${util.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button

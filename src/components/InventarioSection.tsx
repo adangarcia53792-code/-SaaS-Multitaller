@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Refaccion, MovimientoInventario } from '../types';
+import { Refaccion, MovimientoInventario, OrdenCompra } from '../types';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
   Search,
@@ -12,14 +12,26 @@ import {
   History,
   AlertTriangle,
   Package,
-  Layers
+  ShoppingCart,
+  CheckCircle2,
+  Clock,
+  Building2,
+  Phone,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Tag,
+  Car,
 } from 'lucide-react';
 
 interface InventarioSectionProps {
   refacciones: Refaccion[];
   movimientos: MovimientoInventario[];
+  ordenesCompra?: OrdenCompra[];
   onSaveRefaccion: (refaccion: Refaccion, initialMovement?: MovimientoInventario) => void;
   onRecordMovement: (movement: MovimientoInventario) => void;
+  onSaveOrdenCompra?: (ordenCompra: OrdenCompra) => void;
+  onMarcarOrdenCompraRecibida?: (ordenCompraId: string) => void;
 }
 
 type FilterStock = 'todas' | 'stock-bajo';
@@ -27,9 +39,13 @@ type FilterStock = 'todas' | 'stock-bajo';
 export const InventarioSection: React.FC<InventarioSectionProps> = ({
   refacciones,
   movimientos,
+  ordenesCompra = [],
   onSaveRefaccion,
   onRecordMovement,
+  onSaveOrdenCompra,
+  onMarcarOrdenCompraRecibida,
 }) => {
+  const [activeMainTab, setActiveMainTab] = useState<'refacciones' | 'ordenes-compra'>('refacciones');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStock, setFilterStock] = useState<FilterStock>('todas');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -41,8 +57,25 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
   const [formNombre, setFormNombre] = useState('');
   const [formExistencias, setFormExistencias] = useState('0');
   const [formMinimo, setFormMinimo] = useState('5');
-  const [formCostoUnitario, setFormCostoUnitario] = useState('');
+  const [formPrecioCompra, setFormPrecioCompra] = useState('');
+  const [formPrecioVenta, setFormPrecioVenta] = useState('');
+  const [formProveedor, setFormProveedor] = useState('');
+  const [formTelefonoProveedor, setFormTelefonoProveedor] = useState('');
+  const [formDiasEntrega, setFormDiasEntrega] = useState('2');
+  const [formFechaUltimaCompra, setFormFechaUltimaCompra] = useState('');
+  const [formCompatibilidad, setFormCompatibilidad] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Modal: Generar Orden de Compra
+  const [isOrdenCompraModalOpen, setIsOrdenCompraModalOpen] = useState(false);
+  const [ocTargetRefaccion, setOcTargetRefaccion] = useState<Refaccion | null>(null);
+  const [ocCantidad, setOcCantidad] = useState('1');
+  const [ocProveedor, setOcProveedor] = useState('');
+  const [ocTelefono, setOcTelefono] = useState('');
+  const [ocCostoUnitario, setOcCostoUnitario] = useState('');
+  const [ocFecha, setOcFecha] = useState('');
+  const [ocNotas, setOcNotas] = useState('');
+  const [ocErrors, setOcErrors] = useState<Record<string, string>>({});
 
   // Modal: Registrar Entrada / Salida
   const [movementModal, setMovementModal] = useState<{
@@ -55,18 +88,26 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
   // Modal: Ver Movimientos
   const [viewingHistoryRefaccion, setViewingHistoryRefaccion] = useState<Refaccion | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
+  // Modal Dismiss Hooks
   const refaccionFormDismiss = useModalDismiss({
     isOpen: isFormModalOpen,
     onClose: () => {
       setIsFormModalOpen(false);
+      setEditingRefaccion(null);
       setFormErrors({});
     },
-    isDirty: () =>
-      formCodigo.trim() !== (editingRefaccion?.codigo || '') ||
-      formNombre.trim() !== (editingRefaccion?.nombre || '') ||
-      formMinimo !== (editingRefaccion?.minimo?.toString() || '5') ||
-      formCostoUnitario !== (editingRefaccion?.costoUnitario !== undefined ? editingRefaccion.costoUnitario.toString() : ''),
+    closeOnBackdrop: true,
+  });
+
+  const ordenCompraModalDismiss = useModalDismiss({
+    isOpen: isOrdenCompraModalOpen,
+    onClose: () => {
+      setIsOrdenCompraModalOpen(false);
+      setOcTargetRefaccion(null);
+      setOcErrors({});
+    },
     closeOnBackdrop: true,
   });
 
@@ -85,8 +126,32 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     closeOnBackdrop: true,
   });
 
-  // Action processing lock
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Financial KPI calculations for Inventory Valuation
+  const totalPiezasEnStock = useMemo(() => {
+    return refacciones.reduce((sum, r) => sum + r.existencias, 0);
+  }, [refacciones]);
+
+  const valorTotalCosto = useMemo(() => {
+    return refacciones.reduce((sum, r) => {
+      const costo = r.precioCompra || r.costoUnitario || 0;
+      return sum + r.existencias * costo;
+    }, 0);
+  }, [refacciones]);
+
+  const valorTotalVenta = useMemo(() => {
+    return refacciones.reduce((sum, r) => {
+      const venta = r.precioVenta || (r.precioCompra || r.costoUnitario || 0) * 1.4;
+      return sum + r.existencias * venta;
+    }, 0);
+  }, [refacciones]);
+
+  const gananciaPotencialTotal = useMemo(() => {
+    return Math.max(0, valorTotalVenta - valorTotalCosto);
+  }, [valorTotalVenta, valorTotalCosto]);
+
+  const lowStockCount = useMemo(() => {
+    return refacciones.filter((r) => r.existencias < r.minimo).length;
+  }, [refacciones]);
 
   // Open Add modal
   const handleOpenAdd = () => {
@@ -95,7 +160,13 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     setFormNombre('');
     setFormExistencias('0');
     setFormMinimo('5');
-    setFormCostoUnitario('');
+    setFormPrecioCompra('');
+    setFormPrecioVenta('');
+    setFormProveedor('');
+    setFormTelefonoProveedor('');
+    setFormDiasEntrega('2');
+    setFormFechaUltimaCompra(new Date().toISOString().split('T')[0]);
+    setFormCompatibilidad('');
     setFormErrors({});
     setIsFormModalOpen(true);
   };
@@ -107,13 +178,41 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     setFormNombre(ref.nombre);
     setFormExistencias(ref.existencias.toString());
     setFormMinimo(ref.minimo.toString());
-    setFormCostoUnitario(ref.costoUnitario !== undefined ? ref.costoUnitario.toString() : '');
+    setFormPrecioCompra((ref.precioCompra ?? ref.costoUnitario ?? '').toString());
+    setFormPrecioVenta((ref.precioVenta ?? '').toString());
+    setFormProveedor(ref.proveedor || '');
+    setFormTelefonoProveedor(ref.telefonoProveedor || '');
+    setFormDiasEntrega((ref.diasEntregaEstimados ?? 2).toString());
+    setFormFechaUltimaCompra(ref.fechaUltimaCompra || '');
+    setFormCompatibilidad(ref.compatibilidad || '');
     setFormErrors({});
     setOpenMenuId(null);
     setIsFormModalOpen(true);
   };
 
-  // Save Add/Edit
+  // Open Generar Orden de Compra modal
+  const handleOpenOrdenCompra = (ref: Refaccion) => {
+    setOcTargetRefaccion(ref);
+    // Suggest quantity according to current stock vs minimum
+    let sugerida = 5;
+    if (ref.existencias < ref.minimo) {
+      sugerida = Math.max(1, ref.minimo * 2 - ref.existencias);
+    } else {
+      sugerida = Math.max(1, ref.minimo);
+    }
+
+    setOcCantidad(sugerida.toString());
+    setOcProveedor(ref.proveedor || 'Proveedor General');
+    setOcTelefono(ref.telefonoProveedor || '');
+    setOcCostoUnitario((ref.precioCompra || ref.costoUnitario || 100).toString());
+    setOcFecha(new Date().toISOString().split('T')[0]);
+    setOcNotas('');
+    setOcErrors({});
+    setOpenMenuId(null);
+    setIsOrdenCompraModalOpen(true);
+  };
+
+  // Save Add / Edit Refacción
   const handleSaveForm = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
@@ -147,14 +246,14 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       }
     }
 
-    let costoVal: number | undefined = undefined;
-    if (formCostoUnitario.trim()) {
-      const parsedCosto = parseFloat(formCostoUnitario);
-      if (isNaN(parsedCosto) || parsedCosto < 0) {
-        errors.costoUnitario = 'El costo unitario no puede ser negativo.';
-      } else {
-        costoVal = Math.round(parsedCosto * 100) / 100;
-      }
+    const compraVal = parseFloat(formPrecioCompra);
+    if (isNaN(compraVal) || compraVal < 0) {
+      errors.precioCompra = 'El precio de compra debe ser un número mayor o igual a 0.';
+    }
+
+    const ventaVal = parseFloat(formPrecioVenta);
+    if (isNaN(ventaVal) || ventaVal < 0) {
+      errors.precioVenta = 'El precio de venta debe ser un número mayor o igual a 0.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -162,14 +261,23 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       return;
     }
 
+    const cleanCompra = Math.round(compraVal * 100) / 100;
+    const cleanVenta = Math.round(ventaVal * 100) / 100;
+
     if (editingRefaccion) {
-      // Editing updates fields without directly overwriting existencias
       const updated: Refaccion = {
         ...editingRefaccion,
         codigo: cleanCodigo,
         nombre: formNombre.trim(),
         minimo: minVal,
-        costoUnitario: costoVal,
+        costoUnitario: cleanCompra,
+        precioCompra: cleanCompra,
+        precioVenta: cleanVenta,
+        proveedor: formProveedor.trim() || undefined,
+        telefonoProveedor: formTelefonoProveedor.trim() || undefined,
+        diasEntregaEstimados: parseInt(formDiasEntrega, 10) || undefined,
+        fechaUltimaCompra: formFechaUltimaCompra || undefined,
+        compatibilidad: formCompatibilidad.trim() || undefined,
       };
       onSaveRefaccion(updated);
     } else {
@@ -180,7 +288,14 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
         nombre: formNombre.trim(),
         existencias: existVal,
         minimo: minVal,
-        costoUnitario: costoVal,
+        costoUnitario: cleanCompra,
+        precioCompra: cleanCompra,
+        precioVenta: cleanVenta,
+        proveedor: formProveedor.trim() || undefined,
+        telefonoProveedor: formTelefonoProveedor.trim() || undefined,
+        diasEntregaEstimados: parseInt(formDiasEntrega, 10) || undefined,
+        fechaUltimaCompra: formFechaUltimaCompra || undefined,
+        compatibilidad: formCompatibilidad.trim() || undefined,
         creadoEn: new Date().toISOString(),
       };
 
@@ -202,7 +317,63 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     setIsFormModalOpen(false);
   };
 
-  // Open Movement modal (Entrada o Salida)
+  // Submit Generar Orden de Compra
+  const handleSaveOrdenCompra = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ocTargetRefaccion) return;
+
+    const errors: Record<string, string> = {};
+    const cantVal = parseInt(ocCantidad, 10);
+    if (isNaN(cantVal) || cantVal <= 0) {
+      errors.cantidad = 'Ingresa una cantidad mayor a 0.';
+    }
+
+    if (!ocProveedor.trim()) {
+      errors.proveedor = 'El nombre del proveedor es obligatorio.';
+    }
+
+    const unitCost = parseFloat(ocCostoUnitario);
+    if (isNaN(unitCost) || unitCost < 0) {
+      errors.costoUnitario = 'El costo unitario no puede ser negativo.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setOcErrors(errors);
+      return;
+    }
+
+    const cleanUnitCost = Math.round(unitCost * 100) / 100;
+    const totalVal = Math.round(cantVal * cleanUnitCost * 100) / 100;
+
+    const count = ordenesCompra.length + 1;
+    const folioStr = `OC-${String(count).padStart(3, '0')}`;
+
+    const newOc: OrdenCompra = {
+      id: `oc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      folio: folioStr,
+      refaccionId: ocTargetRefaccion.id,
+      refaccionNombre: ocTargetRefaccion.nombre,
+      refaccionCodigo: ocTargetRefaccion.codigo,
+      cantidad: cantVal,
+      proveedor: ocProveedor.trim(),
+      telefonoProveedor: ocTelefono.trim() || undefined,
+      fecha: ocFecha || new Date().toISOString().split('T')[0],
+      costoUnitario: cleanUnitCost,
+      total: totalVal,
+      estado: 'Pendiente',
+      notas: ocNotas.trim() || undefined,
+      creadoEn: new Date().toISOString(),
+    };
+
+    if (onSaveOrdenCompra) {
+      onSaveOrdenCompra(newOc);
+    }
+
+    setIsOrdenCompraModalOpen(false);
+    setActiveMainTab('ordenes-compra');
+  };
+
+  // Movement modals
   const handleOpenMovementModal = (ref: Refaccion, tipo: 'Entrada' | 'Salida') => {
     setMovementModal({ tipo, refaccion: ref });
     setMovCantidad('1');
@@ -211,26 +382,18 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     setOpenMenuId(null);
   };
 
-  // Confirm Movement
   const handleConfirmMovement = (e: React.FormEvent) => {
     e.preventDefault();
     if (!movementModal || isProcessing) return;
 
     const cant = parseInt(movCantidad, 10);
     if (isNaN(cant) || cant <= 0) {
-      setMovError('La cantidad debe ser un número entero mayor a 0.');
+      setMovError('Ingresa una cantidad válida mayor a 0.');
       return;
     }
 
     if (movementModal.tipo === 'Salida' && cant > movementModal.refaccion.existencias) {
-      setMovError(
-        `La salida no puede superar las existencias disponibles (${movementModal.refaccion.existencias} piezas).`
-      );
-      return;
-    }
-
-    if (!movMotivo.trim()) {
-      setMovError('Debe ingresar un motivo para el movimiento.');
+      setMovError(`Existencias insuficientes (actual: ${movementModal.refaccion.existencias} pzs).`);
       return;
     }
 
@@ -240,7 +403,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       refaccionId: movementModal.refaccion.id,
       tipo: movementModal.tipo,
       cantidad: cant,
-      motivo: movMotivo.trim(),
+      motivo: movMotivo.trim() || (movementModal.tipo === 'Entrada' ? 'Entrada manual' : 'Salida manual'),
       fechaHora: new Date().toLocaleString('es-MX'),
     };
 
@@ -261,38 +424,38 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       if (q) {
         const codMatch = r.codigo.toLowerCase().includes(q);
         const nomMatch = r.nombre.toLowerCase().includes(q);
-        return codMatch || nomMatch;
+        const provMatch = r.proveedor?.toLowerCase().includes(q);
+        const compMatch = r.compatibilidad?.toLowerCase().includes(q);
+        return codMatch || nomMatch || provMatch || compMatch;
       }
 
       return true;
     });
   }, [refacciones, searchQuery, filterStock]);
 
-  // Movements of selected refaccion for history modal
-  const selectedRefaccionMovements = useMemo(() => {
-    if (!viewingHistoryRefaccion) return [];
-    return movimientos
-      .filter((m) => m.refaccionId === viewingHistoryRefaccion.id)
-      .sort((a, b) => (b.id > a.id ? 1 : -1));
-  }, [movimientos, viewingHistoryRefaccion]);
-
   return (
     <section className="space-y-6">
-      {/* Encabezado IOT Technologies para Catálogos e Inventario */}
+      {/* Encabezado IOT Technologies */}
       <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE] shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
             <Package className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
-              Inventario de refacciones
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+                Inventario y costeo de refacciones
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                {refacciones.length} items
+              </span>
+            </div>
             <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
-              Control de existencias, cantidades mínimas y registro de movimientos de refacciones.
+              Control de existencias, precios de compra/venta, cálculo de ganancia y órdenes de compra.
             </p>
           </div>
         </div>
+
         <button
           type="button"
           onClick={handleOpenAdd}
@@ -303,477 +466,901 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
         </button>
       </div>
 
-      {/* Controls: Search & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por código o nombre..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
-          />
+      {/* KPI Cards: Valuación e indicadores de rentabilidad */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+            <span>Existencias totales</span>
+            <Package className="w-4 h-4 text-[#1D7EAE]" />
+          </div>
+          <div className="text-xl font-bold text-[#231F20]">{totalPiezasEnStock} pzs</div>
+          <div className="text-[11px] text-[#5F6B73] mt-0.5">En {refacciones.length} refacciones</div>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#DDE4E8] text-xs sm:text-sm font-medium">
-          <button
-            type="button"
-            onClick={() => setFilterStock('todas')}
-            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filterStock === 'todas' ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold' : 'text-[#5F6B73] hover:text-[#231F20]'
-            }`}
-          >
-            Todas ({refacciones.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterStock('stock-bajo')}
-            className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filterStock === 'stock-bajo' ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold' : 'text-[#5F6B73] hover:text-[#231F20]'
-            }`}
-          >
-            Stock bajo ({refacciones.filter((r) => r.existencias < r.minimo).length})
-          </button>
+        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+            <span>Valor al costo</span>
+            <DollarSign className="w-4 h-4 text-slate-500" />
+          </div>
+          <div className="text-xl font-bold text-[#231F20]">
+            ${valorTotalCosto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">Inversión en almacén</div>
+        </div>
+
+        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+            <span>Valor a la venta</span>
+            <Tag className="w-4 h-4 text-blue-600" />
+          </div>
+          <div className="text-xl font-bold text-[#1D7EAE]">
+            ${valorTotalVenta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          </div>
+          <div className="text-[11px] text-blue-600 font-medium mt-0.5">Precio de mostrador</div>
+        </div>
+
+        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+            <span>Ganancia estimada</span>
+            <TrendingUp className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="text-xl font-bold text-emerald-600">
+            ${gananciaPotencialTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          </div>
+          <div className="text-[11px] text-emerald-700 font-medium mt-0.5">Utilidad potencial</div>
+        </div>
+
+        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+            <span>Stock bajo</span>
+            <AlertTriangle className={`w-4 h-4 ${lowStockCount > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+          </div>
+          <div className={`text-xl font-bold ${lowStockCount > 0 ? 'text-amber-600' : 'text-[#231F20]'}`}>
+            {lowStockCount}
+          </div>
+          <div className="text-[11px] text-[#5F6B73] mt-0.5">Por debajo del mínimo</div>
         </div>
       </div>
 
-      {/* Table & Mobile View */}
-      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden no-print">
-        {/* Desktop View */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-5">Código</th>
-                <th className="py-3.5 px-5">Nombre de la refacción</th>
-                <th className="py-3.5 px-5 text-center">Existencias</th>
-                <th className="py-3.5 px-5 text-center">Mínimo</th>
-                <th className="py-3.5 px-5">Estado</th>
-                <th className="py-3.5 px-5 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+      {/* Tabs: Refacciones vs Órdenes de compra */}
+      <div className="flex border-b border-[#DDE4E8] text-sm font-semibold gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('refacciones')}
+          className={`px-4 py-2.5 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            activeMainTab === 'refacciones'
+              ? 'border-[#1D7EAE] text-[#1D7EAE]'
+              : 'border-transparent text-[#5F6B73] hover:text-[#231F20]'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>Catálogo de refacciones ({refacciones.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveMainTab('ordenes-compra')}
+          className={`px-4 py-2.5 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+            activeMainTab === 'ordenes-compra'
+              ? 'border-[#1D7EAE] text-[#1D7EAE]'
+              : 'border-transparent text-[#5F6B73] hover:text-[#231F20]'
+          }`}
+        >
+          <ShoppingCart className="w-4 h-4" />
+          <span>Órdenes de compra ({ordenesCompra.length})</span>
+          {ordenesCompra.filter((o) => o.estado === 'Pendiente').length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+              {ordenesCompra.filter((o) => o.estado === 'Pendiente').length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ======================================================== */}
+      {/* VISTA 1: CATÁLOGO DE REFACCIONES */}
+      {/* ======================================================== */}
+      {activeMainTab === 'refacciones' && (
+        <div className="space-y-4">
+          {/* Controls: Search & Stock Filters */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por código, nombre, proveedor o modelo..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+              />
+            </div>
+
+            <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#DDE4E8] text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setFilterStock('todas')}
+                className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                  filterStock === 'todas'
+                    ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                    : 'text-[#5F6B73] hover:text-[#231F20]'
+                }`}
+              >
+                Todas ({refacciones.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStock('stock-bajo')}
+                className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                  filterStock === 'stock-bajo'
+                    ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
+                    : 'text-[#5F6B73] hover:text-[#231F20]'
+                }`}
+              >
+                Stock bajo ({lowStockCount})
+              </button>
+            </div>
+          </div>
+
+          {/* Table / Cards */}
+          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden no-print">
+            {/* Desktop View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                    <th className="py-3 px-4">Código / Refacción</th>
+                    <th className="py-3 px-3 text-center">Stock</th>
+                    <th className="py-3 px-4 text-right">Compra / Venta</th>
+                    <th className="py-3 px-4 text-right">Ganancia / Pza</th>
+                    <th className="py-3 px-4">Proveedor / Entrega</th>
+                    <th className="py-3 px-4">Compatibilidad</th>
+                    <th className="py-3 px-4 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredRefacciones.length > 0 ? (
+                    filteredRefacciones.map((ref) => {
+                      const isLowStock = ref.existencias < ref.minimo;
+                      const compra = ref.precioCompra || ref.costoUnitario || 0;
+                      const venta = ref.precioVenta || compra * 1.4;
+                      const ganancia = Math.max(0, venta - compra);
+                      const isMenuOpen = openMenuId === ref.id;
+
+                      return (
+                        <tr key={ref.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-200">
+                                {ref.codigo}
+                              </span>
+                              {isLowStock ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                  <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                  <span>Stock bajo</span>
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">
+                                  Normal
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-semibold text-slate-900 text-xs">{ref.nombre}</div>
+                          </td>
+
+                          <td className="py-3.5 px-3 text-center">
+                            <div className={`font-bold text-sm ${isLowStock ? 'text-amber-700' : 'text-slate-900'}`}>
+                              {ref.existencias} pzs
+                            </div>
+                            <div className="text-[10px] text-slate-400">Mín: {ref.minimo} pzs</div>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="font-mono text-slate-600">Compra: ${compra.toFixed(2)}</div>
+                            <div className="font-mono font-bold text-[#1D7EAE]">Venta: ${venta.toFixed(2)}</div>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="font-mono font-bold text-emerald-700">+${ganancia.toFixed(2)}</div>
+                            <div className="text-[10px] text-emerald-600">
+                              {compra > 0 ? `${Math.round((ganancia / compra) * 100)}% margen` : ''}
+                            </div>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <div className="font-medium text-slate-800">{ref.proveedor || 'Sin proveedor'}</div>
+                            <div className="text-[11px] text-slate-500">
+                              {ref.telefonoProveedor ? `${ref.telefonoProveedor} · ` : ''}
+                              Entrega: {ref.diasEntregaEstimados || 2} días
+                            </div>
+                          </td>
+
+                          <td className="py-3.5 px-4 max-w-[180px]">
+                            {ref.compatibilidad ? (
+                              <div className="truncate text-slate-700 font-medium" title={ref.compatibilidad}>
+                                <Car className="w-3 h-3 text-slate-400 inline mr-1" />
+                                <span>{ref.compatibilidad}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">Universal / No especificada</span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenOrdenCompra(ref)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1D7EAE] font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                                title="Generar orden de compra"
+                              >
+                                <ShoppingCart className="w-3.5 h-3.5" />
+                                <span>Comprar</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEdit(ref)}
+                                className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                                title="Editar refacción"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenMenuId(isMenuOpen ? null : ref.id)}
+                                  className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                                  title="Más opciones"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+
+                                {isMenuOpen && (
+                                  <>
+                                    <div className="fixed inset-0 z-20" onClick={() => setOpenMenuId(null)} />
+                                    <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenMovementModal(ref, 'Entrada')}
+                                        className="w-full px-3 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                                      >
+                                        <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+                                        <span>Registrar entrada</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenMovementModal(ref, 'Salida')}
+                                        className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                                      >
+                                        <ArrowUpRight className="w-4 h-4 text-rose-600" />
+                                        <span>Registrar salida</span>
+                                      </button>
+                                      <div className="border-t border-slate-100 my-1" />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setViewingHistoryRefaccion(ref);
+                                          setOpenMenuId(null);
+                                        }}
+                                        className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                      >
+                                        <History className="w-4 h-4 text-slate-500" />
+                                        <span>Ver movimientos</span>
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                        No se encontraron refacciones.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View */}
+            <div className="lg:hidden divide-y divide-slate-100">
               {filteredRefacciones.length > 0 ? (
                 filteredRefacciones.map((ref) => {
                   const isLowStock = ref.existencias < ref.minimo;
-                  const isMenuOpen = openMenuId === ref.id;
+                  const compra = ref.precioCompra || ref.costoUnitario || 0;
+                  const venta = ref.precioVenta || compra * 1.4;
+                  const ganancia = Math.max(0, venta - compra);
 
                   return (
-                    <tr key={ref.id} className="hover:bg-slate-50/70 transition-colors">
-                      {/* Código */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded text-xs border border-emerald-200">
-                          {ref.codigo}
-                        </span>
-                      </td>
-
-                      {/* Nombre */}
-                      <td className="py-3.5 px-5">
-                        <div className="font-medium text-[#231F20]">{ref.nombre}</div>
-                        {ref.costoUnitario !== undefined && (
-                          <div className="text-xs text-[#5F6B73] mt-0.5">
-                            Costo base: ${ref.costoUnitario.toFixed(2)} MXN
+                    <div key={ref.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200">
+                              {ref.codigo}
+                            </span>
+                            {isLowStock && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                Stock bajo
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </td>
+                          <h4 className="font-bold text-slate-900 text-sm">{ref.nombre}</h4>
+                          {ref.compatibilidad && (
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              <Car className="w-3 h-3 text-slate-400 inline mr-1" />
+                              {ref.compatibilidad}
+                            </p>
+                          )}
+                        </div>
 
-                      {/* Existencias */}
-                      <td className="py-3.5 px-5 text-center whitespace-nowrap">
-                        <span
-                          className={`font-bold text-sm ${
-                            isLowStock ? 'text-amber-700 font-extrabold' : 'text-slate-800'
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenOrdenCompra(ref)}
+                          className="px-3 py-1.5 bg-blue-50 text-[#1D7EAE] font-semibold rounded-lg text-xs shrink-0 flex items-center gap-1"
                         >
-                          {ref.existencias} pzs
-                        </span>
-                      </td>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span>Comprar</span>
+                        </button>
+                      </div>
 
-                      {/* Cantidad mínima */}
-                      <td className="py-3.5 px-5 text-center text-slate-600 whitespace-nowrap">
-                        {ref.minimo} pzs
-                      </td>
-
-                      {/* Etiqueta discreta Stock bajo */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        {isLowStock ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-orange-50 text-[#FF661B] border border-orange-200">
-                            <AlertTriangle className="w-3 h-3 text-[#FF661B]" />
-                            <span>Stock bajo</span>
+                      <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Existencias</span>
+                          <span className={`font-bold ${isLowStock ? 'text-amber-700' : 'text-slate-800'}`}>
+                            {ref.existencias} pzs
                           </span>
-                        ) : (
-                          <span className="inline-block px-2.5 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                            Normal
-                          </span>
-                        )}
-                      </td>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Compra / Venta</span>
+                          <span className="font-mono text-slate-800">${compra.toFixed(0)} / ${venta.toFixed(0)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Ganancia</span>
+                          <span className="font-mono font-bold text-emerald-700">+${ganancia.toFixed(0)}</span>
+                        </div>
+                      </div>
 
-                      {/* Botón Editar y Más opciones */}
-                      <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
-                        <div className="inline-flex items-center gap-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                        <span>Proveedor: {ref.proveedor || 'Sin proveedor'}</span>
+                        <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(ref)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
+                            className="text-[#1D7EAE] font-semibold"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
-                            <span>Editar</span>
+                            Editar
                           </button>
-
-                          {/* Más opciones */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setOpenMenuId(isMenuOpen ? null : ref.id)}
-                              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
-                              title="Más opciones"
-                              aria-label="Más opciones"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {isMenuOpen && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-20"
-                                  onClick={() => setOpenMenuId(null)}
-                                />
-                                <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenMovementModal(ref, 'Entrada')}
-                                    className="w-full px-3 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
-                                  >
-                                    <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
-                                    <span>Registrar entrada</span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenMovementModal(ref, 'Salida')}
-                                    className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
-                                  >
-                                    <ArrowUpRight className="w-4 h-4 text-rose-600" />
-                                    <span>Registrar salida</span>
-                                  </button>
-
-                                  <div className="border-t border-slate-100 my-1" />
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setViewingHistoryRefaccion(ref);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <History className="w-4 h-4 text-slate-500" />
-                                    <span>Ver movimientos</span>
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
+                          <span>·</span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMovementModal(ref, 'Entrada')}
+                            className="text-emerald-700 font-semibold"
+                          >
+                            +Entrada
+                          </button>
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })
               ) : (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    {searchQuery
-                      ? 'No se encontraron refacciones que coincidan con la búsqueda.'
-                      : filterStock === 'stock-bajo'
-                      ? 'No hay refacciones con stock bajo en este momento.'
-                      : 'No hay refacciones registradas en el inventario.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile View: Bloques legibles sin scroll horizontal */}
-        <div className="md:hidden divide-y divide-slate-100">
-          {filteredRefacciones.length > 0 ? (
-            filteredRefacciones.map((ref) => {
-              const isLowStock = ref.existencias < ref.minimo;
-              const isMenuOpen = openMenuId === ref.id;
-
-              return (
-                <div key={ref.id} className="p-4 space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200">
-                          {ref.codigo}
-                        </span>
-                        {isLowStock ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-orange-50 text-[#FF661B] border border-orange-200">
-                            <AlertTriangle className="w-3 h-3 text-[#FF661B]" />
-                            <span>Stock bajo</span>
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                            Normal
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="font-semibold text-slate-900 text-sm">{ref.nombre}</h4>
-                      <p className="text-xs text-slate-600 mt-0.5">
-                        Existencias: <strong className={`font-bold ${isLowStock ? 'text-amber-700' : 'text-slate-900'}`}>{ref.existencias} pzs</strong> (Mínimo: {ref.minimo} pzs)
-                      </p>
-                      {ref.costoUnitario !== undefined && (
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Costo: ${ref.costoUnitario.toFixed(2)} MXN
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(ref)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        <span>Editar</span>
-                      </button>
-
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenMenuId(isMenuOpen ? null : ref.id)}
-                          className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-slate-500 hover:text-slate-800 rounded-lg"
-                          aria-label="Más opciones"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-
-                        {isMenuOpen && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-20"
-                              onClick={() => setOpenMenuId(null)}
-                            />
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenMovementModal(ref, 'Entrada')}
-                                className="w-full px-3 py-2.5 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
-                              >
-                                <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
-                                <span>Registrar entrada</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleOpenMovementModal(ref, 'Salida')}
-                                className="w-full px-3 py-2.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
-                              >
-                                <ArrowUpRight className="w-4 h-4 text-rose-600" />
-                                <span>Registrar salida</span>
-                              </button>
-
-                              <div className="border-t border-slate-100 my-1" />
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setViewingHistoryRefaccion(ref);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <History className="w-4 h-4 text-slate-500" />
-                                <span>Ver movimientos</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                <div className="p-6 text-center text-xs text-slate-400">
+                  No se encontraron refacciones.
                 </div>
-              );
-            })
-          ) : (
-            <div className="p-6 text-center text-xs text-slate-400">
-              {searchQuery
-                ? 'No se encontraron refacciones que coincidan con la búsqueda.'
-                : filterStock === 'stock-bajo'
-                ? 'No hay refacciones con stock bajo en este momento.'
-                : 'No hay refacciones registradas en el inventario.'}
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* VISTA 2: ÓRDENES DE COMPRA */}
+      {/* ======================================================== */}
+      {activeMainTab === 'ordenes-compra' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-[#DDE4E8] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-[#231F20]">Órdenes de compra a proveedores</h3>
+              <p className="text-xs text-[#5F6B73]">
+                Genera solicitudes de reabastecimiento y regístralas al inventario en un solo clic al recibirlas.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (refacciones.length > 0) {
+                  handleOpenOrdenCompra(refacciones[0]);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nueva orden de compra</span>
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-[#231F20]">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                  <tr>
+                    <th className="py-3 px-4">Folio</th>
+                    <th className="py-3 px-4">Refacción</th>
+                    <th className="py-3 px-4 text-center">Cantidad</th>
+                    <th className="py-3 px-4">Proveedor</th>
+                    <th className="py-3 px-4">Fecha</th>
+                    <th className="py-3 px-4 text-right">Total ($)</th>
+                    <th className="py-3 px-4 text-center">Estado</th>
+                    <th className="py-3 px-4 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {ordenesCompra.length > 0 ? (
+                    ordenesCompra.map((oc) => (
+                      <tr key={oc.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#1D7EAE]">{oc.folio}</td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-slate-900">{oc.refaccionNombre}</div>
+                          {oc.refaccionCodigo && (
+                            <span className="font-mono text-[10px] text-slate-500">{oc.refaccionCodigo}</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-center font-bold text-slate-800">
+                          {oc.cantidad} pzs
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-medium text-slate-800">{oc.proveedor}</div>
+                          {oc.telefonoProveedor && (
+                            <div className="text-[11px] text-slate-500">{oc.telefonoProveedor}</div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600">{oc.fecha}</td>
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+                          ${oc.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                              oc.estado === 'Recibida'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {oc.estado === 'Recibida' ? (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                              <Clock className="w-3 h-3 text-amber-600" />
+                            )}
+                            <span>{oc.estado}</span>
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {oc.estado === 'Pendiente' ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onMarcarOrdenCompraRecibida) {
+                                  onMarcarOrdenCompraRecibida(oc.id);
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Marcar recibida</span>
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">Ingresada a stock</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400">
+                        No hay órdenes de compra registradas. Puedes generar una orden desde cualquier refacción con el botón "Comprar".
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* MODAL: FORMULARIO AGREGAR / EDITAR REFACCIÓN */}
       {/* ======================================================== */}
       {isFormModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto no-print"
           onClick={refaccionFormDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-6 flex flex-col max-h-[92vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900">
                   {editingRefaccion ? `Editar refacción (${editingRefaccion.codigo})` : 'Agregar refacción'}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {editingRefaccion
-                    ? 'Actualiza los datos de la refacción.'
-                    : 'Registra una nueva refacción en el inventario.'}
+                  Precios de compra y venta, proveedor y compatibilidad
                 </p>
               </div>
               <button
                 type="button"
                 onClick={refaccionFormDismiss.handleClose}
-                className="text-slate-400 hover:text-slate-600 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveForm} className="p-6 space-y-4 text-sm">
-              {/* Código */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Código de refacción <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  autoFocus
-                  value={formCodigo}
-                  onChange={(e) => setFormCodigo(e.target.value)}
-                  placeholder="Ej. REF-010 o FIL-ACE-01"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm uppercase font-mono text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                    formErrors.codigo ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                  }`}
-                />
-                {formErrors.codigo && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.codigo}</p>
-                )}
-              </div>
-
-              {/* Nombre */}
-              <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1">
-                  Nombre de la refacción <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formNombre}
-                  onChange={(e) => setFormNombre(e.target.value)}
-                  placeholder="Ej. Filtro de aire para motor"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                  }`}
-                />
-                {formErrors.nombre && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.nombre}</p>
-                )}
-              </div>
-
-              {/* Existencia inicial (Solo al crear) */}
-              {!editingRefaccion ? (
+            <form onSubmit={handleSaveForm} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1">
-                    Existencia inicial (piezas) <span className="text-red-500">*</span>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Código de refacción <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formCodigo}
+                    onChange={(e) => setFormCodigo(e.target.value)}
+                    placeholder="Ej. FIL-ACE-01"
+                    className={`w-full px-3 py-2 border rounded-lg uppercase font-mono text-[#231F20] bg-white ${
+                      formErrors.codigo ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                    }`}
+                  />
+                  {formErrors.codigo && <p className="text-red-600 mt-1">{formErrors.codigo}</p>}
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Nombre de la refacción <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formNombre}
+                    onChange={(e) => setFormNombre(e.target.value)}
+                    placeholder="Ej. Filtro de aceite sintético"
+                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] bg-white ${
+                      formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                    }`}
+                  />
+                  {formErrors.nombre && <p className="text-red-600 mt-1">{formErrors.nombre}</p>}
+                </div>
+              </div>
+
+              {/* Precios y costeo */}
+              <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl space-y-3">
+                <div className="font-bold text-xs text-[#1D7EAE] flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Costeo y precios por pieza</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Precio de compra ($ Costo) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formPrecioCompra}
+                      onChange={(e) => setFormPrecioCompra(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white font-mono"
+                    />
+                    {formErrors.precioCompra && (
+                      <p className="text-red-600 mt-1">{formErrors.precioCompra}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Precio de venta ($ Cliente) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formPrecioVenta}
+                      onChange={(e) => setFormPrecioVenta(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white font-mono"
+                    />
+                    {formErrors.precioVenta && (
+                      <p className="text-red-600 mt-1">{formErrors.precioVenta}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ganancia por pieza calculada en tiempo real */}
+                {(() => {
+                  const c = parseFloat(formPrecioCompra) || 0;
+                  const v = parseFloat(formPrecioVenta) || 0;
+                  const ganancia = v - c;
+                  const margen = c > 0 ? Math.round((ganancia / c) * 100) : 0;
+                  return (
+                    <div className="flex items-center justify-between text-xs bg-white p-2.5 rounded-lg border border-blue-200">
+                      <span className="text-slate-600 font-medium">Ganancia por pieza estimada:</span>
+                      <div className="font-mono font-bold text-emerald-700 flex items-center gap-2">
+                        <span>+${ganancia.toFixed(2)} MXN</span>
+                        <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          {margen}% margen
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Existencias y Mínimo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {!editingRefaccion ? (
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Existencia inicial (piezas) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={formExistencias}
+                      onChange={(e) => setFormExistencias(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Existencias actuales</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={`${editingRefaccion.existencias} pzs`}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-100 text-slate-600 cursor-not-allowed"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Cantidad mínima requerida <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="1"
-                    value={formExistencias}
-                    onChange={(e) => setFormExistencias(e.target.value)}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                      formErrors.existencias ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                    }`}
+                    value={formMinimo}
+                    onChange={(e) => setFormMinimo(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
                   />
-                  {formErrors.existencias && (
-                    <p className="text-xs text-red-600 mt-1">{formErrors.existencias}</p>
-                  )}
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Número de piezas disponibles al dar de alta la refacción.
-                  </p>
                 </div>
-              ) : (
-                <div className="p-3 bg-slate-50 border border-[#DDE4E8] rounded-lg text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Existencias actuales:</span>
-                    <strong className="text-slate-900">{editingRefaccion.existencias} pzs</strong>
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Las existencias se modifican mediante “Registrar entrada” o “Registrar salida” en Más opciones.
-                  </p>
-                </div>
-              )}
-
-              {/* Cantidad mínima */}
-              <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1">
-                  Cantidad mínima para alerta de stock bajo <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={formMinimo}
-                  onChange={(e) => setFormMinimo(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                    formErrors.minimo ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                  }`}
-                />
-                {formErrors.minimo && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.minimo}</p>
-                )}
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Si las existencias caen por debajo de este valor, se mostrará la etiqueta “Stock bajo”.
-                </p>
               </div>
 
-              {/* Costo unitario opcional */}
-              <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1">
-                  Costo unitario ($ MXN) <span className="text-slate-400 font-normal">(Opcional)</span>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formCostoUnitario}
-                  onChange={(e) => setFormCostoUnitario(e.target.value)}
-                  placeholder="Ej. 180.50"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                    formErrors.costoUnitario ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                  }`}
-                />
-                {formErrors.costoUnitario && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.costoUnitario}</p>
-                )}
+              {/* Proveedor y Logística */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Proveedor habitual</label>
+                  <input
+                    type="text"
+                    value={formProveedor}
+                    onChange={(e) => setFormProveedor(e.target.value)}
+                    placeholder="Ej. Distribuidora Central"
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Teléfono proveedor</label>
+                  <input
+                    type="text"
+                    value={formTelefonoProveedor}
+                    onChange={(e) => setFormTelefonoProveedor(e.target.value)}
+                    placeholder="Ej. 555-123-4567"
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Días estimados de entrega</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formDiasEntrega}
+                    onChange={(e) => setFormDiasEntrega(e.target.value)}
+                    placeholder="2"
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Fecha última compra</label>
+                  <input
+                    type="date"
+                    value={formFechaUltimaCompra}
+                    onChange={(e) => setFormFechaUltimaCompra(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                  />
+                </div>
               </div>
 
-              {/* Botones */}
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              {/* Compatibilidad */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Compatibilidad vehicular (Marcas, modelos y años)
+                </label>
+                <textarea
+                  rows={2}
+                  value={formCompatibilidad}
+                  onChange={(e) => setFormCompatibilidad(e.target.value)}
+                  placeholder="Ej. Toyota Corolla 2018-2023, Nissan Versa 2019-2024, motor 1.6L - 2.0L"
+                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
                 <button
                   type="button"
                   onClick={refaccionFormDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
-                  Guardar
+                  Guardar refacción
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL: GENERAR ORDEN DE COMPRA */}
+      {/* ======================================================== */}
+      {isOrdenCompraModalOpen && ocTargetRefaccion && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto no-print"
+          onClick={ordenCompraModalDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-[#1D7EAE]" />
+                <h3 className="text-base font-bold text-slate-900">
+                  Generar orden de compra
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={ordenCompraModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveOrdenCompra} className="p-6 space-y-4 text-xs">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                <div className="font-bold text-slate-900">{ocTargetRefaccion.nombre}</div>
+                <div className="text-slate-600 flex justify-between">
+                  <span>Código: <strong>{ocTargetRefaccion.codigo}</strong></span>
+                  <span>Stock actual: <strong>{ocTargetRefaccion.existencias} pzs</strong></span>
+                </div>
+                <div className="text-[11px] text-slate-500">Mínimo sugerido: {ocTargetRefaccion.minimo} pzs</div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Cantidad a comprar (sugerida automáticamente) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={ocCantidad}
+                  onChange={(e) => setOcCantidad(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg font-bold text-slate-900"
+                />
+                {ocErrors.cantidad && <p className="text-red-600 mt-1">{ocErrors.cantidad}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Proveedor <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={ocProveedor}
+                    onChange={(e) => setOcProveedor(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                  />
+                  {ocErrors.proveedor && <p className="text-red-600 mt-1">{ocErrors.proveedor}</p>}
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Costo unitario ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={ocCostoUnitario}
+                    onChange={(e) => setOcCostoUnitario(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Fecha de orden</label>
+                  <input
+                    type="date"
+                    value={ocFecha}
+                    onChange={(e) => setOcFecha(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Teléfono</label>
+                  <input
+                    type="text"
+                    value={ocTelefono}
+                    onChange={(e) => setOcTelefono(e.target.value)}
+                    placeholder="555-000-0000"
+                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Total preview */}
+              {(() => {
+                const c = parseInt(ocCantidad, 10) || 0;
+                const u = parseFloat(ocCostoUnitario) || 0;
+                const tot = c * u;
+                return (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                    <span className="font-semibold text-blue-900">Total de la orden:</span>
+                    <span className="font-mono font-bold text-base text-[#1D7EAE]">
+                      ${tot.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                    </span>
+                  </div>
+                );
+              })()}
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#DDE4E8]">
+                <button
+                  type="button"
+                  onClick={ordenCompraModalDismiss.handleClose}
+                  className="px-4 py-2 border border-[#DDE4E8] rounded-lg font-medium text-[#5F6B73]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs"
+                >
+                  Generar orden pendiente
                 </button>
               </div>
             </form>
@@ -789,83 +1376,67 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
           onClick={movementDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-150">
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Registrar {movementModal.tipo.toLowerCase()}
-                </h3>
-                <p className="text-xs text-slate-500 font-mono">
-                  {movementModal.refaccion.codigo} — {movementModal.refaccion.nombre}
-                </p>
-              </div>
+              <h3 className="text-base font-bold text-slate-900">
+                {movementModal.tipo === 'Entrada' ? 'Registrar entrada' : 'Registrar salida'}
+              </h3>
               <button
                 type="button"
                 onClick={movementDismiss.handleClose}
-                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                aria-label="Cerrar ventana"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleConfirmMovement} className="p-6 space-y-4 text-xs">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center">
-                <span className="text-slate-600">Existencias actuales:</span>
-                <span className="font-bold text-sm text-slate-900">
-                  {movementModal.refaccion.existencias} pzs
-                </span>
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="font-bold text-slate-900">{movementModal.refaccion.nombre}</div>
+                <div className="text-slate-500 font-mono text-[11px] mt-0.5">
+                  Existencias actuales: {movementModal.refaccion.existencias} pzs
+                </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Cantidad ({movementModal.tipo === 'Entrada' ? 'a ingresar' : 'a descontar'}) <span className="text-red-500">*</span>
-                </label>
+                <label className="block font-semibold text-slate-700 mb-1">Cantidad de piezas *</label>
                 <input
                   type="number"
                   min="1"
                   step="1"
                   value={movCantidad}
                   onChange={(e) => setMovCantidad(e.target.value)}
-                  className="w-full p-2.5 border border-[#DDE4E8] rounded-lg text-[#231F20] text-sm focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg font-bold text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Motivo del movimiento <span className="text-red-500">*</span>
-                </label>
+                <label className="block font-semibold text-slate-700 mb-1">Motivo del movimiento</label>
                 <input
                   type="text"
                   value={movMotivo}
                   onChange={(e) => setMovMotivo(e.target.value)}
-                  placeholder="Ej. Compra de lote, ajuste de conteo, merma..."
-                  className="w-full p-2.5 border border-[#DDE4E8] rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
                 />
               </div>
 
-              {movError && (
-                <p className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200">
-                  {movError}
-                </p>
-              )}
+              {movError && <p className="text-red-600 text-[11px]">{movError}</p>}
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#DDE4E8]">
                 <button
                   type="button"
                   onClick={movementDismiss.handleClose}
-                  className="px-3 py-1.5 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
+                  className="px-4 py-2 border border-[#DDE4E8] rounded-lg font-medium text-[#5F6B73]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className={`px-4 py-1.5 text-white rounded font-semibold transition-colors disabled:opacity-50 cursor-pointer ${
-                    movementModal.tipo === 'Entrada'
-                      ? 'bg-emerald-600 hover:bg-emerald-700'
-                      : 'bg-rose-600 hover:bg-rose-700'
-                  }`}
+                  className="px-5 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs"
                 >
                   Confirmar {movementModal.tipo.toLowerCase()}
                 </button>
@@ -883,73 +1454,62 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
           onClick={historyDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in duration-150">
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-6 max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  Historial de movimientos
+                  Historial de movimientos: {viewingHistoryRefaccion.nombre}
                 </h3>
-                <p className="text-xs text-slate-500 font-mono">
-                  {viewingHistoryRefaccion.codigo} — {viewingHistoryRefaccion.nombre} ({viewingHistoryRefaccion.existencias} pzs disponibles)
-                </p>
+                <p className="text-xs text-slate-500 font-mono">{viewingHistoryRefaccion.codigo}</p>
               </div>
               <button
                 type="button"
                 onClick={historyDismiss.handleClose}
-                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                aria-label="Cerrar ventana"
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-3 flex-1 text-xs">
-              {selectedRefaccionMovements.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedRefaccionMovements.map((m) => (
+            <div className="p-6 overflow-y-auto flex-1 space-y-2 text-xs">
+              {movimientos.filter((m) => m.refaccionId === viewingHistoryRefaccion.id).length > 0 ? (
+                movimientos
+                  .filter((m) => m.refaccionId === viewingHistoryRefaccion.id)
+                  .map((m) => (
                     <div
                       key={m.id}
-                      className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 flex items-center justify-between gap-3"
+                      className="p-3 border border-slate-200 rounded-lg flex items-center justify-between"
                     >
-                      <div className="space-y-0.5 min-w-0">
-                        <div className="flex items-center gap-2">
+                      <div>
+                        <div className="font-semibold text-slate-900 flex items-center gap-2">
                           <span
-                            className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                            className={`px-2 py-0.2 rounded font-bold text-[10px] ${
                               m.tipo === 'Entrada'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-rose-100 text-rose-800'
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-800 border border-rose-200'
                             }`}
                           >
-                            {m.tipo === 'Entrada' ? '+ ' : '- '}
-                            {m.cantidad} pzs
+                            {m.tipo}
                           </span>
-                          <span className="font-medium text-slate-800 truncate">
-                            {m.motivo}
-                          </span>
+                          <span>{m.motivo}</span>
                         </div>
-                        <div className="text-[11px] text-slate-400">
-                          {m.fechaHora}
-                          {m.ordenId && ' • Orden vinculada'}
-                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">{m.fechaHora}</div>
+                      </div>
+                      <div
+                        className={`font-mono font-bold text-sm ${
+                          m.tipo === 'Entrada' ? 'text-emerald-700' : 'text-rose-700'
+                        }`}
+                      >
+                        {m.tipo === 'Entrada' ? `+${m.cantidad}` : `-${m.cantidad}`} pzs
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
               ) : (
-                <p className="text-center text-slate-400 py-8">
-                  No hay movimientos registrados para esta refacción.
-                </p>
+                <div className="p-4 text-center text-slate-400">No hay movimientos registrados.</div>
               )}
-            </div>
-
-            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setViewingHistoryRefaccion(null)}
-                className="px-4 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100"
-              >
-                Cerrar
-              </button>
             </div>
           </div>
         </div>

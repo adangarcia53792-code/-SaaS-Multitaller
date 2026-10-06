@@ -22,6 +22,10 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
   // Form Fields
   const [formNombre, setFormNombre] = useState('');
   const [formDescripcion, setFormDescripcion] = useState('');
+  // Costos internos de taller
+  const [formCostoRefacciones, setFormCostoRefacciones] = useState<string>('0');
+  const [formCostoManoObra, setFormCostoManoObra] = useState<string>('0');
+  // Precios de venta al público
   const [formRefacciones, setFormRefacciones] = useState<string>('0');
   const [formManoObra, setFormManoObra] = useState<string>('0');
   const [formActivo, setFormActivo] = useState<boolean>(true);
@@ -36,6 +40,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
     isDirty: () =>
       formNombre.trim() !== (editingServicio?.nombre || '') ||
       formDescripcion.trim() !== (editingServicio?.descripcion || '') ||
+      formCostoRefacciones !== (editingServicio?.costoRefacciones !== undefined ? editingServicio.costoRefacciones.toString() : '0') ||
+      formCostoManoObra !== (editingServicio?.costoManoObra !== undefined ? editingServicio.costoManoObra.toString() : '0') ||
       formRefacciones !== (editingServicio?.importeRefacciones !== undefined ? editingServicio.importeRefacciones.toString() : '0') ||
       formManoObra !== (editingServicio?.importeManoObra !== undefined ? editingServicio.importeManoObra.toString() : '0'),
     closeOnBackdrop: true,
@@ -48,16 +54,37 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
     return Math.round(num * 100);
   };
 
-  const calculatedTotal = useMemo(() => {
-    const refCents = parseToCents(formRefacciones);
-    const moCents = parseToCents(formManoObra);
-    return (refCents + moCents) / 100;
-  }, [formRefacciones, formManoObra]);
+  // Cálculos automáticos de costos internos, precios de venta, utilidad y margen
+  const costeoCalculado = useMemo(() => {
+    const costoRefCents = parseToCents(formCostoRefacciones);
+    const costoMoCents = parseToCents(formCostoManoObra);
+    const costoTotalVal = (costoRefCents + costoMoCents) / 100;
+
+    const precioRefCents = parseToCents(formRefacciones);
+    const precioMoCents = parseToCents(formManoObra);
+    const precioTotalVal = (precioRefCents + precioMoCents) / 100;
+
+    const utilidadVal = Math.round((precioTotalVal - costoTotalVal) * 100) / 100;
+    const margenPct = precioTotalVal > 0 ? Math.round(((utilidadVal / precioTotalVal) * 100) * 10) / 10 : 0;
+
+    return {
+      costoRef: costoRefCents / 100,
+      costoMo: costoMoCents / 100,
+      costoTotal: costoTotalVal,
+      precioRef: precioRefCents / 100,
+      precioMo: precioMoCents / 100,
+      precioTotal: precioTotalVal,
+      utilidad: utilidadVal,
+      margen: margenPct,
+    };
+  }, [formCostoRefacciones, formCostoManoObra, formRefacciones, formManoObra]);
 
   const handleOpenAdd = () => {
     setEditingServicio(null);
     setFormNombre('');
     setFormDescripcion('');
+    setFormCostoRefacciones('0');
+    setFormCostoManoObra('0');
     setFormRefacciones('0');
     setFormManoObra('0');
     setFormActivo(true);
@@ -69,6 +96,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
     setEditingServicio(s);
     setFormNombre(s.nombre);
     setFormDescripcion(s.descripcion || '');
+    setFormCostoRefacciones((s.costoRefacciones ?? 0).toString());
+    setFormCostoManoObra((s.costoManoObra ?? 0).toString());
     setFormRefacciones(s.importeRefacciones.toString());
     setFormManoObra(s.importeManoObra.toString());
     setFormActivo(s.activo);
@@ -84,14 +113,24 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
       errors.nombre = 'El nombre del servicio es obligatorio.';
     }
 
+    const cRefNum = parseFloat(formCostoRefacciones);
+    if (isNaN(cRefNum) || cRefNum < 0) {
+      errors.costoRefacciones = 'El costo de refacciones no puede ser negativo.';
+    }
+
+    const cMoNum = parseFloat(formCostoManoObra);
+    if (isNaN(cMoNum) || cMoNum < 0) {
+      errors.costoManoObra = 'El costo de mano de obra no puede ser negativo.';
+    }
+
     const refNum = parseFloat(formRefacciones);
     if (isNaN(refNum) || refNum < 0) {
-      errors.refacciones = 'El importe de refacciones no puede ser negativo.';
+      errors.refacciones = 'El precio de refacciones no puede ser negativo.';
     }
 
     const moNum = parseFloat(formManoObra);
     if (isNaN(moNum) || moNum < 0) {
-      errors.manoObra = 'El importe de mano de obra no puede ser negativo.';
+      errors.manoObra = 'El precio de mano de obra no puede ser negativo.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -99,6 +138,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
       return;
     }
 
+    const cRefCents = parseToCents(formCostoRefacciones);
+    const cMoCents = parseToCents(formCostoManoObra);
     const refCents = parseToCents(formRefacciones);
     const moCents = parseToCents(formManoObra);
     const totalVal = (refCents + moCents) / 100;
@@ -109,6 +150,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
         : `serv-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       nombre: formNombre.trim(),
       descripcion: formDescripcion.trim() || undefined,
+      costoRefacciones: cRefCents / 100,
+      costoManoObra: cMoCents / 100,
       importeRefacciones: refCents / 100,
       importeManoObra: moCents / 100,
       total: totalVal,
@@ -214,68 +257,104 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-5">Nombre del servicio</th>
-                <th className="py-3.5 px-5">Descripción breve</th>
-                <th className="py-3.5 px-5">Precio base total</th>
-                <th className="py-3.5 px-5">Estado</th>
-                <th className="py-3.5 px-5 text-right">Acciones</th>
+                <th className="py-3.5 px-4">Servicio</th>
+                <th className="py-3.5 px-4">Costo interno taller</th>
+                <th className="py-3.5 px-4">Precio de venta</th>
+                <th className="py-3.5 px-4 text-center">Utilidad / Margen</th>
+                <th className="py-3.5 px-4 text-center">Estado</th>
+                <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredServicios.length > 0 ? (
-                filteredServicios.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
-                    {/* Nombre */}
-                    <td className="py-3.5 px-5">
-                      <div className="font-semibold text-slate-900">{s.nombre}</div>
-                      <div className="text-xs text-slate-500 font-mono mt-0.5">
-                        Refacciones: ${s.importeRefacciones.toFixed(2)} | Mano de obra: ${s.importeManoObra.toFixed(2)}
-                      </div>
-                    </td>
+                filteredServicios.map((s) => {
+                  const costoRef = s.costoRefacciones ?? 0;
+                  const costoMo = s.costoManoObra ?? 0;
+                  const costoTotal = costoRef + costoMo;
+                  const precioTotal = s.total;
+                  const utilidad = Math.round((precioTotal - costoTotal) * 100) / 100;
+                  const margen = precioTotal > 0 ? Math.round(((utilidad / precioTotal) * 100) * 10) / 10 : 0;
 
-                    {/* Descripción */}
-                    <td className="py-3.5 px-5 text-slate-600 max-w-sm">
-                      <span className="line-clamp-2">
-                        {s.descripcion || <span className="text-slate-400 italic">Sin descripción</span>}
-                      </span>
-                    </td>
+                  return (
+                    <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
+                      {/* Nombre y descripción */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-[#231F20]">{s.nombre}</div>
+                        {s.descripcion && (
+                          <div className="text-xs text-[#5F6B73] line-clamp-1 max-w-xs mt-0.5">
+                            {s.descripcion}
+                          </div>
+                        )}
+                      </td>
 
-                    {/* Precio Base Total */}
-                    <td className="py-3.5 px-5 whitespace-nowrap font-bold text-slate-900">
-                      ${s.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
-                    </td>
+                      {/* Costo interno */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="font-bold text-slate-700">
+                          ${costoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          Ref: ${costoRef.toFixed(2)} | MO: ${costoMo.toFixed(2)}
+                        </div>
+                      </td>
 
-                    {/* Estado */}
-                    <td className="py-3.5 px-5 whitespace-nowrap">
-                      {s.activo ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Activo</span>
+                      {/* Precio de venta */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="font-bold text-[#1D7EAE]">
+                          ${precioTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          Ref: ${s.importeRefacciones.toFixed(2)} | MO: ${s.importeManoObra.toFixed(2)}
+                        </div>
+                      </td>
+
+                      {/* Utilidad y Margen */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        <div className="font-semibold text-emerald-700">
+                          +${utilidad.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold mt-0.5 ${
+                          margen >= 30
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : margen > 0
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}>
+                          {margen}% margen
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>Inactivo</span>
-                        </span>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Acciones */}
-                    <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(s)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        <span>Editar</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      {/* Estado */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        {s.activo ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Activo</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <span>Inactivo</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Acciones */}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(s)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span>Editar</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400">
+                  <td colSpan={6} className="py-8 text-center text-slate-400">
                     {searchQuery
                       ? 'No se encontraron servicios que coincidan con la búsqueda.'
                       : 'No hay servicios registrados en el catálogo.'}
@@ -289,43 +368,66 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
         {/* Mobile View: Bloques legibles sin scroll horizontal */}
         <div className="md:hidden divide-y divide-slate-100">
           {filteredServicios.length > 0 ? (
-            filteredServicios.map((s) => (
-              <div key={s.id} className="p-4 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-[#231F20] text-sm">{s.nombre}</span>
-                      {s.activo ? (
-                        <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          Activo
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                          Inactivo
-                        </span>
+            filteredServicios.map((s) => {
+              const costoRef = s.costoRefacciones ?? 0;
+              const costoMo = s.costoManoObra ?? 0;
+              const costoTotal = costoRef + costoMo;
+              const precioTotal = s.total;
+              const utilidad = Math.round((precioTotal - costoTotal) * 100) / 100;
+              const margen = precioTotal > 0 ? Math.round(((utilidad / precioTotal) * 100) * 10) / 10 : 0;
+
+              return (
+                <div key={s.id} className="p-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-[#231F20] text-sm">{s.nombre}</span>
+                        {s.activo ? (
+                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Activo
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            Inactivo
+                          </span>
+                        )}
+                      </div>
+                      {s.descripcion && (
+                        <p className="text-xs text-slate-600 line-clamp-2">{s.descripcion}</p>
                       )}
                     </div>
-                    {s.descripcion && (
-                      <p className="text-xs text-slate-600 line-clamp-2">{s.descripcion}</p>
-                    )}
-                    <p className="text-sm font-bold text-slate-900 mt-1">
-                      ${s.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
-                    </p>
-                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                      Ref: ${s.importeRefacciones.toFixed(2)} | MO: ${s.importeManoObra.toFixed(2)}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(s)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Editar</span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(s)}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-semibold text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors shrink-0 cursor-pointer"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                    <span>Editar</span>
-                  </button>
+
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Costo interno</span>
+                      <span className="font-bold text-slate-700">${costoTotal.toFixed(2)}</span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Ref ${costoRef} | MO ${costoMo}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Precio venta</span>
+                      <span className="font-bold text-[#1D7EAE]">${precioTotal.toFixed(2)}</span>
+                      <span className="text-[10px] text-slate-400 block font-mono">Ref ${s.importeRefacciones} | MO ${s.importeManoObra}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-slate-500">Utilidad estimada: <strong className="text-emerald-700">+${utilidad.toFixed(2)}</strong></span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      {margen}% margen
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="p-6 text-center text-xs text-slate-400">
               {searchQuery
@@ -400,61 +502,145 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                 />
               </div>
 
-              {/* Importes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-[#231F20] mb-1">
-                    Importe estimado refacciones ($ MXN)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formRefacciones}
-                    onChange={(e) => {
-                      setFormRefacciones(e.target.value);
-                      if (formErrors.refacciones) setFormErrors({ ...formErrors, refacciones: '' });
-                    }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                    }`}
-                  />
-                  {formErrors.refacciones && (
-                    <p className="text-xs text-red-600 mt-1">{formErrors.refacciones}</p>
-                  )}
+              {/* SECCIÓN 1: COSTO INTERNO DE TALLER */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    1. Costos internos del taller
+                  </span>
+                  <span className="text-xs font-bold text-slate-700">
+                    Costo total: ${costeoCalculado.costoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                  </span>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                      Costo refacciones ($ MXN)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formCostoRefacciones}
+                      onChange={(e) => {
+                        setFormCostoRefacciones(e.target.value);
+                        if (formErrors.costoRefacciones) setFormErrors({ ...formErrors, costoRefacciones: '' });
+                      }}
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                        formErrors.costoRefacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      }`}
+                    />
+                    {formErrors.costoRefacciones && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.costoRefacciones}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-[#231F20] mb-1">
-                    Importe mano de obra ($ MXN)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formManoObra}
-                    onChange={(e) => {
-                      setFormManoObra(e.target.value);
-                      if (formErrors.manoObra) setFormErrors({ ...formErrors, manoObra: '' });
-                    }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
-                    }`}
-                  />
-                  {formErrors.manoObra && (
-                    <p className="text-xs text-red-600 mt-1">{formErrors.manoObra}</p>
-                  )}
+                  <div>
+                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                      Costo mano de obra ($ MXN)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formCostoManoObra}
+                      onChange={(e) => {
+                        setFormCostoManoObra(e.target.value);
+                        if (formErrors.costoManoObra) setFormErrors({ ...formErrors, costoManoObra: '' });
+                      }}
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                        formErrors.costoManoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      }`}
+                    />
+                    {formErrors.costoManoObra && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.costoManoObra}</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Total Calculado Automáticamente */}
-              <div className="p-3.5 bg-emerald-50/50 border border-emerald-200 rounded-lg flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-slate-700 block">Precio base total calculado:</span>
-                  <span className="text-xs text-slate-500">Refacciones + Mano de obra en centavos exactos</span>
+              {/* SECCIÓN 2: PRECIO DE VENTA AL PÚBLICO */}
+              <div className="bg-blue-50/40 border border-blue-200/60 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#1D7EAE]">
+                    2. Precios de venta al público
+                  </span>
+                  <span className="text-xs font-bold text-[#1D7EAE]">
+                    Precio total: ${costeoCalculado.precioTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                  </span>
                 </div>
-                <div className="text-lg font-bold text-emerald-700">
-                  ${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                      Precio venta refacciones ($ MXN)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formRefacciones}
+                      onChange={(e) => {
+                        setFormRefacciones(e.target.value);
+                        if (formErrors.refacciones) setFormErrors({ ...formErrors, refacciones: '' });
+                      }}
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                        formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      }`}
+                    />
+                    {formErrors.refacciones && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.refacciones}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                      Precio venta mano de obra ($ MXN)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formManoObra}
+                      onChange={(e) => {
+                        setFormManoObra(e.target.value);
+                        if (formErrors.manoObra) setFormErrors({ ...formErrors, manoObra: '' });
+                      }}
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
+                        formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      }`}
+                    />
+                    {formErrors.manoObra && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.manoObra}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECCIÓN 3: RESUMEN DE RENTABILIDAD Y MARGEN */}
+              <div className="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold block">Costo total</span>
+                  <span className="text-sm font-bold text-slate-800">
+                    ${costeoCalculado.costoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold block">Utilidad estimada</span>
+                  <span className={`text-sm font-bold ${costeoCalculado.utilidad >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                    ${costeoCalculado.utilidad.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold block">Margen estimado</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold mt-0.5 ${
+                    costeoCalculado.margen >= 30
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : costeoCalculado.margen > 0
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {costeoCalculado.margen}%
+                  </span>
                 </div>
               </div>
 
