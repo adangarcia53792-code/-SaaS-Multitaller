@@ -193,6 +193,8 @@ export type EstadoFactura = 'Pendiente' | 'Pagada' | 'Cancelada';
 export interface PagoFactura {
   metodoPago: string;
   fechaPago: string;
+  monto?: number;
+  referencia?: string;
   notas?: string;
 }
 
@@ -205,13 +207,20 @@ export interface Factura {
   clienteNombre: string;
   clienteTelefono?: string;
   clienteCorreo?: string;
+  razonSocial?: string;
+  rfc?: string;
+  usoCfdi?: string;
+  formaPago?: string;
+  metodoPagoSat?: string;
+  subtotal?: number;
+  iva?: number;
+  total: number;
   vehiculoId: string;
   vehiculoDesc: string;
   vehiculoPlacas: string;
   descripcion: string;
   importeRefacciones: number;
   importeManoObra: number;
-  total: number;
   estado: EstadoFactura;
   fechaCreacion: string;
   pago?: PagoFactura;

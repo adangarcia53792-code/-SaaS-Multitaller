@@ -36,6 +36,7 @@ import {
   CheckCircle,
   Bell,
   Truck,
+  Compass,
 } from 'lucide-react';
 import {
   SectionId,
@@ -88,6 +89,7 @@ import { FlotillasSection } from './components/FlotillasSection';
 import { HistorialVehicularSection } from './components/HistorialVehicularSection';
 import { LoginView } from './components/LoginView';
 import { CentroAvisosDrawer } from './components/CentroAvisosDrawer';
+import { RecorridoModal } from './components/RecorridoModal';
 import { IotLogo } from './components/IotLogo';
 import { useModalDismiss, notifySectionChange } from './hooks/useModalDismiss';
 
@@ -137,6 +139,31 @@ const ALL_MENU_ITEMS: MenuItem[] = [
 ];
 
 const MENU_ITEMS = ALL_MENU_ITEMS;
+
+const SECTION_NAMES: Record<string, string> = {
+  dashboard: 'Dashboard',
+  'nueva-atencion': 'Nueva atención',
+  'recepcion-vehiculo': 'Recepción de vehículo',
+  clientes: 'Clientes',
+  vehiculos: 'Vehículos',
+  flotillas: 'Flotillas',
+  'historial-vehicular': 'Historial vehicular',
+  citas: 'Citas',
+  ordenes: 'Órdenes de trabajo',
+  cotizaciones: 'Cotizaciones',
+  calendario: 'Calendario',
+  servicios: 'Servicios',
+  inventario: 'Inventario y Refacciones',
+  facturacion: 'Facturación',
+  'personal-asistencia': 'Personal y Asistencia',
+  reportes: 'Reportes y Finanzas',
+  prospectos: 'Prospectos y CRM',
+  garantias: 'Garantías',
+  bitacora: 'Bitácora de Auditoría',
+  configuracion: 'Configuración del taller',
+  'atencion-asistida': 'Atención Asistida',
+  usuarios: 'Usuarios y Permisos',
+};
 
 const INITIAL_CLIENTES: Cliente[] = [
   {
@@ -455,7 +482,41 @@ const INITIAL_BITACORA: EventoBitacora[] = [
   },
 ];
 
-const INITIAL_FACTURAS: Factura[] = [];
+const INITIAL_FACTURAS: Factura[] = [
+  {
+    id: 'fac-init-1',
+    folio: 'FAC-001',
+    cotizacionId: 'cot-init-0',
+    cotizacionFolio: 'COT-000',
+    clienteId: 'cli-1',
+    clienteNombre: 'Carlos Mendoza',
+    clienteTelefono: '555-123-4567',
+    clienteCorreo: 'carlos.mendoza@email.com',
+    razonSocial: 'TRANSPORTES Y LOGÍSTICA MENDOZA S.A. DE C.V.',
+    rfc: 'TLM1904128K3',
+    usoCfdi: 'G03 - Gastos en general',
+    formaPago: '03 - Transferencia electrónica de fondos',
+    metodoPagoSat: 'PUE - Pago en una sola exhibición',
+    subtotal: 2155.17,
+    iva: 344.83,
+    total: 2500,
+    vehiculoId: 'veh-1',
+    vehiculoDesc: 'Toyota Corolla 2020',
+    vehiculoPlacas: 'ABC-123',
+    descripcion: 'Mantenimiento preventivo de frenos y revisión de suspensión',
+    importeRefacciones: 1500,
+    importeManoObra: 1000,
+    estado: 'Pagada',
+    fechaCreacion: '2026-10-01T10:15:00Z',
+    pago: {
+      metodoPago: 'Transferencia electrónica de fondos (SPEI)',
+      fechaPago: '2026-10-01',
+      monto: 2500,
+      referencia: 'SPEI-83921049-BBVA',
+      notas: 'Pago recibido y conciliado en cuenta fiscal.',
+    },
+  },
+];
 
 const INITIAL_SEGUIMIENTOS: Seguimiento[] = [
   {
@@ -809,6 +870,15 @@ export default function App() {
     return null;
   });
   const [toastMensaje, setToastMensaje] = useState<string | null>(null);
+  const [isRecorridoOpen, setIsRecorridoOpen] = useState(false);
+  const [facturacionInitialCotizacionId, setFacturacionInitialCotizacionId] = useState<string | null>(null);
+
+  const handleNavigateToFacturacion = (cotizacionId?: string) => {
+    if (cotizacionId) {
+      setFacturacionInitialCotizacionId(cotizacionId);
+    }
+    setActiveSection('facturacion');
+  };
 
   const mostrarMensaje = (msg: string) => {
     setToastMensaje(msg);
@@ -923,7 +993,29 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEY_FACTURAS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((f: any) => {
+            const sub = f.subtotal !== undefined ? f.subtotal : Math.round((f.total / 1.16) * 100) / 100;
+            const iv = f.iva !== undefined ? f.iva : Math.round((f.total - sub) * 100) / 100;
+            return {
+              ...f,
+              subtotal: sub,
+              iva: iv,
+              rfc: f.rfc || 'XAXX010101000',
+              razonSocial: f.razonSocial || f.clienteNombre || 'PÚBLICO EN GENERAL',
+              usoCfdi: f.usoCfdi || 'G03 - Gastos en general',
+              formaPago: f.formaPago || (f.pago?.metodoPago ? `03 - ${f.pago.metodoPago}` : '03 - Transferencia electrónica de fondos'),
+              metodoPagoSat: f.metodoPagoSat || (f.estado === 'Pagada' ? 'PUE - Pago en una sola exhibición' : 'PPD - Pago en parcialidades o diferido'),
+              pago: f.pago
+                ? {
+                    ...f.pago,
+                    monto: f.pago.monto !== undefined ? f.pago.monto : f.total,
+                    referencia: f.pago.referencia || 'REF-SPEI-001',
+                  }
+                : undefined,
+            };
+          });
+        }
       }
     } catch {
       // fallback
@@ -3194,6 +3286,9 @@ export default function App() {
         workshopName={configuracion.nombre || 'Taller mecánico'}
         usuarios={usuarios}
         onLogin={handleLogin}
+        ordenes={ordenes}
+        vehiculos={vehiculos}
+        clientes={clientes}
       />
     );
   }
@@ -3209,19 +3304,30 @@ export default function App() {
             <span className="font-bold text-xs text-[#231F20] tracking-tight block leading-tight truncate">
               {configuracion.nombre || 'Taller mecánico'}
             </span>
-            <span className="text-[10px] text-[#5F6B73] font-medium block truncate">
-              {sesion?.nombre} ({sesion?.rol})
+            <span className="text-[10px] text-[#1D7EAE] font-semibold block truncate">
+              {SECTION_NAMES[activeSection] || activeSection.replace('-', ' ')}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          {/* Botón discreto Recorrido en móvil */}
+          <button
+            type="button"
+            onClick={() => setIsRecorridoOpen(true)}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#DDE4E8] bg-white text-xs font-semibold text-[#1D7EAE] hover:bg-slate-50 transition-colors cursor-pointer min-h-[36px]"
+            title="Recorrido de presentación"
+          >
+            <Compass className="w-4 h-4 text-[#1D7EAE]" />
+            <span className="hidden sm:inline">Recorrido</span>
+          </button>
+
           {/* Campana de avisos (discreta) */}
           <button
             ref={mobileBellRef}
             type="button"
             onClick={() => handleOpenCentroAvisos(true)}
-            className="relative min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors cursor-pointer"
+            className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors cursor-pointer"
             title={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
             aria-label={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
           >
@@ -3240,7 +3346,7 @@ export default function App() {
           <button
             type="button"
             onClick={handleLogout}
-            className="min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
             title="Cerrar sesión"
             aria-label="Cerrar sesión"
           >
@@ -3250,7 +3356,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg text-[#231F20] hover:bg-slate-100 transition-colors"
+            className="min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#231F20] hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label={isMobileMenuOpen ? 'Cerrar menú lateral' : 'Abrir menú lateral'}
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -3268,7 +3374,7 @@ export default function App() {
 
       {/* Sidebar: Menú lateral izquierdo azul profundo #0032A0 IOT Technologies */}
       <aside
-        className={`fixed md:static top-0 bottom-0 left-0 z-40 w-64 bg-[#0032A0] text-blue-100 flex flex-col transition-transform duration-200 ease-in-out no-print ${
+        className={`fixed md:sticky top-0 bottom-0 left-0 z-40 w-64 md:h-screen bg-[#0032A0] text-blue-100 flex flex-col shrink-0 transition-transform duration-200 ease-in-out no-print ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -3488,7 +3594,7 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-[#F6F8FA]">
         {/* Encabezado superior blanco con Logotipo IOT Technologies, buscador, avisos y usuario */}
-        <header className="hidden md:flex items-center justify-between px-8 py-3 bg-white border-b border-[#DDE4E8] shadow-2xs relative no-print">
+        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 py-3 bg-white/95 backdrop-blur-sm border-b border-[#DDE4E8] shadow-2xs sticky top-0 z-30 relative no-print">
           {/* Línea decorativa azul institucional */}
           <div className="absolute bottom-0 left-0 w-36 h-[2px] bg-[#1D7EAE]" />
 
@@ -3506,15 +3612,26 @@ export default function App() {
               <div className="flex items-center gap-1.5 text-[11px] text-[#5F6B73]">
                 <span className="font-medium text-[#231F20]">{configuracion.nombre || 'Taller mecánico'}</span>
                 <span>/</span>
-                <span className="text-[#1D7EAE] font-semibold capitalize">{activeSection.replace('-', ' ')}</span>
+                <span className="text-[#1D7EAE] font-semibold">{SECTION_NAMES[activeSection] || activeSection.replace('-', ' ')}</span>
               </div>
             </div>
           </div>
 
-          {/* Derecha: Buscador, Avisos, Usuario */}
-          <div className="flex items-center gap-3.5">
+          {/* Derecha: Recorrido, Buscador, Avisos, Usuario */}
+          <div className="flex items-center gap-3">
+            {/* Botón discreto Recorrido */}
+            <button
+              type="button"
+              onClick={() => setIsRecorridoOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#DDE4E8] bg-white hover:bg-slate-50 text-xs font-semibold text-[#1D7EAE] hover:text-[#0032A0] shadow-2xs hover:border-[#1D7EAE]/40 transition-all cursor-pointer min-h-[36px]"
+              title="Recorrido de presentación del taller"
+            >
+              <Compass className="w-3.5 h-3.5 text-[#1D7EAE]" />
+              <span>Recorrido</span>
+            </button>
+
             {/* Buscador */}
-            <div className="relative w-52 lg:w-64">
+            <div className="relative w-48 lg:w-60">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
@@ -3583,7 +3700,7 @@ export default function App() {
           </div>
         </header>
 
-        <div className="p-6 md:p-10 max-w-5xl w-full mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl 2xl:max-w-[1536px] w-full mx-auto">
           {!isSectionAllowed(activeSection, sesion?.rol) ? (
             <div className="bg-white rounded-2xl border border-red-200 p-8 text-center max-w-lg mx-auto shadow-sm my-12">
               <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
@@ -4108,11 +4225,13 @@ export default function App() {
               vehiculos={vehiculos}
               servicios={servicios}
               configuracion={configuracion}
+              facturas={facturas}
               onSaveCotizacion={handleSaveCotizacion}
               onUpdateEstado={handleUpdateCotizacionEstado}
               onLinkCotizacionToOrden={handleLinkCotizacionToOrden}
               onCreateOrdenFromCotizacion={handleCreateOrdenFromCotizacion}
               onNavigateToOrden={(ordId) => setActiveSection('ordenes')}
+              onNavigateToFacturacion={handleNavigateToFacturacion}
             />
           )}
 
@@ -4182,6 +4301,8 @@ export default function App() {
               configuracion={configuracion}
               onSaveFactura={handleSaveFactura}
               onUpdateFactura={handleUpdateFactura}
+              initialCotizacionId={facturacionInitialCotizacionId}
+              onClearInitialCotizacionId={() => setFacturacionInitialCotizacionId(null)}
             />
           )}
 
@@ -4611,6 +4732,13 @@ export default function App() {
           onClose={() => setHistorialTarget(null)}
         />
       )}
+
+      {/* RECORRIDO DE PRESENTACIÓN DEL TALLER */}
+      <RecorridoModal
+        isOpen={isRecorridoOpen}
+        onClose={() => setIsRecorridoOpen(false)}
+        onNavigateToSection={(seccion) => handleSelectSection(seccion)}
+      />
 
       {/* CENTRO DE AVISOS Y PENDIENTES (ETAPA 24) */}
       <CentroAvisosDrawer

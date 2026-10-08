@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { Cliente, Vehiculo, Cotizacion, OrdenTrabajo, ServicioCatalogo, ConfiguracionTaller } from '../types';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Cliente, Vehiculo, Cotizacion, OrdenTrabajo, ServicioCatalogo, ConfiguracionTaller, Factura } from '../types';
 import { IotLogo } from './IotLogo';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
@@ -16,6 +17,7 @@ import {
   Link as LinkIcon,
   ExternalLink,
   ChevronDown,
+  Receipt,
 } from 'lucide-react';
 
 interface CotizacionesSectionProps {
@@ -25,11 +27,13 @@ interface CotizacionesSectionProps {
   vehiculos: Vehiculo[];
   servicios: ServicioCatalogo[];
   configuracion?: ConfiguracionTaller;
+  facturas?: Factura[];
   onSaveCotizacion: (cot: Cotizacion) => void;
   onUpdateEstado: (id: string, nuevoEstado: 'Aprobada' | 'Rechazada') => void;
   onLinkCotizacionToOrden: (cotizacionId: string, ordenId: string) => void;
   onCreateOrdenFromCotizacion: (cot: Cotizacion) => void;
   onNavigateToOrden?: (ordenId: string) => void;
+  onNavigateToFacturacion?: (cotizacionId?: string) => void;
 }
 
 type EstadoFilter = 'todas' | 'Por autorizar' | 'Aprobada' | 'Rechazada';
@@ -41,17 +45,84 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   vehiculos,
   servicios,
   configuracion,
+  facturas = [],
   onSaveCotizacion,
   onUpdateEstado,
   onLinkCotizacionToOrden,
   onCreateOrdenFromCotizacion,
   onNavigateToOrden,
+  onNavigateToFacturacion,
 }) => {
   const [filter, setFilter] = useState<EstadoFilter>('todas');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Dropdown menu state per row
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  // Floating dropdown menu state per row (Portal)
+  const [activeMenu, setActiveMenu] = useState<{
+    cotizacion: Cotizacion;
+    top: number;
+    left: number;
+  } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close floating menu on Escape key, window resize, or outside scroll
+  useEffect(() => {
+    if (!activeMenu) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveMenu(null);
+      }
+    };
+
+    const handleScrollOrResize = (e: Event) => {
+      if (menuRef.current && menuRef.current.contains(e.target as Node)) {
+        return;
+      }
+      setActiveMenu(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [activeMenu]);
+
+  const handleToggleMenu = (e: React.MouseEvent<HTMLButtonElement>, cot: Cotizacion) => {
+    e.stopPropagation();
+    if (activeMenu?.cotizacion.id === cot.id) {
+      setActiveMenu(null);
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menuWidth = 210;
+    const estimatedHeight = cot.estado === 'Por autorizar' ? 145 : cot.estado === 'Aprobada' ? 150 : 100;
+
+    // Prefer aligning right edge of menu to right edge of button
+    let left = rect.right - menuWidth;
+    if (left < 10) {
+      left = 10;
+    }
+    if (left + menuWidth > window.innerWidth - 10) {
+      left = Math.max(10, window.innerWidth - menuWidth - 10);
+    }
+
+    let top = rect.bottom + 6;
+    if (top + estimatedHeight > window.innerHeight - 10 && rect.top - estimatedHeight > 10) {
+      top = rect.top - estimatedHeight - 6;
+    }
+
+    setActiveMenu({
+      cotizacion: cot,
+      top,
+      left,
+    });
+  };
 
   // Modal: Add / Edit
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -154,6 +225,16 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     return map;
   }, [ordenes]);
 
+  const facturaPorCotizacionMap = useMemo(() => {
+    const map = new Map<string, Factura>();
+    facturas.forEach((f) => {
+      if (f.estado !== 'Cancelada') {
+        map.set(f.cotizacionId, f);
+      }
+    });
+    return map;
+  }, [facturas]);
+
   // Available vehicles for client in form
   const availableVehicles = useMemo(() => {
     if (!formClientId) return [];
@@ -237,7 +318,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     setFormRefacciones(cot.importeRefacciones.toString());
     setFormManoObra(cot.importeManoObra.toString());
     setFormErrors({});
-    setOpenMenuId(null);
+    setActiveMenu(null);
     initialCotizacionValuesRef.current = {
       clientId: cot.clienteId,
       vehiculoId: cot.vehiculoId,
@@ -362,8 +443,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   // Status confirm
   const handleConfirmStatus = () => {
     if (!statusConfirm) return;
-    onUpdateEstado(statusConfirm.cotizacion.id, statusConfirm.action);
+    const { cotizacion, action } = statusConfirm;
+    onUpdateEstado(cotizacion.id, action);
     setStatusConfirm(null);
+    setActiveMenu(null);
   };
 
   // Open "Crear o vincular orden" modal
@@ -374,7 +457,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     );
     setSelectedExistingOrdenId(existing[0]?.id || '');
     setIsLinkingProcessing(false);
-    setOpenMenuId(null);
+    setActiveMenu(null);
   };
 
   // Link existing order
@@ -525,10 +608,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 filteredCotizaciones.map((cot) => {
                   const client = clienteMap.get(cot.clienteId);
                   const veh = vehiculoMap.get(cot.vehiculoId);
-                  const isMenuOpen = openMenuId === cot.id;
                   const linkedOrden = cot.ordenId
                     ? ordenMap.get(cot.ordenId)
                     : ordenes.find((o) => o.cotizacionId === cot.id);
+                  const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
 
                   return (
                     <tr key={cot.id} className="hover:bg-slate-50/70 transition-colors">
@@ -596,107 +679,54 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       </td>
 
                       {/* Acciones */}
-                      <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
+                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-2">
+                          {/* Botón visible Generar factura si está aprobada */}
+                          {cot.estado === 'Aprobada' && (
+                            <button
+                              type="button"
+                              onClick={() => onNavigateToFacturacion?.(cot.id)}
+                              className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs ${
+                                facturaVinculada
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  : 'bg-[#1D7EAE] hover:bg-[#0032A0] text-white'
+                              }`}
+                              title={
+                                facturaVinculada
+                                  ? `Factura emitida ${facturaVinculada.folio}. Clic para ver comprobante.`
+                                  : `Generar comprobante administrativo para ${cot.folio}`
+                              }
+                            >
+                              <Receipt className="w-3.5 h-3.5" />
+                              <span>{facturaVinculada ? `Factura ${facturaVinculada.folio}` : 'Generar factura'}</span>
+                            </button>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(cot)}
-                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-medium text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer shadow-xs"
+                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[40px] text-xs font-medium text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer shadow-xs"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             <span>Editar</span>
                           </button>
 
-                          {/* Más opciones dropdown */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setOpenMenuId(isMenuOpen ? null : cot.id)}
-                              className="p-2 text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                              title="Más opciones"
-                              aria-label="Más opciones"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {isMenuOpen && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-20"
-                                  onClick={() => setOpenMenuId(null)}
-                                />
-                                <div className="absolute right-0 mt-1 w-48 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
-                                  {/* For approved quotes: Crear o vincular orden / Ver orden */}
-                                  {cot.estado === 'Aprobada' && (
-                                    <>
-                                      {linkedOrden ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setViewingLinkedOrden(linkedOrden);
-                                            setOpenMenuId(null);
-                                          }}
-                                          className="w-full px-3 py-2 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
-                                        >
-                                          <ExternalLink className="w-4 h-4" />
-                                          <span>Ver orden</span>
-                                        </button>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleOpenLinkingModal(cot)}
-                                          className="w-full px-3 py-2 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
-                                        >
-                                          <LinkIcon className="w-4 h-4" />
-                                          <span>Crear o vincular orden</span>
-                                        </button>
-                                      )}
-                                    </>
-                                  )}
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setPrintingCotizacion(cot);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <FileText className="w-4 h-4 text-slate-500" />
-                                    <span>Ver / imprimir</span>
-                                  </button>
-
-                                  {cot.estado !== 'Aprobada' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setStatusConfirm({ cotizacion: cot, action: 'Aprobada' });
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
-                                    >
-                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
-                                      <span>Aprobar</span>
-                                    </button>
-                                  )}
-
-                                  {cot.estado !== 'Rechazada' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setStatusConfirm({ cotizacion: cot, action: 'Rechazada' });
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
-                                    >
-                                      <XCircle className="w-4 h-4 text-rose-600" />
-                                      <span>Rechazar</span>
-                                    </button>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
+                          {/* Botón trigger para menú de tres puntos (Portal) */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleToggleMenu(e, cot)}
+                            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                              activeMenu?.cotizacion.id === cot.id
+                                ? 'bg-slate-200 text-slate-900'
+                                : 'text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100'
+                            }`}
+                            title="Más opciones"
+                            aria-label={`Más opciones para ${cot.folio}`}
+                            aria-haspopup="menu"
+                            aria-expanded={activeMenu?.cotizacion.id === cot.id}
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -723,10 +753,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             filteredCotizaciones.map((cot) => {
               const client = clienteMap.get(cot.clienteId);
               const veh = vehiculoMap.get(cot.vehiculoId);
-              const isMenuOpen = openMenuId === cot.id;
               const linkedOrden = cot.ordenId
                 ? ordenMap.get(cot.ordenId)
                 : ordenes.find((o) => o.cotizacionId === cot.id);
+              const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
 
               return (
                 <div key={cot.id} className="p-4 space-y-2.5">
@@ -768,103 +798,52 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                      {cot.estado === 'Aprobada' && (
+                        <button
+                          type="button"
+                          onClick={() => onNavigateToFacturacion?.(cot.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs ${
+                            facturaVinculada
+                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-[#1D7EAE] hover:bg-[#0032A0] text-white'
+                          }`}
+                          title={
+                            facturaVinculada
+                              ? `Factura emitida ${facturaVinculada.folio}. Clic para ver comprobante.`
+                              : `Generar comprobante administrativo para ${cot.folio}`
+                          }
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          <span>{facturaVinculada ? `Factura ${facturaVinculada.folio}` : 'Generar factura'}</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(cot)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer shadow-xs"
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[40px] text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer shadow-xs"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                         <span>Editar</span>
                       </button>
 
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenMenuId(isMenuOpen ? null : cot.id)}
-                          className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-[#5F6B73] hover:text-[#231F20] rounded-lg"
-                          aria-label="Más opciones"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-
-                        {isMenuOpen && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-20"
-                              onClick={() => setOpenMenuId(null)}
-                            />
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                              {cot.estado === 'Aprobada' && (
-                                <>
-                                  {linkedOrden ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setViewingLinkedOrden(linkedOrden);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-2.5 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
-                                    >
-                                      <ExternalLink className="w-4 h-4" />
-                                      <span>Ver orden</span>
-                                    </button>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleOpenLinkingModal(cot)}
-                                      className="w-full px-3 py-2.5 text-purple-700 hover:bg-purple-50 flex items-center gap-2"
-                                    >
-                                      <LinkIcon className="w-4 h-4" />
-                                      <span>Crear o vincular orden</span>
-                                    </button>
-                                  )}
-                                </>
-                              )}
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setPrintingCotizacion(cot);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <FileText className="w-4 h-4 text-slate-500" />
-                                <span>Ver / imprimir</span>
-                              </button>
-
-                              {cot.estado !== 'Aprobada' && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setStatusConfirm({ cotizacion: cot, action: 'Aprobada' });
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-3 py-2.5 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
-                                >
-                                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                                  <span>Aprobar</span>
-                                </button>
-                              )}
-
-                              {cot.estado !== 'Rechazada' && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setStatusConfirm({ cotizacion: cot, action: 'Rechazada' });
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-3 py-2.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
-                                >
-                                  <XCircle className="w-4 h-4 text-rose-600" />
-                                  <span>Rechazar</span>
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                      {/* Botón trigger para menú de tres puntos móvil (Portal) */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleMenu(e, cot)}
+                        className={`min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg transition-colors cursor-pointer ${
+                          activeMenu?.cotizacion.id === cot.id
+                            ? 'bg-slate-200 text-slate-900'
+                            : 'text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100'
+                        }`}
+                        title="Más opciones"
+                        aria-label={`Más opciones para ${cot.folio}`}
+                        aria-haspopup="menu"
+                        aria-expanded={activeMenu?.cotizacion.id === cot.id}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -881,6 +860,179 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
           )}
         </div>
       </div>
+
+      {/* PORTAL: MENÚ FLOTANTE DE OPCIONES (RENDERIZADO DIRECTAMENTE EN BODY) */}
+      {activeMenu && typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Overlay invisible para cerrar al hacer clic fuera */}
+          <div
+            className="fixed inset-0 z-[9990] bg-transparent cursor-default"
+            onClick={() => setActiveMenu(null)}
+            aria-hidden="true"
+          />
+
+          <div
+            ref={menuRef}
+            style={{
+              position: 'fixed',
+              top: `${activeMenu.top}px`,
+              left: `${activeMenu.left}px`,
+            }}
+            className="z-[9999] w-52 bg-white border border-[#DDE4E8] rounded-xl shadow-2xl py-1 text-left text-xs font-medium animate-in fade-in zoom-in-95 duration-100 divide-y divide-slate-100 focus:outline-none"
+            role="menu"
+            aria-orientation="vertical"
+          >
+            {(() => {
+              const cot = activeMenu.cotizacion;
+              const linkedOrden = cot.ordenId
+                ? ordenMap.get(cot.ordenId)
+                : ordenes.find((o) => o.cotizacionId === cot.id);
+              const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
+
+              return (
+                <>
+                  {/* Si la cotización está "Por autorizar": mostrar opciones Ver/imprimir, Aprobar y Rechazar */}
+                  {cot.estado === 'Por autorizar' && (
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setPrintingCotizacion(cot);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 text-slate-500" />
+                        <span>Ver / imprimir</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setStatusConfirm({ cotizacion: cot, action: 'Aprobada' });
+                          setActiveMenu(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        <span className="font-semibold">Aprobar</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setStatusConfirm({ cotizacion: cot, action: 'Rechazada' });
+                          setActiveMenu(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <XCircle className="w-4 h-4 text-rose-600" />
+                        <span>Rechazar</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Si la cotización está "Aprobada": en aprobadas ya no debe aparecer la opción Aprobar */}
+                  {cot.estado === 'Aprobada' && (
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setPrintingCotizacion(cot);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 text-slate-500" />
+                        <span>Ver / imprimir</span>
+                      </button>
+
+                      {linkedOrden ? (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setViewingLinkedOrden(linkedOrden);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full px-3.5 py-2 text-purple-700 hover:bg-purple-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                        >
+                          <ExternalLink className="w-4 h-4 text-purple-600" />
+                          <span>Ver orden ({linkedOrden.folio})</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            handleOpenLinkingModal(cot);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full px-3.5 py-2 text-purple-700 hover:bg-purple-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                        >
+                          <LinkIcon className="w-4 h-4 text-purple-600" />
+                          <span>Crear o vincular orden</span>
+                        </button>
+                      )}
+
+                      {onNavigateToFacturacion && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            onNavigateToFacturacion(cot.id);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full px-3.5 py-2 text-[#1D7EAE] hover:bg-sky-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                        >
+                          <Receipt className="w-4 h-4 text-[#1D7EAE]" />
+                          <span>{facturaVinculada ? `Ver factura (${facturaVinculada.folio})` : 'Generar factura'}</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Si la cotización está "Rechazada": Ver / imprimir y opción para aprobar/reactivar */}
+                  {cot.estado === 'Rechazada' && (
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setPrintingCotizacion(cot);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4 text-slate-500" />
+                        <span>Ver / imprimir</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setStatusConfirm({ cotizacion: cot, action: 'Aprobada' });
+                          setActiveMenu(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        <span>Aprobar cotización</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* MODAL: CREAR O VINCULAR ORDEN (ETAPA 7) */}
       {linkingCotizacion && (
@@ -1273,49 +1425,67 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
       {/* MODAL: CONFIRMAR CAMBIO DE ESTADO (APROBAR / RECHAZAR) */}
       {statusConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs no-print"
           onClick={statusConfirmDismiss.handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="status-confirm-modal-title"
         >
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-3">
               {statusConfirm.action === 'Aprobada' ? (
-                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-full">
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
                   <CheckCircle className="w-6 h-6" />
                 </div>
               ) : (
-                <div className="p-2 bg-rose-50 text-rose-600 rounded-full">
+                <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl shrink-0">
                   <XCircle className="w-6 h-6" />
                 </div>
               )}
-              <h3 className="text-lg font-bold text-slate-900">
-                ¿{statusConfirm.action === 'Aprobada' ? 'Aprobar' : 'Rechazar'} cotización?
-              </h3>
+              <div>
+                <h3 id="status-confirm-modal-title" className="text-lg font-bold text-slate-900 leading-tight">
+                  ¿{statusConfirm.action === 'Aprobada' ? 'Aprobar' : 'Rechazar'} cotización?
+                </h3>
+                <p className="text-xs font-mono text-purple-700 font-semibold mt-0.5">
+                  {statusConfirm.cotizacion.folio}
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-slate-600">
-              ¿Deseas marcar la cotización <strong>{statusConfirm.cotizacion.folio}</strong> como{' '}
-              <strong className={statusConfirm.action === 'Aprobada' ? 'text-emerald-700' : 'text-rose-700'}>
-                {statusConfirm.action}
-              </strong>
-              ?
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
+
+            <div className="text-sm text-slate-600 space-y-2">
+              <p>
+                ¿Deseas marcar la cotización{' '}
+                <strong className="text-slate-900 font-semibold">{statusConfirm.cotizacion.folio}</strong> como{' '}
+                <strong className={statusConfirm.action === 'Aprobada' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}>
+                  {statusConfirm.action}
+                </strong>
+                ?
+              </p>
+              {statusConfirm.action === 'Aprobada' && (
+                <p className="text-xs text-slate-500 bg-emerald-50/70 border border-emerald-100 rounded-lg p-2.5">
+                  Al confirmarla, la cotización quedará aprobada y podrás generar inmediatamente su factura en la columna Acciones o vincular una orden de trabajo.
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={statusConfirmDismiss.handleClose}
-                className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmStatus}
-                className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-xs transition-colors cursor-pointer ${
+                className={`px-4 py-2.5 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer ${
                   statusConfirm.action === 'Aprobada'
                     ? 'bg-emerald-600 hover:bg-emerald-700'
                     : 'bg-rose-600 hover:bg-rose-700'
                 }`}
               >
-                Confirmar
+                {statusConfirm.action === 'Aprobada' ? 'Confirmar aprobación' : 'Confirmar rechazo'}
               </button>
             </div>
           </div>

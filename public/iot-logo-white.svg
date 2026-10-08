@@ -1,14 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 48" fill="none">
-  <!-- Símbolo antena claro -->
-  <g transform="translate(4, 6)" stroke="#98DAE9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M18 32V17" />
-    <path d="M13 32h10" />
-    <circle cx="18" cy="15" r="2.2" fill="#98DAE9" stroke="none" />
-    <path d="M12.5 10.5a8 8 0 0 1 11 0" />
-    <path d="M8 6a14.5 14.5 0 0 1 20 0" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 200" width="1080" height="200" fill="none">
+  <!-- LOGOTIPO OFICIAL IOT TECHNOLOGIES (Variante blanca) -->
+  
+  <!-- LETRA I -->
+  <g fill="#FFFFFF">
+    <rect x="36" y="38" width="56" height="17" rx="1" />
+    <rect x="55" y="55" width="18" height="74" />
+    <rect x="36" y="129" width="56" height="17" rx="1" />
   </g>
-  <!-- Texto IOT (blanco) -->
-  <text x="48" y="32" font-family="'Open Sans', 'Roboto', sans-serif" font-size="26" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5">IOT</text>
-  <!-- Texto TECHNOLOGIES (azul claro #98DAE9) -->
-  <text x="102" y="31" font-family="'Open Sans', 'Roboto', sans-serif" font-size="16" font-weight="700" fill="#98DAE9" letter-spacing="3.5">TECHNOLOGIES</text>
+
+  <!-- LETRA O -->
+  <g>
+    <circle cx="170" cy="92" r="54" fill="#FFFFFF" />
+    <circle cx="170" cy="92" r="36" fill="#0032A0" />
+
+    <circle cx="170" cy="92" r="31" fill="#98DAE9" />
+
+    <circle cx="170" cy="92" r="19" fill="#FFFFFF" />
+    <circle cx="170" cy="92" r="11" fill="#98DAE9" />
+
+    <polygon points="163,99 170,92 144,118 139,113" fill="#FFFFFF" />
+  </g>
+
+  <!-- LETRA T -->
+  <g fill="#FFFFFF">
+    <rect x="246" y="38" width="66" height="17" rx="1" />
+    <rect x="270" y="55" width="18" height="91" />
+  </g>
+
+  <!-- TECHNOLOGIES -->
+  <text
+    x="330"
+    y="114"
+    fill="#FFFFFF"
+    font-family="'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    font-size="76"
+    font-weight="900"
+    letter-spacing="2.5"
+  >TECHNOLOGIES</text>
+
+  <!-- LEYENDA: Business Innovation Solutions -->
+  <text
+    x="334"
+    y="144"
+    fill="#FFFFFF"
+    font-family="'Open Sans', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    font-size="22"
+    font-weight="600"
+    letter-spacing="5.6"
+    textLength="704"
+    lengthAdjust="spacing"
+  >Business Innovation Solutions</text>
 </svg>

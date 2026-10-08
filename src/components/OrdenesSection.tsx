@@ -336,6 +336,71 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     };
   };
 
+  // Semáforo de entrega: Verde (en tiempo/entregada), Amarillo (hoy o en 2 días), Rojo (vencida con días de atraso), Gris (sin fecha)
+  const getIndicadorEntrega = (orden: OrdenTrabajo) => {
+    // Verde: orden en tiempo, terminada o entregada
+    if (orden.entregado || orden.estado === 'Terminado' || orden.trabajoTerminado) {
+      return {
+        color: 'verde' as const,
+        texto: orden.entregado ? 'Entregada' : 'Terminada a tiempo',
+        detalle: orden.fechaEntregaPrometida ? `Prometida: ${orden.fechaEntregaPrometida}` : 'Servicio finalizado',
+      };
+    }
+
+    // Gris: orden sin fecha prometida de entrega
+    if (!orden.fechaEntregaPrometida || !orden.fechaEntregaPrometida.trim()) {
+      return {
+        color: 'gris' as const,
+        texto: 'Sin fecha prometida',
+        detalle: 'No se programó fecha de entrega',
+      };
+    }
+
+    // Parse YYYY-MM-DD local
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const partes = orden.fechaEntregaPrometida.split('-');
+    let fechaProm: Date;
+    if (partes.length === 3) {
+      fechaProm = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+    } else {
+      fechaProm = new Date(orden.fechaEntregaPrometida);
+    }
+    fechaProm.setHours(0, 0, 0, 0);
+
+    const diffMs = fechaProm.getTime() - hoy.getTime();
+    const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 0) {
+      const atraso = Math.abs(diffDias);
+      return {
+        color: 'rojo' as const,
+        texto: `Vencida (${atraso} día${atraso === 1 ? '' : 's'} atraso)`,
+        detalle: `Debió entregarse el ${orden.fechaEntregaPrometida}`,
+        diasAtraso: atraso,
+      };
+    } else if (diffDias === 0) {
+      return {
+        color: 'amarillo' as const,
+        texto: 'Entrega para hoy',
+        detalle: `Programada hoy ${orden.fechaEntregaPrometida}`,
+      };
+    } else if (diffDias <= 2) {
+      return {
+        color: 'amarillo' as const,
+        texto: `Entrega en ${diffDias} día${diffDias === 1 ? '' : 's'}`,
+        detalle: `Programada el ${orden.fechaEntregaPrometida}`,
+      };
+    } else {
+      return {
+        color: 'verde' as const,
+        texto: `En tiempo (${diffDias} días)`,
+        detalle: `Programada el ${orden.fechaEntregaPrometida}`,
+      };
+    }
+  };
+
   const availableVehicles = useMemo(() => {
     if (!formClientId) return [];
     return vehiculos.filter((v) => v.clienteId === formClientId);
@@ -1199,6 +1264,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 <th className="py-3.5 px-4">Trabajo solicitado</th>
                 <th className="py-3.5 px-4 text-center">Costeo y rentabilidad</th>
                 <th className="py-3.5 px-4 text-center">Estado</th>
+                <th className="py-3.5 px-4 text-center">Entrega</th>
                 <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
             </thead>
@@ -1331,6 +1397,56 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         </div>
                       </td>
 
+                      {/* Semáforo de entrega */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        {(() => {
+                          const sem = getIndicadorEntrega(ord);
+                          return (
+                            <div className="flex flex-col items-center gap-1">
+                              {sem.color === 'verde' && (
+                                <span
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                  title={sem.detalle}
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                  <span>{sem.texto}</span>
+                                </span>
+                              )}
+                              {sem.color === 'amarillo' && (
+                                <span
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200"
+                                  title={sem.detalle}
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                  <span>{sem.texto}</span>
+                                </span>
+                              )}
+                              {sem.color === 'rojo' && (
+                                <span
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200"
+                                  title={sem.detalle}
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                                  <span>{sem.texto}</span>
+                                </span>
+                              )}
+                              {sem.color === 'gris' && (
+                                <span
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"
+                                  title={sem.detalle}
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                                  <span>{sem.texto}</span>
+                                </span>
+                              )}
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                {ord.fechaEntregaPrometida ? `Prom: ${ord.fechaEntregaPrometida}` : 'Sin fecha prometida'}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </td>
+
                       {/* Acciones: Botón principal según rol */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap relative">
                         <div className="inline-flex items-center gap-2">
@@ -1430,7 +1546,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     {searchQuery
                       ? 'No se encontraron órdenes que coincidan con la búsqueda.'
                       : filter !== 'todas'
@@ -1503,6 +1619,57 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                           <span>Cotización: {linkedCot.folio}</span>
                         </p>
                       )}
+                      {/* Semáforo de entrega en móvil */}
+                      {(() => {
+                        const semMobile = getIndicadorEntrega(ord);
+                        return (
+                          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap text-xs">
+                            <span className="text-[11px] text-slate-500 font-medium">Entrega:</span>
+                            {semMobile.color === 'verde' && (
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                title={semMobile.detalle}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span>{semMobile.texto}</span>
+                              </span>
+                            )}
+                            {semMobile.color === 'amarillo' && (
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200"
+                                title={semMobile.detalle}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                <span>{semMobile.texto}</span>
+                              </span>
+                            )}
+                            {semMobile.color === 'rojo' && (
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-800 border border-rose-200"
+                                title={semMobile.detalle}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <span>{semMobile.texto}</span>
+                              </span>
+                            )}
+                            {semMobile.color === 'gris' && (
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200"
+                                title={semMobile.detalle}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                <span>{semMobile.texto}</span>
+                              </span>
+                            )}
+                            {ord.fechaEntregaPrometida && (
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                ({ord.fechaEntregaPrometida})
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {/* Semáforo discreto y costos en móvil */}
                       {(() => {
                         const rentMobile = getRentabilidadOrden(ord);
@@ -1646,6 +1813,35 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 : 'No hay órdenes de trabajo registradas.'}
             </div>
           )}
+        </div>
+
+        {/* Leyenda pequeña del semáforo de entrega */}
+        <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-1.5 font-bold text-slate-700 text-xs">
+            <span>Semáforo de entrega:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-slate-700 font-medium">Verde:</span>
+              <span className="text-slate-500">En tiempo, terminada o entregada</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span className="text-slate-700 font-medium">Amarillo:</span>
+              <span className="text-slate-500">Entrega hoy o próximos 2 días</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span className="text-slate-700 font-medium">Rojo:</span>
+              <span className="text-slate-500">Vencida (muestra días de atraso)</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span className="text-slate-700 font-medium">Gris:</span>
+              <span className="text-slate-500">Sin fecha prometida de entrega</span>
+            </span>
+          </div>
         </div>
       </div>
 
