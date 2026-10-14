@@ -16,6 +16,7 @@ import {
   Car,
   AlertTriangle,
   BarChart3,
+  Sparkles,
 } from 'lucide-react';
 import {
   OrdenTrabajo,
@@ -25,8 +26,14 @@ import {
   Refaccion,
   ServicioCatalogo,
   ConfiguracionTaller,
+  MovimientoInventario,
+  Empleado,
+  Cliente,
+  Seguimiento,
+  Garantia,
 } from '../types';
-import { IotLogo } from './IotLogo';
+import { TunnoLogo } from './TunnoLogo';
+import { AnalisisGerencialModal } from './AnalisisGerencialModal';
 
 interface ReportesSectionProps {
   ordenes: OrdenTrabajo[];
@@ -36,6 +43,11 @@ interface ReportesSectionProps {
   refacciones: Refaccion[];
   servicios: ServicioCatalogo[];
   configuracion: ConfiguracionTaller;
+  movimientos?: MovimientoInventario[];
+  empleados?: Empleado[];
+  clientes?: Cliente[];
+  seguimientos?: Seguimiento[];
+  garantias?: Garantia[];
 }
 
 interface DateRange {
@@ -51,7 +63,15 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
   refacciones,
   servicios: _servicios,
   configuracion,
+  movimientos = [],
+  empleados = [],
+  clientes = [],
+  seguimientos = [],
+  garantias = [],
 }) => {
+  // Estado para el modal de Análisis Gerencial con IA
+  const [isAnalisisGerencialModalOpen, setIsAnalisisGerencialModalOpen] = useState(false);
+
   // Date filter inputs state
   const [fechaInicioInput, setFechaInicioInput] = useState('');
   const [fechaFinInput, setFechaFinInput] = useState('');
@@ -315,14 +335,14 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-2">
-              <IotLogo size="sm" variant="dark" />
+              <TunnoLogo variant="positive" format="horizontal" size="sm" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {configuracion.nombre || 'IOT Technologies'}
+            <h1 className="text-2xl font-bold font-heading text-[#06345A] tracking-tight">
+              {configuracion.nombre || 'TUNNO'}
             </h1>
             <div className="mt-1 flex items-center gap-2">
-              <span className="inline-block px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 text-[#1D7EAE] border border-slate-300 rounded">
-                Reporte de demostración
+              <span className="inline-block px-2.5 py-0.5 text-xs font-bold font-heading uppercase tracking-wider bg-sky-50 text-[#1497F2] border border-[#73C7FF]/40 rounded">
+                Reporte operativo del taller
               </span>
             </div>
             {configuracion.direccion && (
@@ -342,26 +362,37 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       </div>
 
       {/* HEADER EN PANTALLA */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE] shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#73C7FF]/20 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2] shrink-0">
             <BarChart3 className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] tracking-tight">
               Reportes
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Información operativa consolidada a partir de los registros del taller.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          <button
+            type="button"
+            data-tour="reportes-analisis-ia"
+            onClick={() => setIsAnalisisGerencialModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-gradient-to-r from-[#06345A] to-[#1497F2] hover:from-[#1497F2] hover:to-[#06345A] text-white text-sm font-semibold shadow-xs transition-all cursor-pointer"
+            title="Abrir análisis gerencial estratégico con IA"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>Analizar resultados con IA</span>
+          </button>
+
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#E5E7EB] text-sm font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir reporte</span>
@@ -370,17 +401,17 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       </div>
 
       {/* FILTROS DE FECHA (no-print) */}
-      <div className="bg-white rounded-xl border border-[#DDE4E8] p-5 shadow-xs no-print">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 shadow-xs no-print">
         <form onSubmit={handleApplyFilter} className="space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#231F20] uppercase tracking-wider">
-              <Calendar className="w-3.5 h-3.5 text-[#0032A0]" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#06345A] uppercase tracking-wider">
+              <Calendar className="w-3.5 h-3.5 text-[#06345A]" />
               <span>Filtro por periodo</span>
             </div>
             <div className="text-xs text-slate-500">
               {appliedRange ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-[#0032A0] font-semibold border border-rose-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1D7EAE]" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-[#06345A] font-semibold border border-rose-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1497F2]" />
                   Filtro activo
                 </span>
               ) : (
@@ -401,7 +432,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                   setFechaInicioInput(e.target.value);
                   if (dateError) setDateError(null);
                 }}
-                className="w-full px-3 py-2 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
+                className="w-full px-3 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] transition-all"
               />
             </div>
 
@@ -416,14 +447,14 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                   setFechaFinInput(e.target.value);
                   if (dateError) setDateError(null);
                 }}
-                className="w-full px-3 py-2 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
+                className="w-full px-3 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] transition-all"
               />
             </div>
 
             <div className="flex items-center gap-2 sm:col-span-2 md:col-span-2">
               <button
                 type="submit"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
               >
                 <Filter className="w-4 h-4" />
                 <span>Aplicar</span>
@@ -432,7 +463,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
               <button
                 type="button"
                 onClick={handleClearFilter}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] bg-white hover:bg-slate-50 text-[#231F20] border border-[#DDE4E8] text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] bg-white hover:bg-slate-50 text-[#06345A] border border-[#E5E7EB] text-sm font-medium rounded-lg transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Limpiar</span>
@@ -465,7 +496,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
           <button
             type="button"
             onClick={handleExpandAll}
-            className="text-[#1D7EAE] hover:underline font-medium cursor-pointer"
+            className="text-[#1497F2] hover:underline font-medium cursor-pointer"
           >
             Expandir todos
           </button>
@@ -870,7 +901,7 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
                             {idx + 1}
                           </td>
                           <td className="py-2 px-3 font-medium text-slate-900">{s.nombre}</td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-[#231F20]">
+                          <td className="py-2 px-3 text-right font-mono font-bold text-[#06345A]">
                             {s.total}
                           </td>
                           <td className="py-2 px-3 text-right font-mono text-[11px] text-slate-500">
@@ -1051,12 +1082,37 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
       </div>
 
       {/* PIE DE PÁGINA DE IMPRESIÓN (Visible ÚNICAMENTE al imprimir) */}
-      <div className="hidden print:block pt-6 mt-6 border-t border-slate-300 text-center text-xs text-slate-500">
-        <p className="font-semibold text-slate-700">Reporte de demostración operativa</p>
-        <p className="text-[11px] text-slate-400 mt-0.5">
-          Generado por Sistema de Talleres Mecánicos - IOT Technologies para {configuracion.nombre || 'IOT Technologies'}. Sin validez legal ni contable.
+      <div className="hidden print:block pt-6 mt-6 border-t border-slate-300 text-center text-xs text-slate-500 space-y-1">
+        <p className="font-semibold text-[#06345A] font-heading">Reporte operativo del taller</p>
+        <p className="text-[11px] text-slate-400">
+          Generado por TUNNO para {configuracion.nombre || 'TUNNO'}.
+        </p>
+        <p className="text-[10px] font-heading font-semibold text-[#06345A] tracking-wider pt-0.5">
+          Organiza · Controla · Haz crecer
         </p>
       </div>
+
+      {/* ======================================================== */}
+      {/* MODAL: ANÁLISIS GERENCIAL CON IA */}
+      {/* ======================================================== */}
+      {isAnalisisGerencialModalOpen && (
+        <AnalisisGerencialModal
+          isOpen={isAnalisisGerencialModalOpen}
+          onClose={() => setIsAnalisisGerencialModalOpen(false)}
+          ordenes={ordenes}
+          cotizaciones={cotizaciones}
+          citas={citas}
+          facturas={facturas}
+          refacciones={refacciones}
+          servicios={_servicios}
+          movimientos={movimientos}
+          empleados={empleados}
+          clientes={clientes}
+          seguimientos={seguimientos}
+          garantias={garantias}
+          configuracion={configuracion}
+        />
+      )}
     </section>
   );
 };

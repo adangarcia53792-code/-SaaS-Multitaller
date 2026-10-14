@@ -2,65 +2,132 @@
 
 @layer base {
   :root {
-    --iot-primary: #1D7EAE;
-    --iot-dark: #0032A0;
-    --iot-light: #98DAE9;
-    --iot-orange: #FF661B;
-    --iot-black: #231F20;
-    --iot-neutral: #BDC6C3;
-    --background: #F6F8FA;
+    /* PALETA OFICIAL TUNNO */
+    --tunno-azul-institucional: #06345A;
+    --tunno-azul-electrico: #1497F2;
+    --tunno-azul-claro: #73C7FF;
+    --tunno-azul-profundo: #0B2440;
+    --tunno-gris-oscuro: #374151;
+    --tunno-gris-medio: #6B7280;
+    --tunno-gris-claro: #E5E7EB;
+    --tunno-blanco: #FFFFFF;
+
+    /* VARIABLES DE SUPERFICIE Y RENDER */
+    --background: #FFFFFF;
     --surface: #FFFFFF;
-    --border: #DDE4E8;
-    --text: #231F20;
-    --text-secondary: #5F6B73;
+    --border: #E5E7EB;
+    --text-primary: #374151;
+    --text-secondary: #6B7280;
+    --primary: #1497F2;
+    --primary-hover: #06345A;
+    --sidebar-bg: #06345A;
+    --sidebar-dark: #0B2440;
   }
 
   body {
     background-color: var(--background);
-    color: var(--text);
-    font-family: 'Open Sans', Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
+  /* Títulos, encabezados y botones con Montserrat */
+  h1, h2, h3, h4, h5, h6,
+  .font-heading,
+  .font-montserrat {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  /* Textos, tablas, formularios y datos operativos con Roboto */
+  p, span, label, input, select, textarea, td, th,
+  .font-body,
+  .font-roboto {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  /* Focus ring con Azul Eléctrico oficial TUNNO (#1497F2) */
   input:focus, select:focus, textarea:focus {
-    border-color: #1D7EAE !important;
+    border-color: #1497F2 !important;
     outline: none !important;
-    box-shadow: 0 0 0 3px rgba(29, 126, 174, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(20, 151, 242, 0.18) !important;
   }
 }
 
-/* Patrones sutiles de conectividad IOT Technologies */
-.iot-dots-pattern {
-  background-image: radial-gradient(#1D7EAE 0.75px, transparent 0.75px);
-  background-size: 18px 18px;
-  opacity: 0.06;
+/* Patrón sutil y limpio TUNNO */
+.tunno-grid-subtle {
+  background-image: linear-gradient(to right, #E5E7EB 1px, transparent 1px),
+                    linear-gradient(to bottom, #E5E7EB 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-.iot-grid-pattern {
-  background-image: linear-gradient(to right, #DDE4E8 1px, transparent 1px),
-                    linear-gradient(to bottom, #DDE4E8 1px, transparent 1px);
-  background-size: 24px 24px;
+/* Scrollbar sutil y profesional */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F9FAFB;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E5E7EB;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
 }
 
 @media print {
-  body {
-    background: #ffffff !important;
-    color: #231F20 !important;
+  @page {
+    margin: 10mm 12mm;
+    size: auto;
   }
-  .no-print {
+  html, body {
+    background: #FFFFFF !important;
+    color: #374151 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print,
+  button,
+  nav,
+  aside,
+  header {
     display: none !important;
+  }
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
   .print-area {
     display: block !important;
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
+    position: static !important;
     width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
-    padding: 16px !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
+    background: #FFFFFF !important;
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
+  }
+  .print-area * {
+    overflow: visible !important;
+    max-height: none !important;
+    box-shadow: none !important;
+  }
+  tr, .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }

@@ -181,17 +181,17 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado IOT Technologies para Catálogos */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      {/* Encabezado TUNNO para Catálogos */}
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
             <Wrench className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
               Catálogo de servicios
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Gestión de servicios estandarizados con precios base de refacciones y mano de obra.
             </p>
           </div>
@@ -199,7 +199,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors min-h-[42px] cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar servicio</span>
@@ -215,16 +215,16 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre o descripción..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
           />
         </div>
 
-        <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#DDE4E8] text-xs sm:text-sm font-medium">
+        <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#E5E7EB] text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilterEstado('todos')}
             className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filterEstado === 'todos' ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold' : 'text-[#5F6B73] hover:text-[#231F20]'
+              filterEstado === 'todos' ? 'bg-[#1497F2] text-white shadow-xs font-semibold' : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Todos ({servicios.length})
@@ -233,7 +233,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
             type="button"
             onClick={() => setFilterEstado('activos')}
             className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filterEstado === 'activos' ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold' : 'text-[#5F6B73] hover:text-[#231F20]'
+              filterEstado === 'activos' ? 'bg-[#1497F2] text-white shadow-xs font-semibold' : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Activos ({servicios.filter((s) => s.activo).length})
@@ -242,7 +242,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
             type="button"
             onClick={() => setFilterEstado('inactivos')}
             className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filterEstado === 'inactivos' ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold' : 'text-[#5F6B73] hover:text-[#231F20]'
+              filterEstado === 'inactivos' ? 'bg-[#1497F2] text-white shadow-xs font-semibold' : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Inactivos ({servicios.filter((s) => !s.activo).length})
@@ -251,7 +251,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
       </div>
 
       {/* Table & Mobile View */}
-      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden no-print">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden no-print">
         {/* Desktop View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
@@ -279,9 +279,9 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                     <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Nombre y descripción */}
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-[#231F20]">{s.nombre}</div>
+                        <div className="font-semibold text-[#06345A]">{s.nombre}</div>
                         {s.descripcion && (
-                          <div className="text-xs text-[#5F6B73] line-clamp-1 max-w-xs mt-0.5">
+                          <div className="text-xs text-[#6B7280] line-clamp-1 max-w-xs mt-0.5">
                             {s.descripcion}
                           </div>
                         )}
@@ -299,7 +299,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
                       {/* Precio de venta */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="font-bold text-[#1D7EAE]">
+                        <div className="font-bold text-[#1497F2]">
                           ${precioTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                         <div className="text-[11px] text-slate-400 font-mono">
@@ -343,7 +343,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(s)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#6B7280] hover:text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           <span>Editar</span>
@@ -381,7 +381,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-[#231F20] text-sm">{s.nombre}</span>
+                        <span className="font-semibold text-[#06345A] text-sm">{s.nombre}</span>
                         {s.activo ? (
                           <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Activo
@@ -399,7 +399,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(s)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#5F6B73] hover:text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors shrink-0 cursor-pointer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#6B7280] hover:text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors shrink-0 cursor-pointer"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       <span>Editar</span>
@@ -414,7 +414,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-semibold block">Precio venta</span>
-                      <span className="font-bold text-[#1D7EAE]">${precioTotal.toFixed(2)}</span>
+                      <span className="font-bold text-[#1497F2]">${precioTotal.toFixed(2)}</span>
                       <span className="text-[10px] text-slate-400 block font-mono">Ref ${s.importeRefacciones} | MO ${s.importeManoObra}</span>
                     </div>
                   </div>
@@ -479,8 +479,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                     if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: '' });
                   }}
                   placeholder="Ej. Cambio de balatas y rectificado"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all ${
-                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all ${
+                    formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                   }`}
                 />
                 {formErrors.nombre && (
@@ -490,7 +490,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
               {/* Descripción */}
               <div>
-                <label className="block text-sm font-medium text-[#231F20] mb-1">
+                <label className="block text-sm font-medium text-[#06345A] mb-1">
                   Descripción breve <span className="text-xs text-slate-400 font-normal">(Opcional)</span>
                 </label>
                 <textarea
@@ -498,7 +498,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                   value={formDescripcion}
                   onChange={(e) => setFormDescripcion(e.target.value)}
                   placeholder="Detalles de los trabajos y componentes incluidos..."
-                  className="w-full px-3.5 py-2 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+                  className="w-full px-3.5 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
                 />
               </div>
 
@@ -514,7 +514,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                    <label className="block text-xs font-medium text-[#06345A] mb-1">
                       Costo refacciones ($ MXN)
                     </label>
                     <input
@@ -526,8 +526,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                         setFormCostoRefacciones(e.target.value);
                         if (formErrors.costoRefacciones) setFormErrors({ ...formErrors, costoRefacciones: '' });
                       }}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                        formErrors.costoRefacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                        formErrors.costoRefacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                       }`}
                     />
                     {formErrors.costoRefacciones && (
@@ -536,7 +536,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                    <label className="block text-xs font-medium text-[#06345A] mb-1">
                       Costo mano de obra ($ MXN)
                     </label>
                     <input
@@ -548,8 +548,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                         setFormCostoManoObra(e.target.value);
                         if (formErrors.costoManoObra) setFormErrors({ ...formErrors, costoManoObra: '' });
                       }}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                        formErrors.costoManoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                        formErrors.costoManoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                       }`}
                     />
                     {formErrors.costoManoObra && (
@@ -562,16 +562,16 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
               {/* SECCIÓN 2: PRECIO DE VENTA AL PÚBLICO */}
               <div className="bg-blue-50/40 border border-blue-200/60 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#1D7EAE]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#1497F2]">
                     2. Precios de venta al público
                   </span>
-                  <span className="text-xs font-bold text-[#1D7EAE]">
+                  <span className="text-xs font-bold text-[#1497F2]">
                     Precio total: ${costeoCalculado.precioTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                    <label className="block text-xs font-medium text-[#06345A] mb-1">
                       Precio venta refacciones ($ MXN)
                     </label>
                     <input
@@ -583,8 +583,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                         setFormRefacciones(e.target.value);
                         if (formErrors.refacciones) setFormErrors({ ...formErrors, refacciones: '' });
                       }}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                        formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                        formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                       }`}
                     />
                     {formErrors.refacciones && (
@@ -593,7 +593,7 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#231F20] mb-1">
+                    <label className="block text-xs font-medium text-[#06345A] mb-1">
                       Precio venta mano de obra ($ MXN)
                     </label>
                     <input
@@ -605,8 +605,8 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                         setFormManoObra(e.target.value);
                         if (formErrors.manoObra) setFormErrors({ ...formErrors, manoObra: '' });
                       }}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#231F20] focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                        formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                      className={`w-full px-3.5 py-2 bg-white border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                        formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                       }`}
                     />
                     {formErrors.manoObra && (
@@ -646,27 +646,27 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
 
               {/* Estado: Activo o Inactivo */}
               <div>
-                <label className="block text-sm font-medium text-[#231F20] mb-1.5">
+                <label className="block text-sm font-medium text-[#06345A] mb-1.5">
                   Estado en el catálogo
                 </label>
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-[#231F20]">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-[#06345A]">
                     <input
                       type="radio"
                       name="servicioActivo"
                       checked={formActivo}
                       onChange={() => setFormActivo(true)}
-                      className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
+                      className="text-[#1497F2] focus:ring-[#1497F2]"
                     />
                     <span>Activo (disponible en formularios)</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-[#231F20]">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-[#06345A]">
                     <input
                       type="radio"
                       name="servicioActivo"
                       checked={!formActivo}
                       onChange={() => setFormActivo(false)}
-                      className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
+                      className="text-[#1497F2] focus:ring-[#1497F2]"
                     />
                     <span>Inactivo (oculto en selecciones futuras)</span>
                   </label>
@@ -681,13 +681,13 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
                 <button
                   type="button"
                   onClick={serviceFormDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
                   Guardar
                 </button>

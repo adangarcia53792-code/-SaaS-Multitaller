@@ -1,5 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Refaccion, MovimientoInventario, OrdenCompra } from '../types';
+import {
+  Refaccion,
+  MovimientoInventario,
+  OrdenCompra,
+  OrdenTrabajo,
+  Vehiculo,
+  CompraRecomendadaIA,
+} from '../types';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 import {
   Search,
@@ -22,12 +29,16 @@ import {
   TrendingUp,
   Tag,
   Car,
+  Sparkles,
 } from 'lucide-react';
+import { AnalisisInventarioModal } from './AnalisisInventarioModal';
 
 interface InventarioSectionProps {
   refacciones: Refaccion[];
   movimientos: MovimientoInventario[];
   ordenesCompra?: OrdenCompra[];
+  ordenesPendientes?: OrdenTrabajo[];
+  vehiculos?: Vehiculo[];
   onSaveRefaccion: (refaccion: Refaccion, initialMovement?: MovimientoInventario) => void;
   onRecordMovement: (movement: MovimientoInventario) => void;
   onSaveOrdenCompra?: (ordenCompra: OrdenCompra) => void;
@@ -40,6 +51,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
   refacciones,
   movimientos,
   ordenesCompra = [],
+  ordenesPendientes = [],
+  vehiculos = [],
   onSaveRefaccion,
   onRecordMovement,
   onSaveOrdenCompra,
@@ -49,6 +62,9 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStock, setFilterStock] = useState<FilterStock>('todas');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Modal: Análisis de inventario con IA
+  const [isAnalisisModalOpen, setIsAnalisisModalOpen] = useState(false);
 
   // Modal: Add / Edit Refacción
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -210,6 +226,52 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     setOcErrors({});
     setOpenMenuId(null);
     setIsOrdenCompraModalOpen(true);
+  };
+
+  // Crear borrador de Orden de Compra desde sugerencia de IA
+  const handleCrearOrdenCompraDesdeIA = (compra: CompraRecomendadaIA) => {
+    const targetRef = refacciones.find((r) => r.id === compra.refaccionId) || null;
+    if (onSaveOrdenCompra) {
+      const nextFolioNum = ordenesCompra.length + 1;
+      const folio = `OC-${String(nextFolioNum).padStart(3, '0')}`;
+      const nuevaOC: OrdenCompra = {
+        id: `oc-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        folio,
+        refaccionId: compra.refaccionId,
+        refaccionNombre: compra.nombre,
+        refaccionCodigo: compra.codigo,
+        cantidad: compra.cantidadSugerida,
+        proveedor: compra.proveedorSugerido || 'Proveedor sin asignar',
+        telefonoProveedor: compra.telefonoProveedor || '',
+        fecha: new Date().toISOString().split('T')[0],
+        costoUnitario: compra.precioCompraEstimado,
+        total: compra.cantidadSugerida * compra.precioCompraEstimado,
+        estado: 'Pendiente', // Queda como borrador pendiente hasta confirmación del usuario
+        notas: `[Sugerido por IA - Prioridad: ${compra.prioridad.toUpperCase()}] ${compra.motivo}`,
+        creadoEn: new Date().toISOString(),
+      };
+      onSaveOrdenCompra(nuevaOC);
+    } else {
+      // Fallback: abrir modal de orden de compra precargado
+      if (targetRef) {
+        setOcTargetRefaccion(targetRef);
+        setOcCantidad(compra.cantidadSugerida.toString());
+        setOcProveedor(compra.proveedorSugerido || targetRef.proveedor || 'Proveedor General');
+        setOcTelefono(compra.telefonoProveedor || targetRef.telefonoProveedor || '');
+        setOcCostoUnitario(compra.precioCompraEstimado.toString());
+        setOcFecha(new Date().toISOString().split('T')[0]);
+        setOcNotas(`[Sugerido por IA - ${compra.prioridad.toUpperCase()}] ${compra.motivo}`);
+        setOcErrors({});
+        setIsOrdenCompraModalOpen(true);
+      }
+    }
+  };
+
+  const handleVerRefaccionDesdeIA = (refaccionId: string) => {
+    const ref = refacciones.find((r) => r.id === refaccionId);
+    if (ref) {
+      handleOpenEdit(ref);
+    }
   };
 
   // Save Add / Edit Refacción
@@ -435,72 +497,84 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado IOT Technologies */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+      {/* Encabezado TUNNO */}
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
             <Package className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+              <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
                 Inventario y costeo de refacciones
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-[#06345A] border border-[#73C7FF]/40">
                 {refacciones.length} items
               </span>
             </div>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Control de existencias, precios de compra/venta, cálculo de ganancia y órdenes de compra.
             </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar refacción</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          <button
+            type="button"
+            onClick={() => setIsAnalisisModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#1497F2]/40 bg-[#1497F2]/10 hover:bg-[#1497F2]/20 text-[#06345A] text-sm font-semibold transition-all min-h-[42px] cursor-pointer shadow-2xs hover:shadow-xs"
+            title="Analizar existencias, consumo, márgenes y proveedores con IA"
+          >
+            <Sparkles className="w-4 h-4 text-[#1497F2]" />
+            <span>Analizar inventario con IA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Agregar refacción</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards: Valuación e indicadores de rentabilidad */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Existencias totales</span>
-            <Package className="w-4 h-4 text-[#1D7EAE]" />
+            <Package className="w-4 h-4 text-[#1497F2]" />
           </div>
-          <div className="text-xl font-bold text-[#231F20]">{totalPiezasEnStock} pzs</div>
-          <div className="text-[11px] text-[#5F6B73] mt-0.5">En {refacciones.length} refacciones</div>
+          <div className="text-xl font-bold text-[#06345A]">{totalPiezasEnStock} pzs</div>
+          <div className="text-[11px] text-[#6B7280] mt-0.5">En {refacciones.length} refacciones</div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Valor al costo</span>
             <DollarSign className="w-4 h-4 text-slate-500" />
           </div>
-          <div className="text-xl font-bold text-[#231F20]">
+          <div className="text-xl font-bold text-[#06345A]">
             ${valorTotalCosto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">Inversión en almacén</div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Valor a la venta</span>
             <Tag className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-xl font-bold text-[#1D7EAE]">
+          <div className="text-xl font-bold text-[#1497F2]">
             ${valorTotalVenta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] text-blue-600 font-medium mt-0.5">Precio de mostrador</div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Ganancia estimada</span>
             <TrendingUp className="w-4 h-4 text-emerald-600" />
           </div>
@@ -510,27 +584,27 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           <div className="text-[11px] text-emerald-700 font-medium mt-0.5">Utilidad potencial</div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Stock bajo</span>
             <AlertTriangle className={`w-4 h-4 ${lowStockCount > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
           </div>
-          <div className={`text-xl font-bold ${lowStockCount > 0 ? 'text-amber-600' : 'text-[#231F20]'}`}>
+          <div className={`text-xl font-bold ${lowStockCount > 0 ? 'text-amber-600' : 'text-[#06345A]'}`}>
             {lowStockCount}
           </div>
-          <div className="text-[11px] text-[#5F6B73] mt-0.5">Por debajo del mínimo</div>
+          <div className="text-[11px] text-[#6B7280] mt-0.5">Por debajo del mínimo</div>
         </div>
       </div>
 
       {/* Tabs: Refacciones vs Órdenes de compra */}
-      <div className="flex border-b border-[#DDE4E8] text-sm font-semibold gap-2">
+      <div className="flex border-b border-[#E5E7EB] text-sm font-semibold gap-2">
         <button
           type="button"
           onClick={() => setActiveMainTab('refacciones')}
           className={`px-4 py-2.5 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
             activeMainTab === 'refacciones'
-              ? 'border-[#1D7EAE] text-[#1D7EAE]'
-              : 'border-transparent text-[#5F6B73] hover:text-[#231F20]'
+              ? 'border-[#1497F2] text-[#1497F2]'
+              : 'border-transparent text-[#6B7280] hover:text-[#06345A]'
           }`}
         >
           <Package className="w-4 h-4" />
@@ -542,8 +616,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           onClick={() => setActiveMainTab('ordenes-compra')}
           className={`px-4 py-2.5 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
             activeMainTab === 'ordenes-compra'
-              ? 'border-[#1D7EAE] text-[#1D7EAE]'
-              : 'border-transparent text-[#5F6B73] hover:text-[#231F20]'
+              ? 'border-[#1497F2] text-[#1497F2]'
+              : 'border-transparent text-[#6B7280] hover:text-[#06345A]'
           }`}
         >
           <ShoppingCart className="w-4 h-4" />
@@ -570,18 +644,18 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por código, nombre, proveedor o modelo..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
               />
             </div>
 
-            <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#DDE4E8] text-xs font-medium">
+            <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#E5E7EB] text-xs font-medium">
               <button
                 type="button"
                 onClick={() => setFilterStock('todas')}
                 className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
                   filterStock === 'todas'
-                    ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                    : 'text-[#5F6B73] hover:text-[#231F20]'
+                    ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
+                    : 'text-[#6B7280] hover:text-[#06345A]'
                 }`}
               >
                 Todas ({refacciones.length})
@@ -591,8 +665,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                 onClick={() => setFilterStock('stock-bajo')}
                 className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
                   filterStock === 'stock-bajo'
-                    ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                    : 'text-[#5F6B73] hover:text-[#231F20]'
+                    ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
+                    : 'text-[#6B7280] hover:text-[#06345A]'
                 }`}
               >
                 Stock bajo ({lowStockCount})
@@ -601,7 +675,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           </div>
 
           {/* Table / Cards */}
-          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden no-print">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden no-print">
             {/* Desktop View */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
@@ -655,7 +729,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
                           <td className="py-3.5 px-4 text-right">
                             <div className="font-mono text-slate-600">Compra: ${compra.toFixed(2)}</div>
-                            <div className="font-mono font-bold text-[#1D7EAE]">Venta: ${venta.toFixed(2)}</div>
+                            <div className="font-mono font-bold text-[#1497F2]">Venta: ${venta.toFixed(2)}</div>
                           </td>
 
                           <td className="py-3.5 px-4 text-right">
@@ -689,7 +763,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleOpenOrdenCompra(ref)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1D7EAE] font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1497F2] font-semibold rounded-lg text-xs transition-colors cursor-pointer"
                                 title="Generar orden de compra"
                               >
                                 <ShoppingCart className="w-3.5 h-3.5" />
@@ -802,7 +876,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenOrdenCompra(ref)}
-                          className="px-3 py-1.5 bg-blue-50 text-[#1D7EAE] font-semibold rounded-lg text-xs shrink-0 flex items-center gap-1"
+                          className="px-3 py-1.5 bg-blue-50 text-[#1497F2] font-semibold rounded-lg text-xs shrink-0 flex items-center gap-1"
                         >
                           <ShoppingCart className="w-3.5 h-3.5" />
                           <span>Comprar</span>
@@ -832,7 +906,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(ref)}
-                            className="text-[#1D7EAE] font-semibold"
+                            className="text-[#1497F2] font-semibold"
                           >
                             Editar
                           </button>
@@ -864,10 +938,10 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
       {/* ======================================================== */}
       {activeMainTab === 'ordenes-compra' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-[#DDE4E8] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-bold text-[#231F20]">Órdenes de compra a proveedores</h3>
-              <p className="text-xs text-[#5F6B73]">
+              <h3 className="text-base font-bold text-[#06345A]">Órdenes de compra a proveedores</h3>
+              <p className="text-xs text-[#6B7280]">
                 Genera solicitudes de reabastecimiento y regístralas al inventario en un solo clic al recibirlas.
               </p>
             </div>
@@ -879,16 +953,16 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   handleOpenOrdenCompra(refacciones[0]);
                 }
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1497F2] hover:bg-[#06345A] text-white rounded-lg text-xs font-semibold cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Nueva orden de compra</span>
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-[#231F20]">
+              <table className="w-full text-left text-xs text-[#06345A]">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Folio</th>
@@ -905,7 +979,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   {ordenesCompra.length > 0 ? (
                     ordenesCompra.map((oc) => (
                       <tr key={oc.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1D7EAE]">{oc.folio}</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#1497F2]">{oc.folio}</td>
                         <td className="py-3.5 px-4">
                           <div className="font-semibold text-slate-900">{oc.refaccionNombre}</div>
                           {oc.refaccionCodigo && (
@@ -987,7 +1061,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
             className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-6 flex flex-col max-h-[92vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
                   {editingRefaccion ? `Editar refacción (${editingRefaccion.codigo})` : 'Agregar refacción'}
@@ -1017,8 +1091,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     value={formCodigo}
                     onChange={(e) => setFormCodigo(e.target.value)}
                     placeholder="Ej. FIL-ACE-01"
-                    className={`w-full px-3 py-2 border rounded-lg uppercase font-mono text-[#231F20] bg-white ${
-                      formErrors.codigo ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg uppercase font-mono text-[#06345A] bg-white ${
+                      formErrors.codigo ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.codigo && <p className="text-red-600 mt-1">{formErrors.codigo}</p>}
@@ -1033,8 +1107,8 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     value={formNombre}
                     onChange={(e) => setFormNombre(e.target.value)}
                     placeholder="Ej. Filtro de aceite sintético"
-                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] bg-white ${
-                      formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg text-[#06345A] bg-white ${
+                      formErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.nombre && <p className="text-red-600 mt-1">{formErrors.nombre}</p>}
@@ -1043,7 +1117,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
               {/* Precios y costeo */}
               <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl space-y-3">
-                <div className="font-bold text-xs text-[#1D7EAE] flex items-center gap-1.5">
+                <div className="font-bold text-xs text-[#1497F2] flex items-center gap-1.5">
                   <DollarSign className="w-4 h-4" />
                   <span>Costeo y precios por pieza</span>
                 </div>
@@ -1060,7 +1134,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                       value={formPrecioCompra}
                       onChange={(e) => setFormPrecioCompra(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white font-mono"
+                      className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white font-mono"
                     />
                     {formErrors.precioCompra && (
                       <p className="text-red-600 mt-1">{formErrors.precioCompra}</p>
@@ -1078,7 +1152,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                       value={formPrecioVenta}
                       onChange={(e) => setFormPrecioVenta(e.target.value)}
                       placeholder="0.00"
-                      className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white font-mono"
+                      className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white font-mono"
                     />
                     {formErrors.precioVenta && (
                       <p className="text-red-600 mt-1">{formErrors.precioVenta}</p>
@@ -1119,7 +1193,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                       step="1"
                       value={formExistencias}
                       onChange={(e) => setFormExistencias(e.target.value)}
-                      className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                      className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                     />
                   </div>
                 ) : (
@@ -1144,7 +1218,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     step="1"
                     value={formMinimo}
                     onChange={(e) => setFormMinimo(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                   />
                 </div>
               </div>
@@ -1158,7 +1232,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     value={formProveedor}
                     onChange={(e) => setFormProveedor(e.target.value)}
                     placeholder="Ej. Distribuidora Central"
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                   />
                 </div>
 
@@ -1169,7 +1243,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     value={formTelefonoProveedor}
                     onChange={(e) => setFormTelefonoProveedor(e.target.value)}
                     placeholder="Ej. 555-123-4567"
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                   />
                 </div>
 
@@ -1181,7 +1255,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     value={formDiasEntrega}
                     onChange={(e) => setFormDiasEntrega(e.target.value)}
                     placeholder="2"
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                   />
                 </div>
 
@@ -1191,7 +1265,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     type="date"
                     value={formFechaUltimaCompra}
                     onChange={(e) => setFormFechaUltimaCompra(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                   />
                 </div>
               </div>
@@ -1206,21 +1280,21 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   value={formCompatibilidad}
                   onChange={(e) => setFormCompatibilidad(e.target.value)}
                   placeholder="Ej. Toyota Corolla 2018-2023, Nissan Versa 2019-2024, motor 1.6L - 2.0L"
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={refaccionFormDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg font-medium text-[#6B7280] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] text-white font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
                   Guardar refacción
                 </button>
@@ -1242,9 +1316,9 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
             className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-[#1D7EAE]" />
+                <ShoppingCart className="w-5 h-5 text-[#1497F2]" />
                 <h3 className="text-base font-bold text-slate-900">
                   Generar orden de compra
                 </h3>
@@ -1278,7 +1352,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   step="1"
                   value={ocCantidad}
                   onChange={(e) => setOcCantidad(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg font-bold text-slate-900"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg font-bold text-slate-900"
                 />
                 {ocErrors.cantidad && <p className="text-red-600 mt-1">{ocErrors.cantidad}</p>}
               </div>
@@ -1292,7 +1366,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     type="text"
                     value={ocProveedor}
                     onChange={(e) => setOcProveedor(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
                   />
                   {ocErrors.proveedor && <p className="text-red-600 mt-1">{ocErrors.proveedor}</p>}
                 </div>
@@ -1305,7 +1379,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     step="0.01"
                     value={ocCostoUnitario}
                     onChange={(e) => setOcCostoUnitario(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg font-mono"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg font-mono"
                   />
                 </div>
               </div>
@@ -1317,7 +1391,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     type="date"
                     value={ocFecha}
                     onChange={(e) => setOcFecha(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
                   />
                 </div>
 
@@ -1328,7 +1402,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                     value={ocTelefono}
                     onChange={(e) => setOcTelefono(e.target.value)}
                     placeholder="555-000-0000"
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
                   />
                 </div>
               </div>
@@ -1341,24 +1415,24 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                 return (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
                     <span className="font-semibold text-blue-900">Total de la orden:</span>
-                    <span className="font-mono font-bold text-base text-[#1D7EAE]">
+                    <span className="font-mono font-bold text-base text-[#1497F2]">
                       ${tot.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                     </span>
                   </div>
                 );
               })()}
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={ordenCompraModalDismiss.handleClose}
-                  className="px-4 py-2 border border-[#DDE4E8] rounded-lg font-medium text-[#5F6B73]"
+                  className="px-4 py-2 border border-[#E5E7EB] rounded-lg font-medium text-[#6B7280]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs"
+                  className="px-5 py-2 bg-[#1497F2] hover:bg-[#06345A] text-white font-semibold rounded-lg shadow-xs"
                 >
                   Generar orden pendiente
                 </button>
@@ -1409,7 +1483,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   step="1"
                   value={movCantidad}
                   onChange={(e) => setMovCantidad(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg font-bold text-slate-900"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg font-bold text-slate-900"
                 />
               </div>
 
@@ -1419,24 +1493,24 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   type="text"
                   value={movMotivo}
                   onChange={(e) => setMovMotivo(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
                 />
               </div>
 
               {movError && <p className="text-red-600 text-[11px]">{movError}</p>}
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={movementDismiss.handleClose}
-                  className="px-4 py-2 border border-[#DDE4E8] rounded-lg font-medium text-[#5F6B73]"
+                  className="px-4 py-2 border border-[#E5E7EB] rounded-lg font-medium text-[#6B7280]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="px-5 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs"
+                  className="px-5 py-2 bg-[#1497F2] hover:bg-[#06345A] text-white font-semibold rounded-lg shadow-xs"
                 >
                   Confirmar {movementModal.tipo.toLowerCase()}
                 </button>
@@ -1514,6 +1588,21 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
           </div>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* MODAL: ANÁLISIS DE INVENTARIO CON IA */}
+      {/* ======================================================== */}
+      <AnalisisInventarioModal
+        isOpen={isAnalisisModalOpen}
+        onClose={() => setIsAnalisisModalOpen(false)}
+        refacciones={refacciones}
+        movimientos={movimientos}
+        ordenesPendientes={ordenesPendientes}
+        vehiculos={vehiculos}
+        ordenesCompra={ordenesCompra}
+        onCrearOrdenCompraBorrador={handleCrearOrdenCompraDesdeIA}
+        onVerRefaccionDetalle={handleVerRefaccionDesdeIA}
+      />
     </section>
   );
 };

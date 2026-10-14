@@ -286,17 +286,17 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header IOT Technologies */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Encabezado TUNNO */}
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
             <CalendarIcon className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
               Citas
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Gestión y seguimiento de citas programadas en el taller.
             </p>
           </div>
@@ -306,7 +306,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
           >
             <Plus className="w-4 h-4" />
             <span>Agendar cita</span>
@@ -324,19 +324,19 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
           />
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex rounded-lg border border-[#DDE4E8] bg-white p-1 text-xs sm:text-sm font-medium">
+        <div className="flex rounded-lg border border-[#E5E7EB] bg-white p-1 text-xs sm:text-sm font-medium">
           <button
             type="button"
             onClick={() => setFilter('proximas')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'proximas'
-                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                : 'text-[#5F6B73] hover:text-[#231F20]'
+                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
+                : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Próximas
@@ -346,8 +346,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
             onClick={() => setFilter('todas')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'todas'
-                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                : 'text-[#5F6B73] hover:text-[#231F20]'
+                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
+                : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Todas
@@ -357,8 +357,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
             onClick={() => setFilter('canceladas')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filter === 'canceladas'
-                ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                : 'text-[#5F6B73] hover:text-[#231F20]'
+                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
+                : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Canceladas
@@ -367,12 +367,12 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
       </div>
 
       {/* Citas Table & Mobile View */}
-      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
         {/* Desktop View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-[#F6F8FA] border-b border-[#DDE4E8] text-[#5F6B73] font-semibold text-xs uppercase tracking-wider">
+              <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#6B7280] font-semibold text-xs uppercase tracking-wider">
                 <th className="py-3.5 px-5">Fecha y hora</th>
                 <th className="py-3.5 px-5">Cliente y vehículo</th>
                 <th className="py-3.5 px-5">Servicio solicitado</th>
@@ -380,7 +380,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                 <th className="py-3.5 px-5 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#DDE4E8]">
+            <tbody className="divide-y divide-[#E5E7EB]">
               {filteredCitas.length > 0 ? (
                 filteredCitas.map((cita) => {
                   const client = clienteMap.get(cita.clienteId);
@@ -388,14 +388,14 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                   const isMenuOpen = openMenuId === cita.id;
 
                   return (
-                    <tr key={cita.id} className="hover:bg-[#F6F8FA]/80 transition-colors">
+                    <tr key={cita.id} className="hover:bg-[#F4F6F8]/80 transition-colors">
                       {/* Fecha y hora */}
                       <td className="py-3.5 px-5 whitespace-nowrap">
-                        <div className="font-semibold text-[#231F20] flex items-center gap-1.5">
+                        <div className="font-semibold text-[#06345A] flex items-center gap-1.5">
                           <CalendarIcon className="w-4 h-4 text-blue-600" />
                           <span>{cita.fecha}</span>
                         </div>
-                        <div className="text-xs text-[#5F6B73] flex items-center gap-1.5 mt-0.5">
+                        <div className="text-xs text-[#6B7280] flex items-center gap-1.5 mt-0.5">
                           <Clock className="w-3.5 h-3.5 text-slate-400" />
                           <span>{cita.hora}</span>
                         </div>
@@ -403,14 +403,14 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
                       {/* Cliente y vehículo */}
                       <td className="py-3.5 px-5">
-                        <div className="font-semibold text-[#231F20]">
+                        <div className="font-semibold text-[#06345A]">
                           {client ? client.nombre : 'Cliente no encontrado'}
                         </div>
-                        <div className="text-xs text-[#5F6B73] mt-0.5">
+                        <div className="text-xs text-[#6B7280] mt-0.5">
                           {veh ? (
                             <span>
                               {veh.marca} {veh.modelo}{' '}
-                              <strong className="font-mono text-[#231F20] bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#DDE4E8]">
+                              <strong className="font-mono text-[#06345A] bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#E5E7EB]">
                                 {veh.placas}
                               </strong>
                             </span>
@@ -421,7 +421,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                       </td>
 
                       {/* Servicio solicitado */}
-                      <td className="py-3.5 px-5 text-[#5F6B73] max-w-xs">
+                      <td className="py-3.5 px-5 text-[#6B7280] max-w-xs">
                         <span className="line-clamp-2">{cita.servicio}</span>
                       </td>
 
@@ -444,7 +444,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(cita)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer min-h-[36px]"
                           >
                             <Pencil className="w-3.5 h-3.5 text-blue-600" />
                             <span>Editar</span>
@@ -454,7 +454,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                             <button
                               type="button"
                               onClick={() => setOpenMenuId(isMenuOpen ? null : cita.id)}
-                              className="p-1.5 text-slate-400 hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                              className="p-1.5 text-slate-400 hover:text-[#06345A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                               title="Más opciones"
                               aria-label="Más opciones"
                             >
@@ -467,7 +467,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                                   className="fixed inset-0 z-20"
                                   onClick={() => setOpenMenuId(null)}
                                 />
-                                <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                   {cita.estado === 'Programada' && (
                                     <button
                                       type="button"
@@ -492,7 +492,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-[#5F6B73]">
+                  <td colSpan={5} className="py-8 text-center text-[#6B7280]">
                     {searchQuery
                       ? 'No se encontraron citas que coincidan con la búsqueda.'
                       : filter === 'proximas'
@@ -508,7 +508,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
         </div>
 
         {/* Mobile View: Bloques legibles sin scroll horizontal */}
-        <div className="md:hidden divide-y divide-[#DDE4E8]">
+        <div className="md:hidden divide-y divide-[#E5E7EB]">
           {filteredCitas.length > 0 ? (
             filteredCitas.map((cita) => {
               const client = clienteMap.get(cita.clienteId);
@@ -520,7 +520,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-[#231F20] text-sm flex items-center gap-1.5">
+                        <span className="font-semibold text-[#06345A] text-sm flex items-center gap-1.5">
                           <CalendarIcon className="w-3.5 h-3.5 text-blue-600" />
                           <span>{cita.fecha}</span> {cita.hora}
                         </span>
@@ -534,18 +534,18 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                           </span>
                         )}
                       </div>
-                      <p className="font-semibold text-[#231F20] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
-                      <p className="text-xs text-[#5F6B73] mt-0.5">
+                      <p className="font-semibold text-[#06345A] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
+                      <p className="text-xs text-[#6B7280] mt-0.5">
                         {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
                       </p>
-                      <p className="text-xs text-[#5F6B73] mt-1 line-clamp-2">{cita.servicio}</p>
+                      <p className="text-xs text-[#6B7280] mt-1 line-clamp-2">{cita.servicio}</p>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(cita)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white border border-[#DDE4E8] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#06345A] bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
                       >
                         <Pencil className="w-3.5 h-3.5 text-blue-600" />
                         <span>Editar</span>
@@ -556,7 +556,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => setOpenMenuId(isMenuOpen ? null : cita.id)}
-                            className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#231F20] rounded-lg cursor-pointer"
+                            className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#06345A] rounded-lg cursor-pointer"
                             aria-label="Más opciones"
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -568,7 +568,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                                 className="fixed inset-0 z-20"
                                 onClick={() => setOpenMenuId(null)}
                               />
-                              <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                              <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -591,7 +591,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               );
             })
           ) : (
-            <div className="p-6 text-center text-xs text-[#5F6B73]">
+            <div className="p-6 text-center text-xs text-[#6B7280]">
               {searchQuery
                 ? 'No se encontraron citas que coincidan con la búsqueda.'
                 : filter === 'proximas'
@@ -610,15 +610,15 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           onClick={citaFormDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#231F20]">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150 max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#06345A]">
                 {editingCita ? 'Editar cita' : 'Agendar cita'}
               </h3>
               <button
                 type="button"
                 onClick={citaFormDismiss.handleClose}
-                className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                className="text-slate-400 hover:text-[#06345A] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -636,7 +636,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                     autoFocus
                     value={formClientId}
                     onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   >
                     <option value="" disabled>Seleccione un cliente</option>
                     {clientes.map((c) => (
@@ -674,8 +674,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
               {/* Selección de Vehículo */}
               <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                  Vehículo del cliente <span className="text-[#1D7EAE]">*</span>
+                <label className="block text-xs font-semibold text-[#06345A] mb-1.5">
+                  Vehículo del cliente <span className="text-[#1497F2]">*</span>
                 </label>
                 {availableVehicles.length > 0 ? (
                   <select
@@ -684,7 +684,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                       setFormVehiculoId(e.target.value);
                       if (formErrors.vehiculoId) setFormErrors((prev) => ({ ...prev, vehiculoId: '' }));
                     }}
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   >
                     <option value="" disabled>Seleccione un vehículo</option>
                     {availableVehicles.map((v) => (
@@ -705,7 +705,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
               {/* Apartado desplegable opcional: Servicio del catálogo */}
               <details className="group pt-1" open={Boolean(selectedCatalogId)}>
-                <summary className="text-xs text-[#5F6B73] hover:text-[#231F20] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                <summary className="text-xs text-[#6B7280] hover:text-[#06345A] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
                   <span>Datos opcionales (seleccionar del catálogo de servicios)</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
                 </summary>
@@ -713,7 +713,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                   <select
                     value={selectedCatalogId}
                     onChange={(e) => handleSelectCatalogService(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   >
                     <option value="">Seleccionar del catálogo o redactar abajo...</option>
                     {activeCatalogServices.map((s) => (
@@ -727,8 +727,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
 
               {/* Servicio solicitado */}
               <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                  Servicio solicitado <span className="text-[#1D7EAE]">*</span>
+                <label className="block text-xs font-semibold text-[#06345A] mb-1.5">
+                  Servicio solicitado <span className="text-[#1497F2]">*</span>
                 </label>
                 <textarea
                   rows={2}
@@ -738,8 +738,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                     if (formErrors.servicio) setFormErrors((prev) => ({ ...prev, servicio: '' }));
                   }}
                   placeholder="Ej. Afinación mayor, cambio de aceite y filtro"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                    formErrors.servicio ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                    formErrors.servicio ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                   }`}
                 />
                 {formErrors.servicio && (
@@ -750,8 +750,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               {/* Fecha y Hora */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                    Fecha <span className="text-[#1D7EAE]">*</span>
+                  <label className="block text-xs font-semibold text-[#06345A] mb-1.5">
+                    Fecha <span className="text-[#1497F2]">*</span>
                   </label>
                   <input
                     type="date"
@@ -760,8 +760,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                       setFormFecha(e.target.value);
                       if (formErrors.fecha) setFormErrors((prev) => ({ ...prev, fecha: '' }));
                     }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                      formErrors.fecha ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                      formErrors.fecha ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.fecha && (
@@ -770,8 +770,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                    Hora <span className="text-[#1D7EAE]">*</span>
+                  <label className="block text-xs font-semibold text-[#06345A] mb-1.5">
+                    Hora <span className="text-[#1497F2]">*</span>
                   </label>
                   <input
                     type="time"
@@ -780,8 +780,8 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                       setFormHora(e.target.value);
                       if (formErrors.hora) setFormErrors((prev) => ({ ...prev, hora: '' }));
                     }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 ${
-                      formErrors.hora ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                      formErrors.hora ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.hora && (
@@ -791,18 +791,18 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               </div>
 
               {/* Botones */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={citaFormDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#06345A] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={clientes.length === 0 || availableVehicles.length === 0}
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]"
                 >
                   Guardar
                 </button>
@@ -818,14 +818,14 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           onClick={cancelConfirmDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xl w-full max-w-sm overflow-hidden p-6 space-y-4">
             <div className="flex items-center gap-3 text-amber-600">
               <div className="p-2 bg-amber-50 rounded-full border border-amber-200">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-[#231F20]">¿Cancelar esta cita?</h3>
+              <h3 className="text-lg font-bold text-[#06345A]">¿Cancelar esta cita?</h3>
             </div>
-            <p className="text-sm text-[#5F6B73]">
+            <p className="text-sm text-[#6B7280]">
               La cita programada para el <strong>{citaToCancel.fecha}</strong> a las{' '}
               <strong>{citaToCancel.hora}</strong> pasará al estado "Cancelada". Se conservará el registro en el sistema.
             </p>
@@ -833,7 +833,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
               <button
                 type="button"
                 onClick={cancelConfirmDismiss.handleClose}
-                className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#06345A] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
               >
                 No, volver
               </button>
@@ -843,7 +843,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
                   onCancelCita(citaToCancel.id);
                   setCitaToCancel(null);
                 }}
-                className="px-4 py-2.5 bg-[#0032A0] hover:bg-rose-800 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                className="px-4 py-2.5 bg-[#06345A] hover:bg-rose-800 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
               >
                 Sí, cancelar cita
               </button>

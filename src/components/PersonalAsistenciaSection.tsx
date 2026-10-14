@@ -30,7 +30,7 @@ import {
   TipoAsistencia,
   ConfiguracionTaller,
 } from '../types';
-import { IotLogo } from './IotLogo';
+import { TunnoLogo } from './TunnoLogo';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface PersonalAsistenciaSectionProps {
@@ -619,17 +619,17 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
 
   return (
     <section className="space-y-6">
-      {/* Encabezado IOT Technologies para Personal y asistencia */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Encabezado TUNNO para Personal y asistencia */}
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
               Personal y asistencia
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Gestión del equipo de trabajo y registro de asistencia mediante código QR.
             </p>
           </div>
@@ -653,7 +653,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Agregar empleado</span>
@@ -676,7 +676,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
           onClick={() => setActiveTab('personal')}
           className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-colors flex items-center gap-2 ${
             activeTab === 'personal'
-              ? 'border-[#1D7EAE] text-[#1D7EAE]'
+              ? 'border-[#1497F2] text-[#1497F2]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -689,7 +689,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
           onClick={() => setActiveTab('historial')}
           className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-colors flex items-center gap-2 ${
             activeTab === 'historial'
-              ? 'border-[#1D7EAE] text-[#1D7EAE]'
+              ? 'border-[#1497F2] text-[#1497F2]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -710,7 +710,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por nombre, puesto o código QR..."
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE] transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20 focus:border-[#1497F2] transition-all"
               />
             </div>
 
@@ -720,7 +720,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 onClick={() => setFilterEstado('activos')}
                 className={`px-3 py-1.5 rounded-md transition-colors ${
                   filterEstado === 'activos'
-                    ? 'bg-[#1D7EAE] text-white font-semibold shadow-2xs'
+                    ? 'bg-[#1497F2] text-white font-semibold shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
@@ -731,7 +731,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 onClick={() => setFilterEstado('inactivos')}
                 className={`px-3 py-1.5 rounded-md transition-colors ${
                   filterEstado === 'inactivos'
-                    ? 'bg-[#1D7EAE] text-white font-semibold shadow-2xs'
+                    ? 'bg-[#1497F2] text-white font-semibold shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
@@ -742,7 +742,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 onClick={() => setFilterEstado('todos')}
                 className={`px-3 py-1.5 rounded-md transition-colors ${
                   filterEstado === 'todos'
-                    ? 'bg-[#1D7EAE] text-white font-semibold shadow-2xs'
+                    ? 'bg-[#1497F2] text-white font-semibold shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
@@ -840,7 +840,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                                           setOpenMenuId(null);
                                           setViewingCredentialEmp(emp);
                                         }}
-                                        className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors"
+                                        className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors"
                                       >
                                         <IdCard className="w-4 h-4 text-slate-500" />
                                         <span>Ver credencial</span>
@@ -852,7 +852,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                                           setOpenMenuId(null);
                                           setViewingCredentialEmp(emp);
                                         }}
-                                        className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors"
+                                        className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors"
                                       >
                                         <QrCode className="w-4 h-4 text-slate-500" />
                                         <span>Descargar o imprimir QR</span>
@@ -864,7 +864,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                                           setOpenMenuId(null);
                                           setSingleEmpHistory(emp);
                                         }}
-                                        className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors border-t border-slate-100"
+                                        className="w-full px-3 py-2 text-slate-700 hover:bg-rose-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors border-t border-slate-100"
                                       >
                                         <History className="w-4 h-4 text-slate-500" />
                                         <span>Ver asistencias</span>
@@ -965,7 +965,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                                       setOpenMenuId(null);
                                       setViewingCredentialEmp(emp);
                                     }}
-                                    className="w-full px-3 py-2.5 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2"
+                                    className="w-full px-3 py-2.5 text-slate-700 hover:bg-rose-50 hover:text-[#1497F2] flex items-center gap-2"
                                   >
                                     <IdCard className="w-4 h-4 text-slate-500" />
                                     <span>Ver credencial</span>
@@ -977,7 +977,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                                       setOpenMenuId(null);
                                       setViewingCredentialEmp(emp);
                                     }}
-                                    className="w-full px-3 py-2.5 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2"
+                                    className="w-full px-3 py-2.5 text-slate-700 hover:bg-rose-50 hover:text-[#1497F2] flex items-center gap-2"
                                   >
                                     <QrCode className="w-4 h-4 text-slate-500" />
                                     <span>Descargar / imprimir QR</span>
@@ -989,7 +989,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                                       setOpenMenuId(null);
                                       setSingleEmpHistory(emp);
                                     }}
-                                    className="w-full px-3 py-2.5 text-slate-700 hover:bg-rose-50 hover:text-[#1D7EAE] flex items-center gap-2 border-t border-slate-100"
+                                    className="w-full px-3 py-2.5 text-slate-700 hover:bg-rose-50 hover:text-[#1497F2] flex items-center gap-2 border-t border-slate-100"
                                   >
                                     <History className="w-4 h-4 text-slate-500" />
                                     <span>Ver asistencias</span>
@@ -1027,7 +1027,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
               <select
                 value={filterHistEmpleadoId}
                 onChange={(e) => setFilterHistEmpleadoId(e.target.value)}
-                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1D7EAE] focus:border-[#1D7EAE]"
+                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1497F2] focus:border-[#1497F2]"
               >
                 <option value="">Todos los empleados</option>
                 {empleados.map((e) => (
@@ -1046,7 +1046,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 type="date"
                 value={filterHistFecha}
                 onChange={(e) => setFilterHistFecha(e.target.value)}
-                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1D7EAE] focus:border-[#1D7EAE]"
+                className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1497F2] focus:border-[#1497F2]"
               />
             </div>
 
@@ -1088,7 +1088,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                         <td className="py-3.5 px-5 whitespace-nowrap font-medium text-slate-800">
                           {item.fecha}{' '}
                           {item.esHoy && (
-                            <span className="ml-1.5 px-1.5 py-0.5 bg-rose-50 border border-rose-200 text-[#0032A0] rounded font-bold text-[10px]">
+                            <span className="ml-1.5 px-1.5 py-0.5 bg-rose-50 border border-rose-200 text-[#06345A] rounded font-bold text-[10px]">
                               Hoy
                             </span>
                           )}
@@ -1140,7 +1140,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                       <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
                         {item.fecha}
                         {item.esHoy && (
-                          <span className="px-1.5 py-0.2 bg-rose-50 border border-rose-200 text-[#0032A0] rounded font-bold text-[10px]">
+                          <span className="px-1.5 py-0.2 bg-rose-50 border border-rose-200 text-[#06345A] rounded font-bold text-[10px]">
                             Hoy
                           </span>
                         )}
@@ -1223,7 +1223,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                     if (formError) setFormError(null);
                   }}
                   placeholder="Ej. Juan Pérez González"
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20 focus:border-[#1497F2]"
                 />
               </div>
 
@@ -1239,7 +1239,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                     if (formError) setFormError(null);
                   }}
                   placeholder="Ej. Mecánico automotriz, Asesor de servicio..."
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 focus:border-[#1D7EAE]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20 focus:border-[#1497F2]"
                 />
               </div>
 
@@ -1254,7 +1254,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                       name="estadoEmpleado"
                       checked={formActivo}
                       onChange={() => setFormActivo(true)}
-                      className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
+                      className="text-[#1497F2] focus:ring-[#1497F2]"
                     />
                     <span className="font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                       Activo
@@ -1266,7 +1266,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                       name="estadoEmpleado"
                       checked={!formActivo}
                       onChange={() => setFormActivo(false)}
-                      className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
+                      className="text-[#1497F2] focus:ring-[#1497F2]"
                     />
                     <span className="font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                       Inactivo
@@ -1294,7 +1294,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[44px] cursor-pointer"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[44px] cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -1315,13 +1315,13 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Controls (No print) */}
-            <div className="no-print bg-white border-b border-[#DDE4E8] text-[#231F20] px-5 py-3.5 flex items-center justify-between">
+            <div className="no-print bg-white border-b border-[#E5E7EB] text-[#06345A] px-5 py-3.5 flex items-center justify-between">
               <span className="font-semibold text-sm">Credencial del empleado</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded text-xs font-semibold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1497F2] hover:bg-[#06345A] text-white rounded text-xs font-semibold transition-colors cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Imprimir</span>
@@ -1329,7 +1329,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 <button
                   type="button"
                   onClick={credencialDismiss.handleClose}
-                  className="p-1 text-slate-400 hover:text-[#231F20] rounded transition-colors cursor-pointer"
+                  className="p-1 text-slate-400 hover:text-[#06345A] rounded transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1340,10 +1340,10 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
             <div className="p-6 bg-white flex flex-col items-center text-center space-y-4">
               <div className="border-b border-slate-200 pb-3 w-full flex flex-col items-center">
                 <div className="mb-2">
-                  <IotLogo size="sm" variant="dark" />
+                  <TunnoLogo variant="positive" format="horizontal" size="sm" />
                 </div>
-                <span className="text-xs uppercase tracking-widest text-[#1D7EAE] font-bold block">
-                  {configuracion?.nombre || 'IOT Technologies'}
+                <span className="text-xs uppercase tracking-widest text-[#1497F2] font-heading font-bold block">
+                  {configuracion?.nombre || 'TUNNO'}
                 </span>
                 <span className="text-[11px] text-slate-400">Credencial de identificación</span>
               </div>
@@ -1368,7 +1368,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 <h4 className="text-lg font-bold text-slate-900 leading-tight">
                   {viewingCredentialEmp.nombre}
                 </h4>
-                <p className="text-xs font-semibold text-[#0032A0] bg-rose-50 px-2.5 py-0.5 rounded-full inline-block">
+                <p className="text-xs font-semibold text-[#06345A] bg-rose-50 px-2.5 py-0.5 rounded-full inline-block">
                   {viewingCredentialEmp.puesto}
                 </p>
                 <p className="text-xs font-mono font-bold text-slate-400 pt-1">
@@ -1481,7 +1481,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-[#1D7EAE]" />
+                <QrCode className="w-5 h-5 text-[#1497F2]" />
                 <h3 className="font-bold text-slate-900 text-base">
                   Registrar asistencia con QR
                 </h3>
@@ -1557,7 +1557,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                             <button
                               type="button"
                               onClick={startCamera}
-                              className="px-4 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors"
+                              className="px-4 py-2 bg-[#1497F2] hover:bg-[#06345A] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors"
                             >
                               Activar cámara para escanear
                             </button>
@@ -1588,7 +1588,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                     <div className="space-y-3">
                       <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-8 border-2 border-dashed border-slate-300 hover:border-[#1D7EAE] rounded-xl text-center cursor-pointer transition-colors bg-slate-50/70 hover:bg-slate-50"
+                        className="p-8 border-2 border-dashed border-slate-300 hover:border-[#1497F2] rounded-xl text-center cursor-pointer transition-colors bg-slate-50/70 hover:bg-slate-50"
                       >
                         <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                         <p className="text-xs font-semibold text-slate-700">
@@ -1621,7 +1621,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                 <form onSubmit={handleConfirmAttendance} className="space-y-4 animate-in fade-in">
                   <div className="p-4 bg-rose-50/80 border border-rose-200 rounded-xl space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] uppercase font-bold text-[#1D7EAE] tracking-wider">
+                      <span className="text-[11px] uppercase font-bold text-[#1497F2] tracking-wider">
                         Código QR detectado
                       </span>
                       <span className="font-mono font-bold text-slate-600">
@@ -1660,7 +1660,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                             setProposedTipo('Entrada');
                             setConfirmError(null);
                           }}
-                          className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
+                          className="text-[#1497F2] focus:ring-[#1497F2]"
                         />
                       </label>
 
@@ -1681,7 +1681,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                             setProposedTipo('Salida');
                             setConfirmError(null);
                           }}
-                          className="text-[#1D7EAE] focus:ring-[#1D7EAE]"
+                          className="text-[#1497F2] focus:ring-[#1497F2]"
                         />
                       </label>
                     </div>
@@ -1713,7 +1713,7 @@ export const PersonalAsistenciaSection: React.FC<PersonalAsistenciaSectionProps>
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors"
+                      className="px-5 py-2 bg-[#1497F2] hover:bg-[#06345A] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors"
                     >
                       Confirmar registro
                     </button>

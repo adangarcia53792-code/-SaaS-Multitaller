@@ -101,7 +101,7 @@ export function ConfiguracionSection({
   onChangePasswordUsuario,
 }: ConfiguracionSectionProps) {
   // Section 1: Workshop data form
-  const [nombre, setNombre] = useState(configuracion.nombre || 'IOT Technologies');
+  const [nombre, setNombre] = useState(configuracion.nombre || 'TUNNO');
   const [telefono, setTelefono] = useState(configuracion.telefono || '');
   const [direccion, setDireccion] = useState(configuracion.direccion || '');
   const [nombreError, setNombreError] = useState<string | null>(null);
@@ -128,7 +128,7 @@ export function ConfiguracionSection({
 
   // Sync internal state if props change
   React.useEffect(() => {
-    setNombre(configuracion.nombre || 'IOT Technologies');
+    setNombre(configuracion.nombre || 'TUNNO');
     setTelefono(configuracion.telefono || '');
     setDireccion(configuracion.direccion || '');
   }, [configuracion]);
@@ -157,7 +157,7 @@ export function ConfiguracionSection({
       version: '1.0',
       fechaExportacion: new Date().toISOString(),
       configuracion: {
-        nombre: nombre.trim() || 'IOT Technologies',
+        nombre: nombre.trim() || 'TUNNO',
         telefono: telefono.trim() || undefined,
         direccion: direccion.trim() || undefined,
       },
@@ -599,17 +599,17 @@ export function ConfiguracionSection({
 
   return (
     <section className="space-y-6">
-      {/* Encabezado IOT Technologies para Configuración */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Encabezado TUNNO para Configuración */}
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#73C7FF]/20 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
             <Sliders className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] tracking-tight">
               Configuración
             </h2>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Ajustes generales del taller, usuarios y respaldo de la información.
             </p>
           </div>
@@ -656,12 +656,12 @@ export function ConfiguracionSection({
       )}
 
       {/* 1. DATOS DEL TALLER */}
-      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
-        <div className="px-6 py-4 bg-[#F6F8FA] border-b border-[#DDE4E8] flex items-center gap-2.5">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
+        <div className="px-6 py-4 bg-[#F4F6F8] border-b border-[#E5E7EB] flex items-center gap-2.5">
           <Building2 className="w-5 h-5 text-slate-700" />
           <div>
-            <h3 className="font-bold text-[#231F20] text-base">Datos del taller</h3>
-            <p className="text-xs text-[#5F6B73]">
+            <h3 className="font-bold text-[#06345A] text-base">Datos del taller</h3>
+            <p className="text-xs text-[#6B7280]">
               Información de identificación reflejada en el encabezado e impresiones.
             </p>
           </div>
@@ -679,9 +679,9 @@ export function ConfiguracionSection({
                 setNombre(e.target.value);
                 if (nombreError) setNombreError(null);
               }}
-              placeholder="Ej. IOT Technologies"
-              className={`w-full px-3.5 py-2.5 bg-white border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all ${
-                nombreError ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+              placeholder="Ej. TUNNO"
+              className={`w-full px-3.5 py-2.5 bg-white border rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] transition-all ${
+                nombreError ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
               }`}
             />
             {nombreError && <p className="text-xs text-red-600 mt-1">{nombreError}</p>}
@@ -699,7 +699,7 @@ export function ConfiguracionSection({
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
                   placeholder="Ej. 555-123-4567"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] transition-all"
                 />
               </div>
             </div>
@@ -715,7 +715,7 @@ export function ConfiguracionSection({
                   value={direccion}
                   onChange={(e) => setDireccion(e.target.value)}
                   placeholder="Ej. Av. Central #123, Col. Industrial"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] transition-all"
                 />
               </div>
             </div>
@@ -724,7 +724,7 @@ export function ConfiguracionSection({
           <div className="pt-2 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>Guardar cambios</span>
@@ -747,19 +747,19 @@ export function ConfiguracionSection({
       )}
 
       {/* 3. RESPALDO DE LA DEMO */}
-      <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
-        <div className="px-6 py-4 bg-[#F6F8FA] border-b border-[#DDE4E8] flex items-center gap-2.5">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
+        <div className="px-6 py-4 bg-[#F4F6F8] border-b border-[#E5E7EB] flex items-center gap-2.5">
           <FileJson className="w-5 h-5 text-slate-700" />
           <div>
-            <h3 className="font-bold text-[#231F20] text-base">Respaldo de la demo</h3>
-            <p className="text-xs text-[#5F6B73]">
+            <h3 className="font-bold text-[#06345A] text-base">Respaldo de la demo</h3>
+            <p className="text-xs text-[#6B7280]">
               Descarga o restaura toda la información del taller en este navegador.
             </p>
           </div>
         </div>
 
         <div className="p-6 space-y-6">
-          <p className="text-sm text-slate-600 leading-relaxed bg-[#F6F8FA] p-4 rounded-lg border border-[#DDE4E8]">
+          <p className="text-sm text-slate-600 leading-relaxed bg-[#F4F6F8] p-4 rounded-lg border border-[#E5E7EB]">
             Los datos se guardan en este navegador. Descarga un respaldo para conservar una copia o trasladarlos a otro equipo.
           </p>
 
@@ -767,7 +767,7 @@ export function ConfiguracionSection({
             <button
               type="button"
               onClick={handleDownloadBackup}
-              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Descargar respaldo</span>
@@ -776,7 +776,7 @@ export function ConfiguracionSection({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-white border border-[#DDE4E8] hover:bg-slate-50 text-[#231F20] text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-lg bg-white border border-[#E5E7EB] hover:bg-slate-50 text-[#06345A] text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <Upload className="w-4 h-4 text-slate-500" />
               <span>Restaurar respaldo</span>
@@ -932,7 +932,7 @@ export function ConfiguracionSection({
                 <button
                   type="button"
                   onClick={handleDownloadBackup}
-                  className="font-semibold text-[#1D7EAE] hover:underline flex items-center gap-1 shrink-0 ml-2"
+                  className="font-semibold text-[#1497F2] hover:underline flex items-center gap-1 shrink-0 ml-2"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Descargar actual</span>

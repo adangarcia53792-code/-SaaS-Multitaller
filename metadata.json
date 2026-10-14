@@ -1,6 +1,6 @@
 {
   "name": "Sistema de Talleres Mecánicos",
-  "description": "Sistema de gestión para talleres mecánicos - IOT Technologies",
+  "description": "TUNNO - Tu taller. Tu control. Organiza · Controla · Haz crecer. Sistema de gestión integral para talleres mecánicos.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

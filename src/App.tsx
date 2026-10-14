@@ -37,6 +37,7 @@ import {
   Bell,
   Truck,
   Compass,
+  HelpCircle,
 } from 'lucide-react';
 import {
   SectionId,
@@ -90,7 +91,13 @@ import { HistorialVehicularSection } from './components/HistorialVehicularSectio
 import { LoginView } from './components/LoginView';
 import { CentroAvisosDrawer } from './components/CentroAvisosDrawer';
 import { RecorridoModal } from './components/RecorridoModal';
-import { IotLogo } from './components/IotLogo';
+import { GuiaInteractiva } from './components/GuiaInteractiva';
+import { GuiaMenuDropdown } from './components/GuiaMenuDropdown';
+import { GuiaBienvenidaModal } from './components/GuiaBienvenidaModal';
+import { AsistenteInteligente } from './components/AsistenteInteligente';
+import { TipoGuia, guardarPreferenciasGuia, obtenerPreferenciasGuia } from './data/guiaData';
+import { TunnoLogo } from './components/TunnoLogo';
+import { PlanMantenimientoModal } from './components/PlanMantenimientoModal';
 import { useModalDismiss, notifySectionChange } from './hooks/useModalDismiss';
 
 interface MenuItem {
@@ -128,7 +135,7 @@ const ADMINISTRACION_ITEMS: MenuItem[] = [
 
 const CONFIGURACION_ITEMS: MenuItem[] = [
   { id: 'configuracion', label: 'Configuración', icon: Settings },
-  { id: 'atencion-asistida', label: 'Atención asistida', icon: Sparkles },
+  { id: 'atencion-asistida', label: 'Seguimientos y Atención', icon: Sparkles },
 ];
 
 const ALL_MENU_ITEMS: MenuItem[] = [
@@ -161,7 +168,7 @@ const SECTION_NAMES: Record<string, string> = {
   garantias: 'Garantías',
   bitacora: 'Bitácora de Auditoría',
   configuracion: 'Configuración del taller',
-  'atencion-asistida': 'Atención Asistida',
+  'atencion-asistida': 'Seguimientos y Atención Asistida',
   usuarios: 'Usuarios y Permisos',
 };
 
@@ -528,7 +535,7 @@ const INITIAL_SEGUIMIENTOS: Seguimiento[] = [
     registroTipo: 'cotizacion',
     registroRef: 'Cotización COT-001',
     mensaje:
-      'Hola Carlos Mendoza, nos comunicamos de IOT Technologies para dar seguimiento a la cotización COT-001 de tu Toyota Corolla.',
+      'Hola Carlos Mendoza, nos comunicamos de TUNNO para dar seguimiento a la cotización COT-001 de tu Toyota Corolla.',
     fecha: getHoyDateString(),
     hora: '10:30',
     estado: 'Pendiente',
@@ -653,9 +660,9 @@ const INITIAL_ASISTENCIAS: RegistroAsistencia[] = [
 ];
 
 const INITIAL_CONFIGURACION: ConfiguracionTaller = {
-  nombre: 'IOT Technologies',
+  nombre: 'TUNNO',
   telefono: '555-432-1000',
-  direccion: 'Av. Tecnológico 1000, Edificio IOT',
+  direccion: 'Av. Tecnológico 1000, Edificio TUNNO',
 };
 
 const INITIAL_FLOTILLAS: Flotilla[] = [
@@ -871,6 +878,30 @@ export default function App() {
   });
   const [toastMensaje, setToastMensaje] = useState<string | null>(null);
   const [isRecorridoOpen, setIsRecorridoOpen] = useState(false);
+  // Estado de Guía interactiva de TUNNO
+  const [isGuiaOpen, setIsGuiaOpen] = useState(false);
+  const [tipoGuiaActiva, setTipoGuiaActiva] = useState<TipoGuia>('general');
+  const [pasoInicialGuia, setPasoInicialGuia] = useState(0);
+  const [isGuiaMenuOpen, setIsGuiaMenuOpen] = useState(false);
+  const [isGuiaBienvenidaOpen, setIsGuiaBienvenidaOpen] = useState(() => {
+    try {
+      const prefs = obtenerPreferenciasGuia();
+      return !prefs.noMostrarBienvenida;
+    } catch {
+      return false;
+    }
+  });
+
+  const handleStartGuia = (tipo: TipoGuia, pasoInicial = 0) => {
+    setTipoGuiaActiva(tipo);
+    setPasoInicialGuia(pasoInicial);
+    setIsGuiaOpen(true);
+    setIsRecorridoOpen(false);
+  };
+
+  const handleSetNoMostrarNuevamente = (noMostrar: boolean) => {
+    guardarPreferenciasGuia({ noMostrarBienvenida: noMostrar });
+  };
   const [facturacionInitialCotizacionId, setFacturacionInitialCotizacionId] = useState<string | null>(null);
 
   const handleNavigateToFacturacion = (cotizacionId?: string) => {
@@ -2000,6 +2031,7 @@ export default function App() {
   } | null>(null);
   const [openClienteMenuId, setOpenClienteMenuId] = useState<string | null>(null);
   const [openVehiculoMenuId, setOpenVehiculoMenuId] = useState<string | null>(null);
+  const [planMantenimientoVehiculo, setPlanMantenimientoVehiculo] = useState<Vehiculo | null>(null);
 
   const clienteModalDismiss = useModalDismiss({
     isOpen: isClienteModalOpen,
@@ -2596,6 +2628,41 @@ export default function App() {
     }
 
     setIsVehiculoModalOpen(false);
+  };
+
+  const handleUpdateVehiculoRecomendaciones = (
+    vehiculoId: string,
+    recomendaciones: string[],
+    proximaFecha?: string,
+    proximoKm?: string
+  ) => {
+    setVehiculos((prev) =>
+      prev.map((v) =>
+        v.id === vehiculoId
+          ? {
+              ...v,
+              recomendacionesMantenimiento: recomendaciones,
+              proximoServicioFecha: proximaFecha || v.proximoServicioFecha,
+              proximoServicioKm: proximoKm || v.proximoServicioKm,
+              ultimoPlanMantenimiento: new Date().toISOString(),
+            }
+          : v
+      )
+    );
+
+    const vObj = vehiculos.find((v) => v.id === vehiculoId);
+    registrarEvento(
+      'Actualización de plan preventivo',
+      'Vehículos',
+      `Registro de recomendaciones de mantenimiento preventivo para ${vObj?.marca} ${vObj?.modelo} (${vObj?.placas})`,
+      vehiculoId,
+      vObj?.placas,
+      [
+        { etiqueta: 'Próxima revisión', nuevo: proximaFecha || 'N/D' },
+        { etiqueta: 'Kilometraje sugerido', nuevo: proximoKm || 'N/D' },
+      ]
+    );
+    mostrarMensaje('Recomendaciones de mantenimiento guardadas en el vehículo con éxito.');
   };
 
   // Cita handlers
@@ -3294,50 +3361,58 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#F6F8FA] text-[#231F20] font-sans selection:bg-[#1D7EAE] selection:text-white">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#F9FAFB] text-[#374151] font-sans selection:bg-[#73C7FF]/30 selection:text-[#06345A]">
       {/* Mobile Header */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white text-[#231F20] border-b border-[#DDE4E8] shadow-2xs sticky top-0 z-30 no-print">
+      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white text-[#374151] border-b border-[#E5E7EB] shadow-2xs sticky top-0 z-30 no-print">
         <div className="flex items-center gap-2.5 min-w-0">
-          <IotLogo variant="dark" size="sm" />
-          <div className="h-4 w-px bg-[#DDE4E8] shrink-0" />
+          <TunnoLogo variant="positive" format="horizontal" size="xs" />
+          <div className="h-4 w-px bg-[#E5E7EB] shrink-0" />
           <div className="min-w-0">
-            <span className="font-bold text-xs text-[#231F20] tracking-tight block leading-tight truncate">
-              {configuracion.nombre || 'Taller mecánico'}
+            <span className="font-bold font-heading text-xs text-[#06345A] tracking-tight block leading-tight truncate">
+              {configuracion.nombre || 'TUNNO'}
             </span>
-            <span className="text-[10px] text-[#1D7EAE] font-semibold block truncate">
+            <span className="text-[10px] text-[#1497F2] font-semibold block truncate">
               {SECTION_NAMES[activeSection] || activeSection.replace('-', ' ')}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Botón discreto Recorrido en móvil */}
-          <button
-            type="button"
-            onClick={() => setIsRecorridoOpen(true)}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#DDE4E8] bg-white text-xs font-semibold text-[#1D7EAE] hover:bg-slate-50 transition-colors cursor-pointer min-h-[36px]"
-            title="Recorrido de presentación"
-          >
-            <Compass className="w-4 h-4 text-[#1D7EAE]" />
-            <span className="hidden sm:inline">Recorrido</span>
-          </button>
+          {/* Botón discreto Guía en móvil */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsGuiaMenuOpen(!isGuiaMenuOpen)}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] bg-white text-xs font-semibold text-[#1497F2] hover:bg-slate-50 transition-colors cursor-pointer min-h-[36px]"
+              title="Guía interactiva de TUNNO"
+            >
+              <HelpCircle className="w-4 h-4 text-[#1497F2]" />
+              <span className="hidden sm:inline">Guía</span>
+            </button>
+            <GuiaMenuDropdown
+              isOpen={isGuiaMenuOpen}
+              onClose={() => setIsGuiaMenuOpen(false)}
+              onSelectGuia={handleStartGuia}
+              userRol={sesion?.rol}
+            />
+          </div>
 
           {/* Campana de avisos (discreta) */}
           <button
             ref={mobileBellRef}
             type="button"
             onClick={() => handleOpenCentroAvisos(true)}
-            className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors cursor-pointer"
+            className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20 transition-colors cursor-pointer"
             title={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
             aria-label={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
           >
-            <Bell className="w-5 h-5 text-[#5F6B73]" />
+            <Bell className="w-5 h-5 text-[#6B7280]" />
             {totalPendientesCount > 0 ? (
-              <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#FF661B]">
+              <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#1497F2]">
                 {totalPendientesCount > 9 ? '9+' : totalPendientesCount}
               </span>
             ) : (
-              <span className="absolute top-1 right-1 min-w-[15px] h-[15px] px-0.5 rounded-full text-[9px] font-medium flex items-center justify-center text-slate-400 bg-slate-100 border border-slate-200">
+              <span className="absolute top-1 right-1 min-w-[15px] h-[15px] px-0.5 rounded-full text-[9px] font-medium flex items-center justify-center text-slate-400 bg-slate-100 border border-[#E5E7EB]">
                 0
               </span>
             )}
@@ -3346,7 +3421,7 @@ export default function App() {
           <button
             type="button"
             onClick={handleLogout}
-            className="min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+            className="min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#6B7280] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
             title="Cerrar sesión"
             aria-label="Cerrar sesión"
           >
@@ -3356,7 +3431,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#231F20] hover:bg-slate-100 transition-colors cursor-pointer"
+            className="min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#374151] hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label={isMobileMenuOpen ? 'Cerrar menú lateral' : 'Abrir menú lateral'}
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -3372,15 +3447,15 @@ export default function App() {
         />
       )}
 
-      {/* Sidebar: Menú lateral izquierdo azul profundo #0032A0 IOT Technologies */}
+      {/* Sidebar: Menú lateral izquierdo Azul Institucional #06345A TUNNO */}
       <aside
-        className={`fixed md:sticky top-0 bottom-0 left-0 z-40 w-64 md:h-screen bg-[#0032A0] text-blue-100 flex flex-col shrink-0 transition-transform duration-200 ease-in-out no-print ${
+        className={`fixed md:sticky top-0 bottom-0 left-0 z-40 w-64 md:h-screen bg-[#06345A] text-blue-100 flex flex-col shrink-0 transition-transform duration-200 ease-in-out no-print border-r border-[#0B2440] ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <IotLogo variant="light" size="sm" />
+            <TunnoLogo variant="negative" format="horizontal" size="sm" />
           </div>
           <button
             type="button"
@@ -3393,7 +3468,7 @@ export default function App() {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {/* Top-level visible: 8 opciones principales */}
+          {/* Top-level visible: opciones principales */}
           {TOP_LEVEL_MENU_ITEMS.filter((item) => isSectionAllowed(item.id, sesion?.rol)).map((item) => {
             const Icon = item.icon;
             const isSelected = activeSection === item.id;
@@ -3401,14 +3476,15 @@ export default function App() {
               <button
                 key={item.id}
                 type="button"
+                data-tour={`nav-${item.id}`}
                 onClick={() => handleSelectSection(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-all text-left min-h-[42px] cursor-pointer ${
                   isSelected
-                    ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                    : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                    ? 'bg-[#1497F2] text-white shadow-xs font-semibold font-heading'
+                    : 'text-blue-100/90 hover:bg-white/10 hover:text-white font-medium'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#73C7FF]'}`} />
                 <span className="truncate">{item.label}</span>
               </button>
             );
@@ -3425,21 +3501,21 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => toggleDropdown('catalogos')}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold font-heading uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
                         isCatalogosActive
-                          ? 'text-[#98DAE9] bg-white/10 pl-3'
-                          : 'text-blue-200 hover:text-white hover:bg-white/10'
+                          ? 'text-[#73C7FF] bg-white/10 pl-3'
+                          : 'text-blue-100/90 hover:text-white hover:bg-white/10'
                       }`}
                       aria-expanded={isOpen}
                     >
                       <span className="flex items-center gap-2">
-                        <Layers className="w-4 h-4" />
+                        <Layers className="w-4 h-4 text-[#73C7FF]" />
                         <span>Catálogos</span>
                       </span>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-blue-200" />
+                        <ChevronUp className="w-4 h-4 text-[#73C7FF]" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-blue-200" />
+                        <ChevronDown className="w-4 h-4 text-[#73C7FF]" />
                       )}
                     </button>
                     {isOpen && (
@@ -3451,14 +3527,15 @@ export default function App() {
                             <button
                               key={item.id}
                               type="button"
+                              data-tour={`nav-${item.id}`}
                               onClick={() => handleSelectSection(item.id)}
-                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
+                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm transition-all text-left min-h-[42px] cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                                  ? 'bg-[#1497F2] text-white shadow-xs font-semibold font-heading'
+                                  : 'text-blue-100/90 hover:bg-white/10 hover:text-white font-medium'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#73C7FF]'}`} />
                               <span>{item.label}</span>
                             </button>
                           );
@@ -3482,21 +3559,21 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => toggleDropdown('administracion')}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold font-heading uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
                         isAdminActive
-                          ? 'text-[#98DAE9] bg-white/10 pl-3'
-                          : 'text-blue-200 hover:text-white hover:bg-white/10'
+                          ? 'text-[#73C7FF] bg-white/10 pl-3'
+                          : 'text-blue-100/90 hover:text-white hover:bg-white/10'
                       }`}
                       aria-expanded={isOpen}
                     >
                       <span className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4" />
+                        <Building2 className="w-4 h-4 text-[#73C7FF]" />
                         <span>Administración</span>
                       </span>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-blue-200" />
+                        <ChevronUp className="w-4 h-4 text-[#73C7FF]" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-blue-200" />
+                        <ChevronDown className="w-4 h-4 text-[#73C7FF]" />
                       )}
                     </button>
                     {isOpen && (
@@ -3508,14 +3585,15 @@ export default function App() {
                             <button
                               key={item.id}
                               type="button"
+                              data-tour={`nav-${item.id}`}
                               onClick={() => handleSelectSection(item.id)}
-                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
+                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm transition-all text-left min-h-[42px] cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                                  ? 'bg-[#1497F2] text-white shadow-xs font-semibold font-heading'
+                                  : 'text-blue-100/90 hover:bg-white/10 hover:text-white font-medium'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#73C7FF]'}`} />
                               <span>{item.label}</span>
                             </button>
                           );
@@ -3539,21 +3617,21 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => toggleDropdown('configuracion')}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold font-heading uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
                         isConfigActive
-                          ? 'text-[#98DAE9] bg-white/10 pl-3'
-                          : 'text-blue-200 hover:text-white hover:bg-white/10'
+                          ? 'text-[#73C7FF] bg-white/10 pl-3'
+                          : 'text-blue-100/90 hover:text-white hover:bg-white/10'
                       }`}
                       aria-expanded={isOpen}
                     >
                       <span className="flex items-center gap-2">
-                        <Settings className="w-4 h-4" />
+                        <Settings className="w-4 h-4 text-[#73C7FF]" />
                         <span>Configuración</span>
                       </span>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-blue-200" />
+                        <ChevronUp className="w-4 h-4 text-[#73C7FF]" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-blue-200" />
+                        <ChevronDown className="w-4 h-4 text-[#73C7FF]" />
                       )}
                     </button>
                     {isOpen && (
@@ -3565,14 +3643,15 @@ export default function App() {
                             <button
                               key={item.id}
                               type="button"
+                              data-tour={`nav-${item.id}`}
                               onClick={() => handleSelectSection(item.id)}
-                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm font-medium transition-all text-left min-h-[42px] cursor-pointer ${
+                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm transition-all text-left min-h-[42px] cursor-pointer ${
                                 isSelected
-                                  ? 'bg-[#1D7EAE] text-white shadow-xs font-semibold'
-                                  : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                                  ? 'bg-[#1497F2] text-white shadow-xs font-semibold font-heading'
+                                  : 'text-blue-100/90 hover:bg-white/10 hover:text-white font-medium'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#98DAE9]'}`} />
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#73C7FF]'}`} />
                               <span>{item.label}</span>
                             </button>
                           );
@@ -3586,49 +3665,58 @@ export default function App() {
           )}
         </nav>
 
-        <div className="p-4 border-t border-white/10 text-xs text-blue-200/80 text-center">
-          Sistema de Talleres Mecánicos
+        <div className="p-4 border-t border-white/10 text-xs text-blue-100/70 text-center font-heading font-medium tracking-wide">
+          TUNNO · Tu taller. Tu control.
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#F6F8FA]">
-        {/* Encabezado superior blanco con Logotipo IOT Technologies, buscador, avisos y usuario */}
-        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 py-3 bg-white/95 backdrop-blur-sm border-b border-[#DDE4E8] shadow-2xs sticky top-0 z-30 relative no-print">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#F9FAFB]">
+        {/* Encabezado superior blanco con Logotipo TUNNO, buscador, avisos y usuario */}
+        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 py-3 bg-white/95 backdrop-blur-sm border-b border-[#E5E7EB] shadow-2xs sticky top-0 z-30 relative no-print">
           {/* Línea decorativa azul institucional */}
-          <div className="absolute bottom-0 left-0 w-36 h-[2px] bg-[#1D7EAE]" />
+          <div className="absolute bottom-0 left-0 w-36 h-[2px] bg-[#1497F2]" />
 
-          {/* Izquierda: Logotipo oficial IOT Technologies + nombre secundario */}
+          {/* Izquierda: Logotipo oficial TUNNO + breadcrumb */}
           <div className="flex items-center gap-3.5">
-            <IotLogo variant="dark" size="sm" />
-            <div className="h-5 w-px bg-[#DDE4E8]" />
+            <TunnoLogo variant="positive" format="horizontal" size="sm" />
+            <div className="h-5 w-px bg-[#E5E7EB]" />
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-[#5F6B73] tracking-tight">
-                  Sistema de Talleres Mecánicos
+                <span className="text-xs font-bold font-heading text-[#06345A] tracking-tight">
+                  TUNNO
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#1D7EAE]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1497F2]" />
+                <span className="text-[11px] text-[#6B7280]">
+                  {configuracion.nombre || 'Taller automotriz'}
+                </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-[#5F6B73]">
-                <span className="font-medium text-[#231F20]">{configuracion.nombre || 'Taller mecánico'}</span>
-                <span>/</span>
-                <span className="text-[#1D7EAE] font-semibold">{SECTION_NAMES[activeSection] || activeSection.replace('-', ' ')}</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-[#6B7280]">
+                <span className="text-[#1497F2] font-semibold font-heading">{SECTION_NAMES[activeSection] || activeSection.replace('-', ' ')}</span>
               </div>
             </div>
           </div>
 
           {/* Derecha: Recorrido, Buscador, Avisos, Usuario */}
           <div className="flex items-center gap-3">
-            {/* Botón discreto Recorrido */}
-            <button
-              type="button"
-              onClick={() => setIsRecorridoOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#DDE4E8] bg-white hover:bg-slate-50 text-xs font-semibold text-[#1D7EAE] hover:text-[#0032A0] shadow-2xs hover:border-[#1D7EAE]/40 transition-all cursor-pointer min-h-[36px]"
-              title="Recorrido de presentación del taller"
-            >
-              <Compass className="w-3.5 h-3.5 text-[#1D7EAE]" />
-              <span>Recorrido</span>
-            </button>
+            {/* Botón discreto Guía con menú de opciones */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsGuiaMenuOpen(!isGuiaMenuOpen)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E7EB] bg-white hover:bg-slate-50 text-xs font-semibold text-[#1497F2] hover:text-[#06345A] shadow-2xs hover:border-[#1497F2]/40 transition-all cursor-pointer min-h-[36px]"
+                title="Guía interactiva de TUNNO"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#1497F2]" />
+                <span>Guía</span>
+              </button>
+              <GuiaMenuDropdown
+                isOpen={isGuiaMenuOpen}
+                onClose={() => setIsGuiaMenuOpen(false)}
+                onSelectGuia={handleStartGuia}
+                userRol={sesion?.rol}
+              />
+            </div>
 
             {/* Buscador */}
             <div className="relative w-48 lg:w-60">
@@ -3638,7 +3726,7 @@ export default function App() {
                 value={searchCliente}
                 onChange={(e) => setSearchCliente(e.target.value)}
                 placeholder="Buscar cliente, orden..."
-                className="w-full pl-9 pr-3 py-1.5 bg-[#F6F8FA] border border-[#DDE4E8] rounded-lg text-xs text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:bg-white transition-all"
+                className="w-full pl-9 pr-3 py-1.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg text-xs text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
               />
             </div>
 
@@ -3647,35 +3735,35 @@ export default function App() {
               ref={desktopBellRef}
               type="button"
               onClick={() => handleOpenCentroAvisos(false)}
-              className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#5F6B73] hover:text-[#231F20] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20 transition-colors cursor-pointer"
+              className="relative min-w-[38px] min-h-[38px] flex items-center justify-center p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20 transition-colors cursor-pointer"
               title={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
               aria-label={`Avisos (${totalPendientesCount > 9 ? '9+' : totalPendientesCount} pendientes)`}
             >
-              <Bell className="w-4.5 h-4.5 text-[#5F6B73]" />
+              <Bell className="w-4.5 h-4.5 text-[#6B7280]" />
               {totalPendientesCount > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#FF661B]">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-[#1497F2]">
                   {totalPendientesCount > 9 ? '9+' : totalPendientesCount}
                 </span>
               ) : (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-medium flex items-center justify-center text-slate-400 bg-slate-100 border border-slate-200">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-0.5 rounded-full text-[9px] font-medium flex items-center justify-center text-slate-400 bg-slate-100 border border-[#E5E7EB]">
                   0
                 </span>
               )}
             </button>
 
-            <div className="h-6 w-px bg-[#DDE4E8]" />
+            <div className="h-6 w-px bg-[#E5E7EB]" />
 
             {/* Usuario */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-sky-50 text-[#1D7EAE] font-bold text-xs flex items-center justify-center border border-[#98DAE9]/50">
+              <div className="w-8 h-8 rounded-full bg-sky-50 text-[#06345A] font-bold font-heading text-xs flex items-center justify-center border border-[#73C7FF]/40">
                 {sesion?.nombre.slice(0, 2).toUpperCase() || 'US'}
               </div>
               <div className="text-left hidden lg:block">
-                <p className="text-xs font-semibold text-[#231F20] leading-tight">{sesion?.nombre}</p>
+                <p className="text-xs font-semibold text-[#374151] leading-tight font-heading">{sesion?.nombre}</p>
                 <span
                   className={`inline-block text-[10px] font-semibold px-1.5 py-0.2 rounded ${
                     sesion?.rol === 'Administrador'
-                      ? 'bg-sky-50 text-[#1D7EAE] border border-[#98DAE9]/50'
+                      ? 'bg-sky-50 text-[#06345A] border border-[#73C7FF]/40'
                       : sesion?.rol === 'Recepción'
                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
                       : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -3686,12 +3774,12 @@ export default function App() {
               </div>
             </div>
 
-            <div className="h-6 w-px bg-[#DDE4E8]" />
+            <div className="h-6 w-px bg-[#E5E7EB]" />
 
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#5F6B73] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer min-h-[36px]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#6B7280] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer min-h-[36px]"
               title="Cerrar sesión"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -3713,7 +3801,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveSection('dashboard')}
-                className="px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
+                className="px-5 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
               >
                 Volver al Dashboard
               </button>
@@ -3756,17 +3844,17 @@ export default function App() {
           {/* CLIENTES */}
           {activeSection === 'clientes' && (
             <section className="space-y-6">
-              {/* Encabezado IOT Technologies para Clientes */}
-              <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Encabezado TUNNO para Clientes */}
+              <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-[#98DAE9]/25 border border-[#98DAE9]/50 text-[#1D7EAE] flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
                     <Users className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+                    <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
                       Clientes
                     </h2>
-                    <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+                    <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
                       Consulta y administra los clientes registrados.
                     </p>
                   </div>
@@ -3776,7 +3864,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleOpenAddCliente}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Agregar cliente</span>
@@ -3791,29 +3879,29 @@ export default function App() {
                   value={searchCliente}
                   onChange={(e) => setSearchCliente(e.target.value)}
                   placeholder="Buscar por nombre o teléfono..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
                 />
               </div>
 
-              <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+              <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-[#F6F8FA] border-b border-[#DDE4E8] text-[#231F20] font-semibold text-xs uppercase tracking-wider">
+                      <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#06345A] font-semibold text-xs uppercase tracking-wider font-heading">
                         <th className="py-3.5 px-5">Nombre</th>
                         <th className="py-3.5 px-5">Teléfono</th>
                         <th className="py-3.5 px-5">Correo</th>
                         <th className="py-3.5 px-5 text-right">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#DDE4E8]">
+                    <tbody className="divide-y divide-[#E5E7EB]">
                       {filteredClientes.length > 0 ? (
                         filteredClientes.map((cliente) => (
-                          <tr key={cliente.id} className="hover:bg-[#98DAE9]/10 transition-colors">
-                            <td className="py-3.5 px-5 font-semibold text-[#231F20]">{cliente.nombre}</td>
-                            <td className="py-3.5 px-5 text-[#5F6B73]">{cliente.telefono}</td>
-                            <td className="py-3.5 px-5 text-[#5F6B73]">
+                          <tr key={cliente.id} className="hover:bg-[#73C7FF]/10 transition-colors">
+                            <td className="py-3.5 px-5 font-semibold text-[#374151] font-heading">{cliente.nombre}</td>
+                            <td className="py-3.5 px-5 text-[#6B7280]">{cliente.telefono}</td>
+                            <td className="py-3.5 px-5 text-[#6B7280]">
                               {cliente.correo || <span className="text-slate-400 italic">No registrado</span>}
                             </td>
                             <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
@@ -3821,9 +3909,9 @@ export default function App() {
                                 <button
                                   type="button"
                                   onClick={() => setHistorialTarget({ tipo: 'cliente', id: cliente.id })}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#374151] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer min-h-[36px]"
                                 >
-                                  <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
+                                  <History className="w-3.5 h-3.5 text-[#1497F2]" />
                                   <span>Historial</span>
                                 </button>
 
@@ -3835,7 +3923,7 @@ export default function App() {
                                         openClienteMenuId === cliente.id ? null : cliente.id
                                       )
                                     }
-                                    className="p-2 text-slate-400 hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                    className="p-2 text-slate-400 hover:text-[#374151] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                     title="Más opciones"
                                     aria-label="Más opciones"
                                   >
@@ -3848,14 +3936,14 @@ export default function App() {
                                         className="fixed inset-0 z-20"
                                         onClick={() => setOpenClienteMenuId(null)}
                                       />
-                                      <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                      <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                         <button
                                           type="button"
                                           onClick={() => {
                                             setOpenClienteMenuId(null);
                                             handleOpenEditCliente(cliente);
                                           }}
-                                          className="w-full px-3 py-2 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors cursor-pointer"
+                                          className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
                                         >
                                           <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                           <span>Editar cliente</span>
@@ -3870,7 +3958,7 @@ export default function App() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="py-8 text-center text-[#5F6B73]">
+                          <td colSpan={4} className="py-8 text-center text-[#6B7280]">
                             {searchCliente
                               ? 'No se encontraron clientes que coincidan con la búsqueda.'
                               : 'No hay clientes registrados.'}
@@ -3882,14 +3970,14 @@ export default function App() {
                 </div>
 
                 {/* Mobile Block View */}
-                <div className="md:hidden divide-y divide-[#DDE4E8]">
+                <div className="md:hidden divide-y divide-[#E5E7EB]">
                   {filteredClientes.length > 0 ? (
                     filteredClientes.map((cliente) => (
                       <div key={cliente.id} className="p-4 space-y-2.5">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-[#231F20] text-sm">{cliente.nombre}</h4>
-                            <p className="text-xs text-[#5F6B73] mt-0.5">{cliente.telefono}</p>
+                            <h4 className="font-semibold text-[#374151] text-sm font-heading">{cliente.nombre}</h4>
+                            <p className="text-xs text-[#6B7280] mt-0.5">{cliente.telefono}</p>
                             {cliente.correo && (
                               <p className="text-xs text-slate-400 truncate">{cliente.correo}</p>
                             )}
@@ -3898,9 +3986,9 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => setHistorialTarget({ tipo: 'cliente', id: cliente.id })}
-                              className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white border border-[#DDE4E8] hover:bg-slate-50 rounded-lg transition-colors"
+                              className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#374151] bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg transition-colors"
                             >
-                              <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
+                              <History className="w-3.5 h-3.5 text-[#1497F2]" />
                               <span>Historial</span>
                             </button>
                             <div className="relative">
@@ -3911,7 +3999,7 @@ export default function App() {
                                     openClienteMenuId === cliente.id ? null : cliente.id
                                   )
                                 }
-                                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#231F20] rounded-lg"
+                                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#374151] rounded-lg"
                                 aria-label="Más opciones"
                               >
                                 <MoreVertical className="w-4 h-4" />
@@ -3922,14 +4010,14 @@ export default function App() {
                                     className="fixed inset-0 z-20"
                                     onClick={() => setOpenClienteMenuId(null)}
                                   />
-                                  <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                  <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
                                     <button
                                       type="button"
                                       onClick={() => {
                                         setOpenClienteMenuId(null);
                                         handleOpenEditCliente(cliente);
                                       }}
-                                      className="w-full px-3 py-2.5 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2"
+                                      className="w-full px-3 py-2.5 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2"
                                     >
                                       <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                       <span>Editar cliente</span>
@@ -3957,17 +4045,17 @@ export default function App() {
           {/* VEHÍCULOS */}
           {activeSection === 'vehiculos' && (
             <section className="space-y-6">
-              {/* Encabezado IOT Technologies para Vehículos */}
-              <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Encabezado TUNNO para Vehículos */}
+              <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-[#98DAE9]/25 border border-[#98DAE9]/50 text-[#1D7EAE] flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
                     <Car className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+                    <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
                       Vehículos
                     </h2>
-                    <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+                    <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
                       Consulta y administra los vehículos vinculados a sus propietarios.
                     </p>
                   </div>
@@ -3977,7 +4065,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleOpenAddVehiculo}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Agregar vehículo</span>
@@ -3992,42 +4080,42 @@ export default function App() {
                   value={searchVehiculo}
                   onChange={(e) => setSearchVehiculo(e.target.value)}
                   placeholder="Buscar por placas o propietario..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
                 />
               </div>
 
-              <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xs overflow-hidden">
+              <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-[#F6F8FA] border-b border-[#DDE4E8] text-[#231F20] font-semibold text-xs uppercase tracking-wider">
+                      <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#06345A] font-semibold text-xs uppercase tracking-wider font-heading">
                         <th className="py-3.5 px-5">Vehículo</th>
                         <th className="py-3.5 px-5">Placas</th>
                         <th className="py-3.5 px-5">Propietario</th>
                         <th className="py-3.5 px-5 text-right">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#DDE4E8]">
+                    <tbody className="divide-y divide-[#E5E7EB]">
                       {filteredVehiculos.length > 0 ? (
                         filteredVehiculos.map((v) => {
                           const owner = clienteMap.get(v.clienteId);
                           return (
-                            <tr key={v.id} className="hover:bg-[#98DAE9]/10 transition-colors">
+                            <tr key={v.id} className="hover:bg-[#73C7FF]/10 transition-colors">
                               <td className="py-3.5 px-5">
-                                <div className="font-semibold text-[#231F20]">{v.marca} {v.modelo}</div>
-                                {v.año && <div className="text-xs text-[#5F6B73]">Año: {v.año}</div>}
+                                 <div className="font-semibold text-[#374151] font-heading">{v.marca} {v.modelo}</div>
+                                 {v.año && <div className="text-xs text-[#6B7280]">Año: {v.año}</div>}
                               </td>
                               <td className="py-3.5 px-5">
-                                <span className="inline-block px-2.5 py-1 bg-slate-100 border border-[#DDE4E8] rounded text-xs font-mono font-bold text-[#231F20] tracking-wider">
+                                <span className="inline-block px-2.5 py-1 bg-slate-100 border border-[#E5E7EB] rounded text-xs font-mono font-bold text-[#374151] tracking-wider">
                                   {v.placas}
                                 </span>
                               </td>
-                              <td className="py-3.5 px-5 text-[#231F20]">
+                              <td className="py-3.5 px-5 text-[#374151]">
                                 {owner ? (
                                   <div>
-                                    <div className="font-semibold text-[#231F20]">{owner.nombre}</div>
-                                    <div className="text-xs text-[#5F6B73]">{owner.telefono}</div>
+                                    <div className="font-semibold text-[#374151]">{owner.nombre}</div>
+                                    <div className="text-xs text-[#6B7280]">{owner.telefono}</div>
                                   </div>
                                 ) : (
                                   <span className="text-rose-500 text-xs italic">Cliente no encontrado</span>
@@ -4037,10 +4125,20 @@ export default function App() {
                                 <div className="inline-flex items-center gap-2">
                                   <button
                                     type="button"
-                                    onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#231F20] bg-white hover:bg-slate-50 border border-[#DDE4E8] rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                                    onClick={() => setPlanMantenimientoVehiculo(v)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                                    title="Generar plan de mantenimiento con IA"
                                   >
-                                    <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
+                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                    <span>Plan IA</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#374151] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer min-h-[36px]"
+                                  >
+                                    <History className="w-3.5 h-3.5 text-[#1497F2]" />
                                     <span>Historial</span>
                                   </button>
 
@@ -4052,7 +4150,7 @@ export default function App() {
                                           openVehiculoMenuId === v.id ? null : v.id
                                         )
                                       }
-                                      className="p-2 text-slate-400 hover:text-[#231F20] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                      className="p-2 text-slate-400 hover:text-[#374151] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
                                       title="Más opciones"
                                       aria-label="Más opciones"
                                     >
@@ -4065,14 +4163,25 @@ export default function App() {
                                           className="fixed inset-0 z-20"
                                           onClick={() => setOpenVehiculoMenuId(null)}
                                         />
-                                        <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                        <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setOpenVehiculoMenuId(null);
+                                              setPlanMantenimientoVehiculo(v);
+                                            }}
+                                            className="w-full px-3 py-2 text-[#374151] hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
+                                          >
+                                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                            <span>Plan de mantenimiento IA</span>
+                                          </button>
                                           <button
                                             type="button"
                                             onClick={() => {
                                               setOpenVehiculoMenuId(null);
                                               handleOpenEditVehiculo(v);
                                             }}
-                                            className="w-full px-3 py-2 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2 transition-colors cursor-pointer"
+                                            className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
                                           >
                                             <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                             <span>Editar vehículo</span>
@@ -4100,7 +4209,7 @@ export default function App() {
                 </div>
 
                 {/* Mobile Block View */}
-                <div className="md:hidden divide-y divide-[#DDE4E8]">
+                <div className="md:hidden divide-y divide-[#E5E7EB]">
                   {filteredVehiculos.length > 0 ? (
                     filteredVehiculos.map((v) => {
                       const owner = clienteMap.get(v.clienteId);
@@ -4109,23 +4218,33 @@ export default function App() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold text-[#231F20] text-sm">{v.marca} {v.modelo}</span>
-                                <span className="px-2 py-0.5 bg-slate-100 border border-[#DDE4E8] rounded text-xs font-mono font-bold text-[#231F20]">
+                                <span className="font-semibold text-[#374151] font-heading text-sm">{v.marca} {v.modelo}</span>
+                                <span className="px-2 py-0.5 bg-slate-100 border border-[#E5E7EB] rounded text-xs font-mono font-bold text-[#374151]">
                                   {v.placas}
                                 </span>
                               </div>
-                              {v.año && <p className="text-xs text-[#5F6B73] mt-0.5">Año: {v.año}</p>}
-                              <p className="text-xs text-[#5F6B73] mt-1">
-                                Propietario: <strong className="text-[#231F20]">{owner ? owner.nombre : 'No encontrado'}</strong>
+                              {v.año && <p className="text-xs text-[#6B7280] mt-0.5">Año: {v.año}</p>}
+                              <p className="text-xs text-[#6B7280] mt-1">
+                                Propietario: <strong className="text-[#374151] font-heading">{owner ? owner.nombre : 'No encontrado'}</strong>
                               </p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               <button
                                 type="button"
-                                onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
-                                className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#231F20] bg-white border border-[#DDE4E8] hover:bg-slate-50 rounded-lg transition-colors"
+                                onClick={() => setPlanMantenimientoVehiculo(v)}
+                                className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-[#1497F2] bg-sky-50 border border-sky-200 hover:bg-sky-100 rounded-lg transition-colors cursor-pointer"
+                                title="Generar plan de mantenimiento con IA"
                               >
-                                <History className="w-3.5 h-3.5 text-[#1D7EAE]" />
+                                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                <span>Plan IA</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
+                                className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#374151] bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg transition-colors"
+                              >
+                                <History className="w-3.5 h-3.5 text-[#1497F2]" />
                                 <span>Historial</span>
                               </button>
                               <div className="relative">
@@ -4136,7 +4255,7 @@ export default function App() {
                                       openVehiculoMenuId === v.id ? null : v.id
                                     )
                                   }
-                                  className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#231F20] rounded-lg"
+                                  className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#374151] rounded-lg"
                                   aria-label="Más opciones"
                                 >
                                   <MoreVertical className="w-4 h-4" />
@@ -4147,14 +4266,25 @@ export default function App() {
                                       className="fixed inset-0 z-20"
                                       onClick={() => setOpenVehiculoMenuId(null)}
                                     />
-                                    <div className="absolute right-0 mt-1 w-44 bg-white border border-[#DDE4E8] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                    <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenVehiculoMenuId(null);
+                                          setPlanMantenimientoVehiculo(v);
+                                        }}
+                                        className="w-full px-3 py-2.5 text-[#374151] hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2"
+                                      >
+                                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                        <span>Plan de mantenimiento IA</span>
+                                      </button>
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setOpenVehiculoMenuId(null);
                                           handleOpenEditVehiculo(v);
                                         }}
-                                        className="w-full px-3 py-2.5 text-[#231F20] hover:bg-slate-50 hover:text-[#1D7EAE] flex items-center gap-2"
+                                        className="w-full px-3 py-2.5 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2"
                                       >
                                         <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                         <span>Editar vehículo</span>
@@ -4169,7 +4299,7 @@ export default function App() {
                       );
                     })
                   ) : (
-                    <div className="p-6 text-center text-xs text-[#5F6B73]">
+                    <div className="p-6 text-center text-xs text-[#6B7280]">
                       {searchVehiculo
                         ? 'No se encontraron vehículos que coincidan con la búsqueda.'
                         : 'No hay vehículos registrados.'}
@@ -4201,6 +4331,9 @@ export default function App() {
               ordenes={ordenes}
               flotillas={flotillas}
               configuracion={configuracion}
+              garantias={garantias}
+              onSaveSeguimiento={handleSaveSeguimiento}
+              onUpdateVehiculoRecomendaciones={handleUpdateVehiculoRecomendaciones}
             />
           )}
 
@@ -4226,6 +4359,7 @@ export default function App() {
               servicios={servicios}
               configuracion={configuracion}
               facturas={facturas}
+              refacciones={refacciones}
               onSaveCotizacion={handleSaveCotizacion}
               onUpdateEstado={handleUpdateCotizacionEstado}
               onLinkCotizacionToOrden={handleLinkCotizacionToOrden}
@@ -4255,6 +4389,10 @@ export default function App() {
               usuarios={usuarios}
               empleados={empleados}
               onRegistrarGarantia={handleRegistrarGarantiaFromOrden}
+              facturas={facturas}
+              garantias={garantias}
+              onSaveSeguimiento={handleSaveSeguimiento}
+              onNavigateToSection={handleSelectSection}
             />
           )}
 
@@ -4272,6 +4410,8 @@ export default function App() {
               refacciones={refacciones}
               movimientos={movimientos}
               ordenesCompra={ordenesCompra}
+              ordenesPendientes={ordenes}
+              vehiculos={vehiculos}
               onSaveRefaccion={handleSaveRefaccion}
               onRecordMovement={handleRecordMovement}
               onSaveOrdenCompra={handleSaveOrdenCompra}
@@ -4326,11 +4466,14 @@ export default function App() {
               citas={citas}
               cotizaciones={cotizaciones}
               ordenes={ordenes}
+              facturas={facturas}
               servicios={servicios}
               configuracion={configuracion}
               seguimientos={seguimientos}
+              garantias={garantias}
               onSaveSeguimiento={handleSaveSeguimiento}
               onUpdateSeguimientoEstado={handleUpdateSeguimientoEstado}
+              onSaveGarantia={handleSaveGarantia}
               onNavigateToSection={handleSelectSection}
             />
           )}
@@ -4377,6 +4520,11 @@ export default function App() {
               refacciones={refacciones}
               servicios={servicios}
               configuracion={configuracion}
+              movimientos={movimientos}
+              empleados={empleados}
+              clientes={clientes}
+              seguimientos={seguimientos}
+              garantias={garantias}
             />
           )}
 
@@ -4443,15 +4591,15 @@ export default function App() {
             activeSection !== 'garantias' &&
             activeSection !== 'bitacora' &&
             activeSection !== 'configuracion' && (
-              <section className="bg-white rounded-xl p-8 md:p-12 border border-[#DDE4E8] text-center max-w-xl mx-auto my-12 shadow-xs relative overflow-hidden">
-                <div className="absolute inset-0 iot-dots-pattern pointer-events-none" />
-                <div className="w-14 h-14 mx-auto rounded-full bg-[#98DAE9]/25 border border-[#98DAE9]/50 flex items-center justify-center text-[#1D7EAE] mb-4 relative z-10">
+              <section className="bg-white rounded-xl p-8 md:p-12 border border-[#E5E7EB] text-center max-w-xl mx-auto my-12 shadow-xs relative overflow-hidden">
+                <div className="absolute inset-0 tunno-grid-subtle pointer-events-none opacity-40" />
+                <div className="w-14 h-14 mx-auto rounded-full bg-[#1497F2]/10 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2] mb-4 relative z-10">
                   <currentItem.icon className="w-7 h-7" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#231F20] mb-2 relative z-10">
+                <h2 className="text-2xl font-bold font-heading text-[#06345A] mb-2 relative z-10">
                   {currentItem.label}
                 </h2>
-                <p className="text-base text-[#5F6B73] relative z-10">
+                <p className="text-base text-[#6B7280] relative z-10">
                   Sección en preparación
                 </p>
               </section>
@@ -4459,9 +4607,11 @@ export default function App() {
             </>
           )}
 
-          {/* Pie de página oficial IOT Technologies */}
-          <footer className="mt-12 py-6 border-t border-[#DDE4E8] text-center text-xs text-[#5F6B73] no-print">
-            <p>Tecnología de IOT Technologies</p>
+          {/* Pie de página oficial TUNNO */}
+          <footer className="mt-12 py-6 border-t border-[#E5E7EB] text-center text-xs text-[#6B7280] no-print">
+            <p className="font-heading font-medium tracking-wide">
+              TUNNO · Tu taller. Tu control. · Organiza · Controla · Haz crecer
+            </p>
           </footer>
         </div>
       </main>
@@ -4472,15 +4622,15 @@ export default function App() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           onClick={clienteModalDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#231F20]">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
+              <h3 className="text-lg font-bold font-heading text-[#06345A]">
                 {editingCliente ? 'Editar cliente' : 'Agregar cliente'}
               </h3>
               <button
                 type="button"
                 onClick={clienteModalDismiss.handleClose}
-                className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                className="text-slate-400 hover:text-[#374151] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -4489,8 +4639,8 @@ export default function App() {
 
             <form onSubmit={handleSaveCliente} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                  Nombre completo <span className="text-[#1D7EAE]">*</span>
+                <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                  Nombre completo <span className="text-[#1497F2]">*</span>
                 </label>
                 <input
                   type="text"
@@ -4501,16 +4651,16 @@ export default function App() {
                     if (clienteErrors.nombre) setClienteErrors({ ...clienteErrors, nombre: undefined });
                   }}
                   placeholder="Ej. Juan Pérez"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all ${
-                    clienteErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all ${
+                    clienteErrors.nombre ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                   }`}
                 />
                 {clienteErrors.nombre && <p className="text-xs text-red-600 mt-1">{clienteErrors.nombre}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                  Teléfono <span className="text-[#1D7EAE]">*</span>
+                <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                  Teléfono <span className="text-[#1497F2]">*</span>
                 </label>
                 <input
                   type="tel"
@@ -4520,8 +4670,8 @@ export default function App() {
                     if (clienteErrors.telefono) setClienteErrors({ ...clienteErrors, telefono: undefined });
                   }}
                   placeholder="Ej. 555-123-4567"
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all ${
-                    clienteErrors.telefono ? 'border-red-400 bg-red-50/20' : 'border-[#DDE4E8]'
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all ${
+                    clienteErrors.telefono ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
                   }`}
                 />
                 {clienteErrors.telefono && <p className="text-xs text-red-600 mt-1">{clienteErrors.telefono}</p>}
@@ -4529,35 +4679,35 @@ export default function App() {
 
               {/* Apartado desplegable para datos opcionales */}
               <details className="group pt-1" open={Boolean(clienteForm.correo)}>
-                <summary className="text-xs text-[#5F6B73] hover:text-[#231F20] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                <summary className="text-xs text-[#6B7280] hover:text-[#374151] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
                   <span>Datos opcionales (correo electrónico)</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="pt-2">
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                    Correo electrónico <span className="text-xs text-[#5F6B73] font-normal">(Opcional)</span>
+                  <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                    Correo electrónico <span className="text-xs text-[#6B7280] font-normal">(Opcional)</span>
                   </label>
                   <input
                     type="email"
                     value={clienteForm.correo}
                     onChange={(e) => setClienteForm({ ...clienteForm, correo: e.target.value })}
                     placeholder="Ej. juan.perez@email.com"
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20 transition-all"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
                   />
                 </div>
               </details>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={clienteModalDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#374151] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
                 >
                   Guardar
                 </button>
@@ -4573,15 +4723,15 @@ export default function App() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           onClick={vehiculoModalDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl border border-[#DDE4E8] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#231F20]">
+          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
+              <h3 className="text-lg font-bold font-heading text-[#06345A]">
                 {editingVehiculo ? 'Editar vehículo' : 'Agregar vehículo'}
               </h3>
               <button
                 type="button"
                 onClick={vehiculoModalDismiss.handleClose}
-                className="text-slate-400 hover:text-[#231F20] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                className="text-slate-400 hover:text-[#374151] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
                 aria-label="Cerrar ventana"
               >
                 <X className="w-5 h-5" />
@@ -4590,8 +4740,8 @@ export default function App() {
 
             <form onSubmit={handleSaveVehiculo} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                  Cliente propietario <span className="text-[#1D7EAE]">*</span>
+                <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                  Cliente propietario <span className="text-[#1497F2]">*</span>
                 </label>
                 {clientes.length > 0 ? (
                   <select
@@ -4601,7 +4751,7 @@ export default function App() {
                       setVehiculoForm({ ...vehiculoForm, clienteId: e.target.value });
                       if (vehiculoErrors.clienteId) setVehiculoErrors({ ...vehiculoErrors, clienteId: '' });
                     }}
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   >
                     <option value="" disabled>Seleccione un cliente</option>
                     {clientes.map((c) => (
@@ -4622,8 +4772,8 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                    Marca <span className="text-[#1D7EAE]">*</span>
+                  <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                    Marca <span className="text-[#1497F2]">*</span>
                   </label>
                   <input
                     type="text"
@@ -4633,7 +4783,7 @@ export default function App() {
                       if (vehiculoErrors.marca) setVehiculoErrors({ ...vehiculoErrors, marca: '' });
                     }}
                     placeholder="Ej. Toyota"
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   />
                   {vehiculoErrors.marca && (
                     <p className="text-xs text-red-600 mt-1">{vehiculoErrors.marca}</p>
@@ -4641,8 +4791,8 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                    Modelo <span className="text-[#1D7EAE]">*</span>
+                  <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                    Modelo <span className="text-[#1497F2]">*</span>
                   </label>
                   <input
                     type="text"
@@ -4652,7 +4802,7 @@ export default function App() {
                       if (vehiculoErrors.modelo) setVehiculoErrors({ ...vehiculoErrors, modelo: '' });
                     }}
                     placeholder="Ej. Corolla"
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   />
                   {vehiculoErrors.modelo && (
                     <p className="text-xs text-red-600 mt-1">{vehiculoErrors.modelo}</p>
@@ -4661,8 +4811,8 @@ export default function App() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                  Placas <span className="text-[#1D7EAE]">*</span>
+                <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                  Placas <span className="text-[#1497F2]">*</span>
                 </label>
                 <input
                   type="text"
@@ -4672,7 +4822,7 @@ export default function App() {
                     if (vehiculoErrors.placas) setVehiculoErrors({ ...vehiculoErrors, placas: '' });
                   }}
                   placeholder="Ej. ABC-123"
-                  className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm uppercase text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                  className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm uppercase text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                 />
                 {vehiculoErrors.placas && (
                   <p className="text-xs text-red-600 mt-1">{vehiculoErrors.placas}</p>
@@ -4681,36 +4831,36 @@ export default function App() {
 
               {/* Apartado desplegable para datos opcionales */}
               <details className="group pt-1" open={Boolean(vehiculoForm.año)}>
-                <summary className="text-xs text-[#5F6368] hover:text-[#231F20] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                <summary className="text-xs text-[#6B7280] hover:text-[#374151] cursor-pointer font-medium flex items-center justify-between py-1 select-none">
                   <span>Datos opcionales (año del vehículo)</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
                 </summary>
                 <div className="pt-2">
-                  <label className="block text-xs font-semibold text-[#231F20] mb-1.5">
-                    Año <span className="text-xs text-[#5F6368] font-normal">(Opcional)</span>
+                  <label className="block text-xs font-semibold font-heading text-[#374151] mb-1.5">
+                    Año <span className="text-xs text-[#6B7280] font-normal">(Opcional)</span>
                   </label>
                   <input
                     type="text"
                     value={vehiculoForm.año}
                     onChange={(e) => setVehiculoForm({ ...vehiculoForm, año: e.target.value })}
                     placeholder="Ej. 2021"
-                    className="w-full px-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] placeholder-slate-400 focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
                   />
                 </div>
               </details>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={vehiculoModalDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#231F20] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#374151] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={clientes.length === 0}
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D7EAE]/20"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white text-sm font-semibold font-heading rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
                 >
                   Guardar
                 </button>
@@ -4733,11 +4883,45 @@ export default function App() {
         />
       )}
 
-      {/* RECORRIDO DE PRESENTACIÓN DEL TALLER */}
-      <RecorridoModal
-        isOpen={isRecorridoOpen}
-        onClose={() => setIsRecorridoOpen(false)}
+      {/* PLAN DE MANTENIMIENTO CON IA */}
+      <PlanMantenimientoModal
+        isOpen={Boolean(planMantenimientoVehiculo)}
+        onClose={() => setPlanMantenimientoVehiculo(null)}
+        vehiculo={planMantenimientoVehiculo}
+        cliente={planMantenimientoVehiculo ? clienteMap.get(planMantenimientoVehiculo.clienteId) : undefined}
+        ordenes={ordenes}
+        citas={citas}
+        garantias={garantias}
+        configuracion={configuracion}
+        onSaveSeguimiento={handleSaveSeguimiento}
+        onUpdateVehiculoRecomendaciones={handleUpdateVehiculoRecomendaciones}
+      />
+
+      {/* GUÍA INTERACTIVA DE TUNNO (CON RECORRIDO Y FLUJOS) */}
+      <GuiaInteractiva
+        isOpen={isGuiaOpen || isRecorridoOpen}
+        tipoGuia={tipoGuiaActiva}
+        pasoInicialIndex={pasoInicialGuia}
+        userRol={sesion?.rol}
+        currentSection={activeSection}
         onNavigateToSection={(seccion) => handleSelectSection(seccion)}
+        isSectionAllowed={isSectionAllowed}
+        onClose={() => {
+          setIsGuiaOpen(false);
+          setIsRecorridoOpen(false);
+        }}
+        onComplete={() => {
+          mostrarMensaje('¡Felicidades! Has completado la guía interactiva.');
+        }}
+      />
+
+      {/* MODAL DE BIENVENIDA EN PRIMER ACCESO */}
+      <GuiaBienvenidaModal
+        isOpen={isGuiaBienvenidaOpen}
+        userRol={sesion?.rol}
+        onClose={() => setIsGuiaBienvenidaOpen(false)}
+        onStartGuia={(tipo) => handleStartGuia(tipo, 0)}
+        onSetNoMostrarNuevamente={handleSetNoMostrarNuevamente}
       />
 
       {/* CENTRO DE AVISOS Y PENDIENTES (ETAPA 24) */}
@@ -4752,10 +4936,30 @@ export default function App() {
         totalNoVistosCount={totalPendientesCount}
       />
 
+      {/* ASISTENTE INTELIGENTE CONTEXTUAL */}
+      <AsistenteInteligente
+        currentSection={activeSection}
+        onNavigateToSection={(sec) => {
+          handleSelectSection(sec);
+        }}
+        userRol={sesion?.rol}
+        citas={citas}
+        cotizaciones={cotizaciones}
+        ordenes={ordenes}
+        refacciones={refacciones}
+        facturas={facturas}
+        clientes={clientes}
+        vehiculos={vehiculos}
+        seguimientos={seguimientos}
+        prospectos={prospectos}
+        empleados={empleados}
+        garantias={garantias}
+      />
+
       {/* Toast Feedback Notification (ETAPA 23) */}
       {toastMensaje && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0032A0] text-white px-4 py-3 rounded-xl shadow-lg border border-blue-400/30 flex items-center gap-2.5 text-xs sm:text-sm animate-in fade-in slide-in-from-bottom-2">
-          <CheckCircle className="w-4 h-4 text-[#98DAE9] shrink-0" />
+        <div className="fixed bottom-20 right-6 z-50 bg-[#06345A] text-white px-4 py-3 rounded-xl shadow-lg border border-[#73C7FF]/30 flex items-center gap-2.5 text-xs sm:text-sm animate-in fade-in slide-in-from-bottom-2 no-print">
+          <CheckCircle className="w-4 h-4 text-[#73C7FF] shrink-0" />
           <span>{toastMensaje}</span>
           <button
             type="button"

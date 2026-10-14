@@ -258,25 +258,25 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
   };
 
   return (
-    <div className="bg-white rounded-xl border border-[#DDE4E8] overflow-hidden shadow-xs">
+    <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden shadow-xs">
       {/* Accordion Header */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-[#98DAE9]/10 transition-colors cursor-pointer select-none"
+        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-[#73C7FF]/10 transition-colors cursor-pointer select-none"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+          <div className="w-10 h-10 rounded-lg bg-[#73C7FF]/20 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2]">
             <Shield className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-[#231F20] text-base flex items-center gap-2">
+            <h3 className="font-bold text-[#06345A] text-base flex items-center gap-2">
               <span>Usuarios y permisos</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-[#5F6B73] font-semibold border border-[#DDE4E8]">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-[#6B7280] font-semibold border border-[#E5E7EB]">
                 {usuarios.length} {usuarios.length === 1 ? 'usuario' : 'usuarios'}
               </span>
             </h3>
-            <p className="text-xs text-[#5F6B73]">
+            <p className="text-xs text-[#6B7280]">
               Administración de cuentas locales, roles y restricciones de acceso.
             </p>
           </div>
@@ -336,7 +336,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>Agregar usuario</span>
@@ -344,10 +344,10 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto border border-[#DDE4E8] rounded-xl shadow-xs">
+          <div className="overflow-x-auto border border-[#E5E7EB] rounded-xl shadow-xs">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#F6F8FA] border-b border-[#DDE4E8] text-[#5F6B73] font-semibold uppercase tracking-wider text-[11px]">
+                <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#6B7280] font-semibold uppercase tracking-wider text-[11px]">
                   <th className="py-3 px-4">Usuario / Nombre</th>
                   <th className="py-3 px-4">Correo / Login</th>
                   <th className="py-3 px-4">Rol asignado</th>
@@ -367,10 +367,10 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                     <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Nombre */}
                       <td className="py-3 px-4">
-                        <div className="font-bold text-[#231F20] flex items-center gap-1.5">
+                        <div className="font-bold text-[#06345A] flex items-center gap-1.5">
                           <span>{u.nombre}</span>
                           {isCurrent && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-50 text-[#1D7EAE] font-bold border border-rose-200">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-50 text-[#1497F2] font-bold border border-rose-200">
                               Tú
                             </span>
                           )}
@@ -476,7 +476,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
           {/* Matriz y descripción de roles y permisos */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#1D7EAE]" />
+              <Shield className="w-4 h-4 text-[#1497F2]" />
               <h5 className="font-bold text-xs text-slate-800 uppercase tracking-wide">
                 Guía de roles y permisos del sistema
               </h5>
@@ -519,19 +519,19 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
           onClick={userFormDismiss.handleBackdropClick}
         >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden my-8" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-white text-[#06345A]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                <div className="w-8 h-8 rounded-lg bg-[#73C7FF]/20 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2]">
                   <Users className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-bold text-[#231F20]">
+                <h3 className="text-base font-bold text-[#06345A]">
                   {editingUsuario ? 'Editar usuario' : 'Agregar usuario'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={userFormDismiss.handleClose}
-                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#06345A] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -550,8 +550,8 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                     if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: '' });
                   }}
                   placeholder="Ej. Juan Pérez"
-                  className={`w-full px-3 py-2 border rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                    formErrors.nombre ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                  className={`w-full px-3 py-2 border rounded-lg text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                    formErrors.nombre ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                   }`}
                 />
                 {formErrors.nombre && (
@@ -571,8 +571,8 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                     if (formErrors.usuario) setFormErrors({ ...formErrors, usuario: '' });
                   }}
                   placeholder="Ej. juan@taller.com o juanp"
-                  className={`w-full px-3 py-2 border rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                    formErrors.usuario ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                  className={`w-full px-3 py-2 border rounded-lg text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                    formErrors.usuario ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                   }`}
                 />
                 {formErrors.usuario && (
@@ -593,8 +593,8 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                       if (formErrors.password) setFormErrors({ ...formErrors, password: '' });
                     }}
                     placeholder="••••••••"
-                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                      formErrors.password ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                      formErrors.password ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.password && (
@@ -613,7 +613,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                     setFormRol(e.target.value as RolUsuario);
                     if (formErrors.rol) setFormErrors({ ...formErrors, rol: '' });
                   }}
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] bg-white cursor-pointer"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] bg-white cursor-pointer"
                 >
                   <option value="Administrador">Administrador — Acceso completo</option>
                   <option value="Recepción/CRM">Recepción/CRM — Clientes, vehículos, citas, prospectos, seguimientos y creación inicial de órdenes</option>
@@ -636,7 +636,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                   <select
                     value={formEmpleadoId}
                     onChange={(e) => setFormEmpleadoId(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-[#DDE4E8] rounded bg-white text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
+                    className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded bg-white text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
                   >
                     <option value="">-- Sin vincular a empleado específico --</option>
                     {empleados.map((emp) => (
@@ -655,13 +655,13 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                 <button
                   type="button"
                   onClick={userFormDismiss.handleClose}
-                  className="px-3.5 py-2 min-h-[42px] border border-[#DDE4E8] rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="px-3.5 py-2 min-h-[42px] border border-[#E5E7EB] rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   {editingUsuario ? 'Guardar cambios' : 'Crear usuario'}
                 </button>
@@ -680,19 +680,19 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
           onClick={passwordModalDismiss.handleBackdropClick}
         >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden my-8" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-white text-[#06345A]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                <div className="w-8 h-8 rounded-lg bg-[#73C7FF]/20 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2]">
                   <KeyRound className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-bold text-[#231F20]">
+                <h3 className="text-sm font-bold text-[#06345A]">
                   Cambiar contraseña: {passwordTargetUsuario.nombre}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={passwordModalDismiss.handleClose}
-                className="p-1 text-slate-400 hover:text-[#231F20] transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-[#06345A] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -711,7 +711,7 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                     if (passwordError) setPasswordError(null);
                   }}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-[#231F20] text-xs focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
                 />
                 {passwordError && (
                   <p className="text-xs text-red-600 mt-1">{passwordError}</p>
@@ -722,13 +722,13 @@ export const UsuariosPermisosSection: React.FC<UsuariosPermisosSectionProps> = (
                 <button
                   type="button"
                   onClick={passwordModalDismiss.handleClose}
-                  className="px-3.5 py-1.5 min-h-[42px] border border-[#DDE4E8] rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="px-3.5 py-1.5 min-h-[42px] border border-[#E5E7EB] rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 min-h-[42px] bg-[#1D7EAE] hover:bg-[#0032A0] text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  className="px-4 py-1.5 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] text-white font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                 >
                   Guardar clave
                 </button>

@@ -238,22 +238,22 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
 
   return (
     <section className="space-y-6">
-      {/* Header IOT Technologies */}
-      <div className="bg-white border border-[#DDE4E8] border-t-4 border-t-[#1D7EAE] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Encabezado TUNNO */}
+      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#98DAE9]/20 border border-[#98DAE9]/40 text-[#1D7EAE] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
             <Truck className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-bold text-[#231F20] tracking-tight">
+              <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
                 Flotillas
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-[#06345A] border border-[#73C7FF]/40">
                 {flotillas.length} {flotillas.length === 1 ? 'flotilla' : 'flotillas'}
               </span>
             </div>
-            <p className="text-xs md:text-sm text-[#5F6B73] mt-0.5">
+            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
               Administración de cuentas corporativas, empresas y asignación exclusiva de vehículos.
             </p>
           </div>
@@ -262,7 +262,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Nueva flotilla</span>
@@ -271,44 +271,44 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Flotillas activas</span>
-            <Building2 className="w-4 h-4 text-[#1D7EAE]" />
+            <Building2 className="w-4 h-4 text-[#1497F2]" />
           </div>
-          <div className="text-2xl font-bold text-[#231F20]">{totalFlotillasActivas}</div>
+          <div className="text-2xl font-bold text-[#06345A]">{totalFlotillasActivas}</div>
           <div className="text-[11px] text-emerald-600 font-medium mt-0.5">
             De {flotillas.length} registradas
           </div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Vehículos en flotilla</span>
-            <Truck className="w-4 h-4 text-[#1D7EAE]" />
+            <Truck className="w-4 h-4 text-[#1497F2]" />
           </div>
-          <div className="text-2xl font-bold text-[#231F20]">{vehiculosEnFlotillasCount}</div>
-          <div className="text-[11px] text-[#5F6B73] mt-0.5">Asignación empresarial</div>
+          <div className="text-2xl font-bold text-[#06345A]">{vehiculosEnFlotillasCount}</div>
+          <div className="text-[11px] text-[#6B7280] mt-0.5">Asignación empresarial</div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Vehículos disponibles</span>
             <Car className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold text-[#231F20]">{vehiculosDisponiblesCount}</div>
+          <div className="text-2xl font-bold text-[#06345A]">{vehiculosDisponiblesCount}</div>
           <div className="text-[11px] text-emerald-600 font-medium mt-0.5">
             Particulares / sin flotilla
           </div>
         </div>
 
-        <div className="bg-white border border-[#DDE4E8] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#5F6B73] text-xs font-medium mb-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Total del parque</span>
             <Car className="w-4 h-4 text-indigo-600" />
           </div>
-          <div className="text-2xl font-bold text-[#231F20]">{vehiculos.length}</div>
-          <div className="text-[11px] text-[#5F6B73] mt-0.5">Vehículos en el taller</div>
+          <div className="text-2xl font-bold text-[#06345A]">{vehiculos.length}</div>
+          <div className="text-[11px] text-[#6B7280] mt-0.5">Vehículos en el taller</div>
         </div>
       </div>
 
@@ -321,7 +321,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, empresa, placas..."
-            className="w-full pl-9 pr-3.5 py-2.5 border border-[#DDE4E8] rounded-lg text-sm text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-2 focus:ring-[#1D7EAE]/20"
+            className="w-full pl-9 pr-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
           />
         </div>
 
@@ -331,8 +331,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             onClick={() => setFilterEstado('todas')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filterEstado === 'todas'
-                ? 'bg-white text-[#1D7EAE] font-semibold shadow-2xs'
-                : 'text-[#5F6B73] hover:text-[#231F20]'
+                ? 'bg-white text-[#1497F2] font-semibold shadow-2xs'
+                : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Todas ({flotillas.length})
@@ -342,8 +342,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             onClick={() => setFilterEstado('Activa')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filterEstado === 'Activa'
-                ? 'bg-white text-[#1D7EAE] font-semibold shadow-2xs'
-                : 'text-[#5F6B73] hover:text-[#231F20]'
+                ? 'bg-white text-[#1497F2] font-semibold shadow-2xs'
+                : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Activas ({totalFlotillasActivas})
@@ -353,8 +353,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             onClick={() => setFilterEstado('Inactiva')}
             className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
               filterEstado === 'Inactiva'
-                ? 'bg-white text-[#1D7EAE] font-semibold shadow-2xs'
-                : 'text-[#5F6B73] hover:text-[#231F20]'
+                ? 'bg-white text-[#1497F2] font-semibold shadow-2xs'
+                : 'text-[#6B7280] hover:text-[#06345A]'
             }`}
           >
             Inactivas ({flotillas.length - totalFlotillasActivas})
@@ -374,12 +374,12 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             return (
               <div
                 key={f.id}
-                className="bg-white border border-[#DDE4E8] rounded-xl overflow-hidden shadow-2xs hover:border-[#1D7EAE]/50 transition-all"
+                className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-2xs hover:border-[#1497F2]/50 transition-all"
               >
                 <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-2 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <h3 className="text-base font-bold text-[#231F20]">{f.nombre}</h3>
+                      <h3 className="text-base font-bold text-[#06345A]">{f.nombre}</h3>
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                           f.estado === 'Activa'
@@ -395,7 +395,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                         <span>{f.estado}</span>
                       </span>
 
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-[#1D7EAE] border border-blue-200">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-[#1497F2] border border-blue-200">
                         <Truck className="w-3 h-3" />
                         <span>
                           {f.vehiculoIds.length}{' '}
@@ -404,33 +404,33 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-1.5 gap-x-4 text-xs text-[#5F6B73]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-1.5 gap-x-4 text-xs text-[#6B7280]">
                       <div className="flex items-center gap-1.5">
                         <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-[#231F20]">Empresa:</span>
+                        <span className="font-semibold text-[#06345A]">Empresa:</span>
                         <span className="truncate">{f.empresa}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-[#231F20]">Contacto:</span>
+                        <span className="font-semibold text-[#06345A]">Contacto:</span>
                         <span className="truncate">{f.contacto}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-[#231F20]">Teléfono:</span>
+                        <span className="font-semibold text-[#06345A]">Teléfono:</span>
                         <span>{f.telefono}</span>
                       </div>
                       {f.correo && (
                         <div className="flex items-center gap-1.5 sm:col-span-2">
                           <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="font-semibold text-[#231F20]">Correo:</span>
+                          <span className="font-semibold text-[#06345A]">Correo:</span>
                           <span className="truncate">{f.correo}</span>
                         </div>
                       )}
                     </div>
 
                     {f.notas && (
-                      <div className="text-xs text-[#5F6B73] bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-start gap-1.5">
+                      <div className="text-xs text-[#6B7280] bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-start gap-1.5">
                         <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                         <p className="line-clamp-2">{f.notas}</p>
                       </div>
@@ -441,7 +441,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(f)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 border border-[#DDE4E8] rounded-lg text-xs font-medium text-[#231F20] hover:bg-slate-50 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 border border-[#E5E7EB] rounded-lg text-xs font-medium text-[#06345A] hover:bg-slate-50 transition-colors cursor-pointer"
                     >
                       <Pencil className="w-3.5 h-3.5 text-slate-500" />
                       <span>Editar</span>
@@ -450,7 +450,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setExpandedFlotillaId(isExpanded ? null : f.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#1D7EAE]/10 hover:bg-[#1D7EAE]/20 text-[#1D7EAE] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#1497F2]/10 hover:bg-[#1497F2]/20 text-[#1497F2] transition-colors cursor-pointer"
                     >
                       <span>Vehículos ({assignedVehicles.length})</span>
                       {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -460,8 +460,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
 
                 {/* Expanded assigned vehicles */}
                 {isExpanded && (
-                  <div className="border-t border-[#DDE4E8] bg-slate-50/60 p-5 space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#5F6B73] flex items-center justify-between">
+                  <div className="border-t border-[#E5E7EB] bg-slate-50/60 p-5 space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#6B7280] flex items-center justify-between">
                       <span>Vehículos asignados a {f.nombre}</span>
                       <span className="text-[11px] text-slate-400 font-normal">
                         Exclusivos para esta flotilla
@@ -475,18 +475,18 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                           return (
                             <div
                               key={v.id}
-                              className="bg-white border border-[#DDE4E8] rounded-lg p-3 text-xs space-y-1.5 shadow-2xs"
+                              className="bg-white border border-[#E5E7EB] rounded-lg p-3 text-xs space-y-1.5 shadow-2xs"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-[#231F20] flex items-center gap-1.5">
-                                  <Car className="w-3.5 h-3.5 text-[#1D7EAE]" />
+                                <span className="font-bold text-[#06345A] flex items-center gap-1.5">
+                                  <Car className="w-3.5 h-3.5 text-[#1497F2]" />
                                   <span>{v.marca} {v.modelo}</span>
                                 </span>
                                 <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
                                   {v.placas}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between text-[11px] text-[#5F6B73]">
+                              <div className="flex items-center justify-between text-[11px] text-[#6B7280]">
                                 <span>Año: {v.año || 'N/D'}</span>
                                 <span className="truncate max-w-[120px]" title={cli?.nombre}>
                                   Titular: {cli?.nombre || 'Sin cliente'}
@@ -507,7 +507,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             );
           })
         ) : (
-          <div className="bg-white border border-[#DDE4E8] rounded-xl p-8 text-center text-xs text-slate-400">
+          <div className="bg-white border border-[#E5E7EB] rounded-xl p-8 text-center text-xs text-slate-400">
             {searchQuery
               ? 'No se encontraron flotillas que coincidan con la búsqueda.'
               : 'No hay flotillas registradas actualmente.'}
@@ -528,9 +528,9 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-[#DDE4E8] flex items-center justify-between bg-white text-[#231F20]">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-white text-[#06345A]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#98DAE9]/20 border border-[#98DAE9]/40 flex items-center justify-center text-[#1D7EAE]">
+                <div className="w-8 h-8 rounded-lg bg-[#73C7FF]/20 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2]">
                   <Truck className="w-4 h-4" />
                 </div>
                 <h3 className="text-base font-bold">
@@ -569,8 +569,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                       if (formErrors.nombre) setFormErrors({ ...formErrors, nombre: '' });
                     }}
                     placeholder="Ej. Flotilla Reparto Norte"
-                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                      formErrors.nombre ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                      formErrors.nombre ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.nombre && (
@@ -590,8 +590,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                       if (formErrors.empresa) setFormErrors({ ...formErrors, empresa: '' });
                     }}
                     placeholder="Ej. Logística y Distribución S.A."
-                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                      formErrors.empresa ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                      formErrors.empresa ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.empresa && (
@@ -611,8 +611,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                       if (formErrors.contacto) setFormErrors({ ...formErrors, contacto: '' });
                     }}
                     placeholder="Ej. Ing. Roberto Gómez"
-                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                      formErrors.contacto ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                      formErrors.contacto ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.contacto && (
@@ -632,8 +632,8 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                       if (formErrors.telefono) setFormErrors({ ...formErrors, telefono: '' });
                     }}
                     placeholder="Ej. 555-888-9999"
-                    className={`w-full px-3 py-2 border rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] ${
-                      formErrors.telefono ? 'border-red-400 bg-red-50/30' : 'border-[#DDE4E8]'
+                    className={`w-full px-3 py-2 border rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] ${
+                      formErrors.telefono ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'
                     }`}
                   />
                   {formErrors.telefono && (
@@ -650,7 +650,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                     value={formCorreo}
                     onChange={(e) => setFormCorreo(e.target.value)}
                     placeholder="Ej. flotillas@empresa.com"
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
                   />
                 </div>
 
@@ -661,7 +661,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                   <select
                     value={formEstado}
                     onChange={(e) => setFormEstado(e.target.value as EstadoFlotilla)}
-                    className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE] cursor-pointer"
+                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] cursor-pointer"
                   >
                     <option value="Activa">Activa — Operando en taller</option>
                     <option value="Inactiva">Inactiva — Pausada o suspendida</option>
@@ -678,18 +678,18 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                   value={formNotas}
                   onChange={(e) => setFormNotas(e.target.value)}
                   placeholder="Detalles sobre facturación, condiciones de servicio o requerimientos especiales..."
-                  className="w-full px-3 py-2 border border-[#DDE4E8] rounded-lg text-[#231F20] bg-white focus:outline-none focus:border-[#1D7EAE] focus:ring-1 focus:ring-[#1D7EAE]"
+                  className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
                 />
               </div>
 
               {/* ASIGNACIÓN DE VEHÍCULOS (CON EXCLUSIVIDAD) */}
-              <div className="pt-2 border-t border-[#DDE4E8] space-y-3">
+              <div className="pt-2 border-t border-[#E5E7EB] space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <label className="block font-bold text-slate-800 text-xs">
                       Vehículos asignados ({formSelectedVehiculoIds.length})
                     </label>
-                    <p className="text-[11px] text-[#5F6B73]">
+                    <p className="text-[11px] text-[#6B7280]">
                       Un vehículo no puede pertenecer a dos flotillas al mismo tiempo.
                     </p>
                   </div>
@@ -701,13 +701,13 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                       value={vehiculoSearchFilter}
                       onChange={(e) => setVehiculoSearchFilter(e.target.value)}
                       placeholder="Filtrar placas..."
-                      className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-[#DDE4E8] rounded-md"
+                      className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-md"
                     />
                   </div>
                 </div>
 
                 {/* Vehicle Selection Box */}
-                <div className="border border-[#DDE4E8] rounded-lg max-h-56 overflow-y-auto divide-y divide-slate-100 bg-slate-50/50">
+                <div className="border border-[#E5E7EB] rounded-lg max-h-56 overflow-y-auto divide-y divide-slate-100 bg-slate-50/50">
                   {vehiculos.length > 0 ? (
                     vehiculos
                       .filter((v) => {
@@ -747,16 +747,16 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                                 checked={isSelected}
                                 disabled={isBlockedByOther}
                                 onChange={() => toggleSelectVehiculo(v.id)}
-                                className="w-4 h-4 text-[#1D7EAE] rounded cursor-pointer"
+                                className="w-4 h-4 text-[#1497F2] rounded cursor-pointer"
                               />
                               <div>
-                                <div className="font-bold text-[#231F20] flex items-center gap-1.5">
+                                <div className="font-bold text-[#06345A] flex items-center gap-1.5">
                                   <span>{v.marca} {v.modelo}</span>
                                   <span className="font-mono text-[11px] font-semibold text-slate-700 bg-white px-1.5 py-0.2 rounded border border-slate-200">
                                     {v.placas}
                                   </span>
                                 </div>
-                                <div className="text-[10px] text-[#5F6B73]">
+                                <div className="text-[10px] text-[#6B7280]">
                                   {v.año ? `${v.año} · ` : ''}Cliente: {cli?.nombre || 'Particular'}
                                 </div>
                               </div>
@@ -769,7 +769,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
                                   <span>En flotilla "{otherFleet?.flotillaNombre}"</span>
                                 </span>
                               ) : isSelected ? (
-                                <span className="text-[10px] font-bold text-[#1D7EAE] bg-white px-2 py-0.5 rounded border border-blue-200">
+                                <span className="text-[10px] font-bold text-[#1497F2] bg-white px-2 py-0.5 rounded border border-blue-200">
                                   Asignado
                                 </span>
                               ) : (
@@ -790,17 +790,17 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DDE4E8]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
                 <button
                   type="button"
                   onClick={flotillaModalDismiss.handleClose}
-                  className="px-4 py-2.5 border border-[#DDE4E8] rounded-lg text-sm font-medium text-[#5F6B73] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
+                  className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-slate-50 transition-colors min-h-[42px] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#1D7EAE] hover:bg-[#0032A0] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
+                  className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors min-h-[42px] cursor-pointer"
                 >
                   Guardar flotilla
                 </button>
