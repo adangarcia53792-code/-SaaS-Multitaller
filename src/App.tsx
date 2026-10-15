@@ -4983,7 +4983,7 @@ export default function App() {
         totalNoVistosCount={totalPendientesCount}
       />
 
-      {/* ASISTENTE INTELIGENTE CONTEXTUAL */}
+      {/* ASISTENTE IA GENERAL Y COPILOTO CONTEXTUAL */}
       <AsistenteInteligente
         currentSection={activeSection}
         onNavigateToSection={(sec) => {
@@ -5001,6 +5001,13 @@ export default function App() {
         prospectos={prospectos}
         empleados={empleados}
         garantias={garantias}
+        currentUser={sesion || undefined}
+        onSaveCotizacion={handleSaveCotizacion}
+        onSaveCita={handleSaveCita}
+        onSaveOrden={handleSaveOrden}
+        onRegistrarBitacora={registrarEvento}
+        onShowToast={(msg) => mostrarMensaje(msg)}
+        onOpenCrearCotizacionIA={() => setIsCrearCotizacionIAOpen(true)}
       />
 
       {/* COPILOTO OPERATIVO TUNNO (PANEL LATERAL EN CADA SECCIÓN) */}

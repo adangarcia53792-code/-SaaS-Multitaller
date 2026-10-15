@@ -265,7 +265,8 @@ export type SeccionBitacora =
   | 'Configuración'
   | 'Usuarios'
   | 'Respaldos'
-  | 'Copiloto IA';
+  | 'Copiloto IA'
+  | 'Asistente IA';
 
 export interface DetalleCambioBitacora {
   etiqueta: string;

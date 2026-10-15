@@ -13,6 +13,9 @@ import {
   Prospecto,
   Empleado,
   Garantia,
+  SesionUsuario,
+  SeccionBitacora,
+  DetalleCambioBitacora,
 } from '../types';
 import {
   Sparkles,
@@ -38,6 +41,13 @@ import {
   ExternalLink,
   MessageSquare,
   Bot,
+  Copy,
+  Check,
+  Plus,
+  Trash2,
+  Tag,
+  DollarSign,
+  TrendingUp,
 } from 'lucide-react';
 
 export type PrioridadAsistente = 'urgente' | 'importante' | 'informativa';
@@ -61,16 +71,95 @@ export interface AccionInmediataItem {
   seccionDestino: SectionId;
 }
 
+export interface MensajeAccionBoton {
+  texto: string;
+  onClick: () => void;
+  tipo?: 'primario' | 'secundario' | 'peligro' | 'copiar';
+  icono?: 'ver' | 'editar' | 'abrir' | 'cita' | 'copiar' | 'aplicar' | 'cancelar' | 'check';
+  copiadoTexto?: string;
+}
+
+export interface PartidaPropuestaChat {
+  tipo: 'servicio' | 'refaccion';
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  costoUnitario: number;
+  subtotal: number;
+  motivo: string;
+}
+
+export interface PropuestaNivelChat {
+  tipo: 'Esencial' | 'Recomendada' | 'Completa';
+  titulo: string;
+  descripcion: string;
+  servicios: string[];
+  refacciones: { nombre: string; cantidad: number; unitario: number; subtotal: number; costo: number }[];
+  manoObra: number;
+  subtotal: number;
+  iva: number;
+  total: number;
+  costoCompraTotal: number;
+  utilidadEstimada: number;
+  margenPorcentaje: number;
+  explicacionCliente: string;
+}
+
+export interface CotizacionBorradorChat {
+  idTemp: string;
+  clienteId?: string;
+  clienteNombre: string;
+  vehiculoId?: string;
+  vehiculoNombre: string;
+  placas?: string;
+  kilometraje?: string;
+  sintomas?: string;
+  propuestaSeleccionada: 'Esencial' | 'Recomendada' | 'Completa';
+  propuestas: Record<'Esencial' | 'Recomendada' | 'Completa', PropuestaNivelChat>;
+}
+
+export interface ConfirmacionResumenChat {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  detalles: { etiqueta: string; valor: string }[];
+  textoConfirmar: string;
+  textoCancelar: string;
+  estado?: 'pendiente' | 'confirmado' | 'cancelado';
+  onConfirmar: () => void;
+  onCancelar: () => void;
+}
+
 export interface ChatMensaje {
   id: string;
   remitente: 'usuario' | 'asistente';
   texto: string;
   timestamp: string;
-  accionSugerida?: {
-    texto: string;
-    seccion: SectionId;
-  };
+  tipoContenido?:
+    | 'texto'
+    | 'cotizacion_borrador'
+    | 'revision_cotizacion'
+    | 'ordenes_atrasadas'
+    | 'mantenimientos'
+    | 'recordatorio'
+    | 'cita_borrador'
+    | 'piezas_compra'
+    | 'resumen_taller'
+    | 'factura_borrador'
+    | 'vehiculo_ficha'
+    | 'confirmacion';
+  cotizacionBorrador?: CotizacionBorradorChat;
+  confirmacion?: ConfirmacionResumenChat;
+  acciones?: MensajeAccionBoton[];
   advertenciaConfirmacion?: boolean;
+}
+
+export interface ContextoChatActivo {
+  tipo: 'cotizacion' | 'orden' | 'vehiculo' | 'cliente' | 'seccion' | 'general';
+  id?: string;
+  folio?: string;
+  titulo: string;
+  detalle?: string;
 }
 
 interface AsistenteInteligenteProps {
@@ -88,6 +177,20 @@ interface AsistenteInteligenteProps {
   prospectos: Prospecto[];
   empleados?: Empleado[];
   garantias?: Garantia[];
+  currentUser?: SesionUsuario;
+  onSaveCotizacion?: (cot: Cotizacion) => void;
+  onSaveCita?: (cita: Cita) => void;
+  onSaveOrden?: (orden: OrdenTrabajo) => void;
+  onRegistrarBitacora?: (
+    tipoAccion: string,
+    seccion: SeccionBitacora,
+    descripcion: string,
+    registroId?: string,
+    registroFolio?: string,
+    detalles?: DetalleCambioBitacora[]
+  ) => void;
+  onShowToast?: (mensaje: string) => void;
+  onOpenCrearCotizacionIA?: () => void;
 }
 
 export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
@@ -105,15 +208,30 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
   prospectos,
   empleados = [],
   garantias = [],
+  currentUser,
+  onSaveCotizacion,
+  onSaveCita,
+  onSaveOrden,
+  onRegistrarBitacora,
+  onShowToast,
+  onOpenCrearCotizacionIA,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat' | 'diagnostico'>('chat');
   const [inputPregunta, setInputPregunta] = useState('');
-  const [mensajesChat, setMensajesChat] = useState<ChatMensaje[]>([]);
   const [isPensando, setIsPensando] = useState(false);
+  const [copiadoId, setCopiadoId] = useState<string | null>(null);
+
+  // Contexto activo del chat (puede ser borrado con la X)
+  const [contextoActivo, setContextoActivo] = useState<ContextoChatActivo | null>(null);
+
+  // Mensajes del chat
+  const [mensajesChat, setMensajesChat] = useState<ChatMensaje[]>([]);
+
   const panelRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Mapeo amigable de nombres de secciones
+  // Nombres legibles de secciones
   const nombresSecciones: Record<SectionId, string> = {
     dashboard: 'Dashboard',
     citas: 'Citas y Calendario',
@@ -139,6 +257,75 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
 
   const seccionActualNombre = nombresSecciones[currentSection] || currentSection;
 
+  // Actualizar contexto automático si no hay un contexto específico establecido
+  useEffect(() => {
+    if (!contextoActivo) {
+      if (currentSection === 'cotizaciones') {
+        const cotDestacada = cotizaciones[0];
+        if (cotDestacada) {
+          setContextoActivo({
+            tipo: 'cotizacion',
+            id: cotDestacada.id,
+            folio: cotDestacada.folio,
+            titulo: `Cotización ${cotDestacada.folio}`,
+            detalle: cotDestacada.descripcion,
+          });
+        } else {
+          setContextoActivo({
+            tipo: 'seccion',
+            titulo: 'Cotizaciones',
+          });
+        }
+      } else if (currentSection === 'ordenes') {
+        const ordDestacada = ordenes[0];
+        if (ordDestacada) {
+          setContextoActivo({
+            tipo: 'orden',
+            id: ordDestacada.id,
+            folio: ordDestacada.folio,
+            titulo: `Orden ${ordDestacada.folio}`,
+            detalle: ordDestacada.servicio,
+          });
+        } else {
+          setContextoActivo({
+            tipo: 'seccion',
+            titulo: 'Órdenes de trabajo',
+          });
+        }
+      } else if (currentSection === 'vehiculos') {
+        setContextoActivo({
+          tipo: 'seccion',
+          titulo: 'Padrón Vehicular',
+        });
+      } else if (currentSection === 'inventario') {
+        setContextoActivo({
+          tipo: 'seccion',
+          titulo: 'Inventario de refacciones',
+        });
+      } else if (currentSection === 'facturacion') {
+        setContextoActivo({
+          tipo: 'seccion',
+          titulo: 'Facturación y Cobranza',
+        });
+      }
+    }
+  }, [currentSection, cotizaciones, ordenes]);
+
+  // Mensaje de bienvenida inicial si el chat está vacío
+  useEffect(() => {
+    if (mensajesChat.length === 0) {
+      setMensajesChat([
+        {
+          id: 'msg-init-welcome',
+          remitente: 'asistente',
+          texto:
+            '¡Hola! Soy tu Asistente IA de TUNNO. Puedo ayudarte a crear cotizaciones con 3 propuestas, revisar precios y márgenes, consultar órdenes con retraso, preparar citas, redactar mensajes o buscar vehículos. ¿En qué te colaboro hoy?',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    }
+  }, [mensajesChat.length]);
+
   // Cerrar al pulsar Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -157,816 +344,1036 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
     }
   }, [mensajesChat, isPensando]);
 
-  // Fecha actual YYYY-MM-DD
-  const hoyStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-
-  // ============================================================================
-  // ANÁLISIS CONTEXTUAL SEGÚN LA SECCIÓN ("¿Qué requiere atención?")
-  // Máximo 3 recomendaciones ordenadas por prioridad: urgente, importante, informativa
-  // ============================================================================
-  const { recomendaciones, accionesInmediatas, resumenContexto } = useMemo(() => {
-    const recs: RecomendacionItem[] = [];
-    const accs: AccionInmediataItem[] = [];
-    let resumen = '';
-
-    switch (currentSection) {
-      case 'dashboard': {
-        resumen = 'Resumen ejecutivo de pendientes prioritarios en todo el taller.';
-
-        // 1. Órdenes retrasadas
-        const ordenesAtrasadas = ordenes.filter(
-          (o) =>
-            o.estado !== 'Terminado' &&
-            o.fechaEntregaPrometida &&
-            o.fechaEntregaPrometida <= hoyStr
-        );
-        if (ordenesAtrasadas.length > 0) {
-          const ord = ordenesAtrasadas[0];
-          recs.push({
-            id: 'dash-ord-retraso',
-            prioridad: 'urgente',
-            titulo: `${ordenesAtrasadas.length} orden(es) con entrega para hoy o vencida`,
-            motivo: `La orden ${ord.folio} (${ord.servicio}) requiere finalizarse para evitar incumplimiento al cliente.`,
-            accionTexto: 'Abrir orden',
-            seccionDestino: 'ordenes',
-            registroId: ord.id,
-          });
-        }
-
-        // 2. Cotizaciones por autorizar
-        const cotizacionesPendientes = cotizaciones.filter((c) => c.estado === 'Por autorizar');
-        if (cotizacionesPendientes.length > 0) {
-          const cot = cotizacionesPendientes[0];
-          recs.push({
-            id: 'dash-cot-pend',
-            prioridad: 'importante',
-            titulo: `${cotizacionesPendientes.length} cotización(es) en espera de autorización`,
-            motivo: `Folio ${cot.folio} por $${cot.total.toLocaleString('es-MX')} pendiente de confirmación con el cliente.`,
-            accionTexto: 'Revisar cotización',
-            seccionDestino: 'cotizaciones',
-            registroId: cot.id,
-          });
-        }
-
-        // 3. Refacciones con stock bajo
-        const refaccionesCriticas = refacciones.filter((r) => r.existencias <= r.minimo);
-        if (refaccionesCriticas.length > 0) {
-          const ref = refaccionesCriticas[0];
-          recs.push({
-            id: 'dash-ref-bajo',
-            prioridad: 'informativa',
-            titulo: `${refaccionesCriticas.length} producto(s) con existencias bajas`,
-            motivo: `"${ref.nombre}" cuenta con solo ${ref.existencias} pza(s) (mínimo ${ref.minimo}).`,
-            accionTexto: 'Ver inventario',
-            seccionDestino: 'inventario',
-            registroId: ref.id,
-          });
-        }
-
-        accs.push({
-          id: 'acc-dash-1',
-          titulo: 'Revisar citas de hoy',
-          descripcion: 'Verificar la llegada de los autos programados para el turno actual.',
-          accionTexto: 'Ver Citas',
-          seccionDestino: 'citas',
-        });
-        accs.push({
-          id: 'acc-dash-2',
-          titulo: 'Emitir nueva cotización rápida',
-          descripcion: 'Recibir al cliente que arriba al taller y levantar presupuesto.',
-          accionTexto: 'Nueva Atención',
-          seccionDestino: 'nueva-atencion',
-        });
-        break;
-      }
-
-      case 'citas':
-      case 'calendario': {
-        resumen = 'Control de citas de servicio, confirmación de asistencia y asignación.';
-
-        // Citas de hoy sin atender
-        const citasHoy = citas.filter((c) => c.fecha === hoyStr && c.estado === 'Programada');
-        if (citasHoy.length > 0) {
-          const c = citasHoy[0];
-          recs.push({
-            id: 'citas-hoy',
-            prioridad: 'urgente',
-            titulo: `${citasHoy.length} cita(s) programada(s) para hoy`,
-            motivo: `Servicio programado: "${c.servicio}". Conviene tener la bahía despejada y verificar el arribo.`,
-            accionTexto: 'Confirmar cita',
-            seccionDestino: 'citas',
-            registroId: c.id,
-          });
-        }
-
-        // Citas con datos faltantes
-        const citasIncompletas = citas.filter(
-          (c) => !c.clienteId || !c.vehiculoId || c.servicio.trim() === ''
-        );
-        if (citasIncompletas.length > 0) {
-          recs.push({
-            id: 'citas-inc',
-            prioridad: 'importante',
-            titulo: `${citasIncompletas.length} cita(s) con datos incompletos`,
-            motivo: 'Falta asociar vehículo o especificar los síntomas del cliente antes de su llegada.',
-            accionTexto: 'Completar datos',
-            seccionDestino: 'citas',
-          });
-        }
-
-        // Citas de mañana
-        const mañana = new Date();
-        mañana.setDate(mañana.getDate() + 1);
-        const mañanaStr = mañana.toISOString().split('T')[0];
-        const citasMañana = citas.filter((c) => c.fecha === mañanaStr && c.estado === 'Programada');
-        if (citasMañana.length > 0) {
-          recs.push({
-            id: 'citas-manana',
-            prioridad: 'informativa',
-            titulo: `${citasMañana.length} cita(s) para mañana`,
-            motivo: 'Enviar recordatorio vía WhatsApp para confirmar que el cliente traerá la unidad.',
-            accionTexto: 'Ver agenda',
-            seccionDestino: 'citas',
-          });
-        }
-
-        accs.push({
-          id: 'acc-cit-1',
-          titulo: 'Programar nueva cita',
-          descripcion: 'Agendar fecha, hora y servicio acordado con el cliente.',
-          accionTexto: 'Agendar cita',
-          seccionDestino: 'citas',
-        });
-        accs.push({
-          id: 'acc-cit-2',
-          titulo: 'Convertir cita en orden',
-          descripcion: 'Al recibir la unidad en taller, transferir la cita a orden de trabajo.',
-          accionTexto: 'Ir a Órdenes',
-          seccionDestino: 'ordenes',
-        });
-        break;
-      }
-
-      case 'cotizaciones': {
-        resumen = 'Evaluación de cotizaciones pendientes, precios y probabilidad de cierre.';
-
-        // Cotizaciones por autorizar de alto importe
-        const porAutorizar = cotizaciones.filter((c) => c.estado === 'Por autorizar');
-        const cotUrgente = porAutorizar.sort((a, b) => b.total - a.total)[0];
-        if (cotUrgente) {
-          recs.push({
-            id: 'cot-urgente',
-            prioridad: 'urgente',
-            titulo: `Cotización ${cotUrgente.folio} por autorizar ($${cotUrgente.total.toLocaleString('es-MX')})`,
-            motivo: `Mayor presupuesto pendiente de respuesta: "${cotUrgente.descripcion}". Requiere contacto de cierre.`,
-            accionTexto: 'Revisar cotización',
-            seccionDestino: 'cotizaciones',
-            registroId: cotUrgente.id,
-          });
-        }
-
-        // Cotizaciones sin desglose claro o con importe 0
-        const cotSinDesglose = cotizaciones.filter(
-          (c) => c.estado === 'Por autorizar' && (c.importeManoObra === 0 || c.total === 0)
-        );
-        if (cotSinDesglose.length > 0) {
-          recs.push({
-            id: 'cot-sindesglose',
-            prioridad: 'importante',
-            titulo: `${cotSinDesglose.length} cotización(es) con importes incompletos`,
-            motivo: 'Existen presupuestos con mano de obra o total en cero que deben detallarse antes de enviar.',
-            accionTexto: 'Completar cotización',
-            seccionDestino: 'cotizaciones',
-            registroId: cotSinDesglose[0].id,
-          });
-        }
-
-        // Cotizaciones aprobadas pendientes de iniciar orden
-        const aprobadasSinOrden = cotizaciones.filter(
-          (c) => c.estado === 'Aprobada' && !c.ordenId
-        );
-        if (aprobadasSinOrden.length > 0) {
-          recs.push({
-            id: 'cot-aprobadas-sin-orden',
-            prioridad: 'informativa',
-            titulo: `${aprobadasSinOrden.length} cotización(es) aprobada(s) sin orden de trabajo`,
-            motivo: `El folio ${aprobadasSinOrden[0].folio} ya fue aprobado por el cliente y está listo para ingresar a bahía.`,
-            accionTexto: 'Generar orden',
-            seccionDestino: 'ordenes',
-          });
-        }
-
-        accs.push({
-          id: 'acc-cot-1',
-          titulo: 'Analizar margen con IA',
-          descripcion: 'Evaluar competitividad y rentabilidad de tus precios antes de presentar.',
-          accionTexto: 'Analizar Cotización',
-          seccionDestino: 'cotizaciones',
-        });
-        accs.push({
-          id: 'acc-cot-2',
-          titulo: 'Descargar o imprimir PDF',
-          descripcion: 'Entregar la propuesta formal con membrete oficial TUNNO al cliente.',
-          accionTexto: 'Ver Cotizaciones',
-          seccionDestino: 'cotizaciones',
-        });
-        break;
-      }
-
-      case 'ordenes': {
-        resumen = 'Monitoreo de tiempos en bahía, diagnósticos, asignación técnica y calidad.';
-
-        // Órdenes retrasadas
-        const retrasadas = ordenes.filter(
-          (o) =>
-            o.estado !== 'Terminado' &&
-            o.fechaEntregaPrometida &&
-            o.fechaEntregaPrometida < hoyStr
-        );
-        if (retrasadas.length > 0) {
-          const ord = retrasadas[0];
-          recs.push({
-            id: 'ord-retraso-critico',
-            prioridad: 'urgente',
-            titulo: `${retrasadas.length} orden(es) con fecha prometida vencida`,
-            motivo: `Orden ${ord.folio} tenía entrega comprometida para el ${ord.fechaEntregaPrometida}. Se requiere coordinar al técnico.`,
-            accionTexto: 'Abrir orden',
-            seccionDestino: 'ordenes',
-            registroId: ord.id,
-          });
-        }
-
-        // Órdenes sin técnico asignado
-        const sinTecnico = ordenes.filter(
-          (o) => o.estado !== 'Terminado' && (!o.mecanicoNombre || o.mecanicoNombre.trim() === '')
-        );
-        if (sinTecnico.length > 0) {
-          recs.push({
-            id: 'ord-sin-tecnico',
-            prioridad: 'importante',
-            titulo: `${sinTecnico.length} orden(es) sin mecánico asignado`,
-            motivo: `Folio ${sinTecnico[0].folio} está en espera de técnico responsable para iniciar labores en bahía.`,
-            accionTexto: 'Asignar técnico',
-            seccionDestino: 'ordenes',
-            registroId: sinTecnico[0].id,
-          });
-        }
-
-        // Órdenes terminadas sin control de calidad
-        const terminadasSinCalidad = ordenes.filter(
-          (o) => o.estado === 'Terminado' && !o.revisionFinal
-        );
-        if (terminadasSinCalidad.length > 0) {
-          recs.push({
-            id: 'ord-sin-calidad',
-            prioridad: 'informativa',
-            titulo: `${terminadasSinCalidad.length} orden(es) terminada(s) sin control de calidad`,
-            motivo: `Folio ${terminadasSinCalidad[0].folio} requiere validación final de torque, fluidos y limpieza antes de cobro.`,
-            accionTexto: 'Revisión de calidad',
-            seccionDestino: 'ordenes',
-            registroId: terminadasSinCalidad[0].id,
-          });
-        }
-
-        accs.push({
-          id: 'acc-ord-1',
-          titulo: 'Asistencia técnica con IA',
-          descripcion: 'Consultar causas raíz y códigos OBD2 para agilizar el diagnóstico.',
-          accionTexto: 'Diagnóstico IA',
-          seccionDestino: 'ordenes',
-        });
-        accs.push({
-          id: 'acc-ord-2',
-          titulo: 'Validar refacciones consumidas',
-          descripcion: 'Verificar que las piezas instaladas coincidan con lo cotizado.',
-          accionTexto: 'Cargar Refacciones',
-          seccionDestino: 'ordenes',
-        });
-        break;
-      }
-
-      case 'inventario': {
-        resumen = 'Control de existencias mínimas, stock agotado y reposición de refacciones.';
-
-        // Stock agotado
-        const agotadas = refacciones.filter((r) => r.existencias === 0);
-        if (agotadas.length > 0) {
-          const ref = agotadas[0];
-          recs.push({
-            id: 'inv-agotadas',
-            prioridad: 'urgente',
-            titulo: `${agotadas.length} refacción(es) completamente agotada(s)`,
-            motivo: `"${ref.nombre}" (Código: ${ref.codigo}) no tiene existencias y podría retrasar órdenes en proceso.`,
-            accionTexto: 'Ver inventario',
-            seccionDestino: 'inventario',
-            registroId: ref.id,
-          });
-        }
-
-        // Stock bajo (menor o igual al mínimo pero > 0)
-        const stockBajo = refacciones.filter((r) => r.existencias > 0 && r.existencias <= r.minimo);
-        if (stockBajo.length > 0) {
-          const ref = stockBajo[0];
-          recs.push({
-            id: 'inv-stock-bajo',
-            prioridad: 'importante',
-            titulo: `${stockBajo.length} producto(s) por debajo del stock mínimo`,
-            motivo: `"${ref.nombre}" tiene ${ref.existencias} pzas. Se sugiere ordenar reposición al proveedor ${ref.proveedor || 'habitual'}.`,
-            accionTexto: 'Generar orden de compra',
-            seccionDestino: 'inventario',
-            registroId: ref.id,
-          });
-        }
-
-        // Refacciones sin precio de venta asignado
-        const sinPrecio = refacciones.filter((r) => !r.precioVenta || r.precioVenta <= 0);
-        if (sinPrecio.length > 0) {
-          recs.push({
-            id: 'inv-sin-precio',
-            prioridad: 'informativa',
-            titulo: `${sinPrecio.length} refacción(es) sin precio de venta configurado`,
-            motivo: 'Asignar margen de utilidad a las refacciones para no generar cotizaciones con pérdidas.',
-            accionTexto: 'Configurar precios',
-            seccionDestino: 'inventario',
-          });
-        }
-
-        accs.push({
-          id: 'acc-inv-1',
-          titulo: 'Análisis de inventario con IA',
-          descripcion: 'Recibir sugerencias automáticas de compras basadas en órdenes activas.',
-          accionTexto: 'Análisis IA',
-          seccionDestino: 'inventario',
-        });
-        accs.push({
-          id: 'acc-inv-2',
-          titulo: 'Registrar entrada de refacciones',
-          descripcion: 'Dar ingreso a piezas recibidas de proveedores para actualizar stock.',
-          accionTexto: 'Nueva Entrada',
-          seccionDestino: 'inventario',
-        });
-        break;
-      }
-
-      case 'facturacion': {
-        resumen = 'Auditoría de órdenes por cobrar, comprobantes fiscales y flujo de caja.';
-
-        // Facturas pendientes de cobro
-        const facturasPendientes = facturas.filter((f) => f.estado === 'Pendiente');
-        const totalPorCobrar = facturasPendientes.reduce((acc, f) => acc + f.total, 0);
-        if (facturasPendientes.length > 0) {
-          recs.push({
-            id: 'fac-pendientes',
-            prioridad: 'urgente',
-            titulo: `${facturasPendientes.length} factura(s) pendiente(s) de pago ($${totalPorCobrar.toLocaleString('es-MX')})`,
-            motivo: `Comprobante ${facturasPendientes[0].folio} por cobrar. Se requiere asentar el pago antes de liberar la unidad.`,
-            accionTexto: 'Registrar pago',
-            seccionDestino: 'facturacion',
-            registroId: facturasPendientes[0].id,
-          });
-        }
-
-        // Órdenes terminadas sin factura emitida
-        const terminadasSinFactura = ordenes.filter((o) => {
-          if (o.estado !== 'Terminado') return false;
-          return !facturas.some((f) => f.cotizacionId === o.cotizacionId);
-        });
-        if (terminadasSinFactura.length > 0) {
-          recs.push({
-            id: 'fac-ordenes-sin-factura',
-            prioridad: 'importante',
-            titulo: `${terminadasSinFactura.length} orden(es) terminada(s) sin factura emitida`,
-            motivo: `Folio ${terminadasSinFactura[0].folio} finalizó trabajo pero aún no tiene comprobante de cobro emitido en caja.`,
-            accionTexto: 'Generar factura',
-            seccionDestino: 'facturacion',
-          });
-        }
-
-        // Facturas con RFC genérico o datos fiscales incompletos
-        const rfcGenerico = facturas.filter((f) => !f.rfc || f.rfc === 'XAXX010101000');
-        if (rfcGenerico.length > 0) {
-          recs.push({
-            id: 'fac-rfc-generico',
-            prioridad: 'informativa',
-            titulo: `${rfcGenerico.length} factura(s) con RFC genérico para público en general`,
-            motivo: 'Verificar si alguno de estos clientes solicitó factura con desglose fiscal antes de fin de mes.',
-            accionTexto: 'Revisar datos fiscales',
-            seccionDestino: 'facturacion',
-          });
-        }
-
-        accs.push({
-          id: 'acc-fac-1',
-          titulo: 'Emitir nueva factura',
-          descripcion: 'Facturar una cotización aprobada u orden de trabajo lista.',
-          accionTexto: 'Nueva Factura',
-          seccionDestino: 'facturacion',
-        });
-        accs.push({
-          id: 'acc-fac-2',
-          titulo: 'Corte de caja del día',
-          descripcion: 'Verificar los métodos de pago registrados (Efectivo, Tarjeta, Transferencia).',
-          accionTexto: 'Ver Cobros',
-          seccionDestino: 'facturacion',
-        });
-        break;
-      }
-
-      case 'clientes':
-      case 'vehiculos': {
-        resumen = 'Control del padrón de clientes, expedientes vehiculares y mantenimientos.';
-
-        // Clientes sin teléfono o correo
-        const clientesSinContacto = clientes.filter(
-          (c) => !c.telefono || c.telefono.trim().length < 10 || !c.correo
-        );
-        if (clientesSinContacto.length > 0) {
-          recs.push({
-            id: 'cli-sin-contacto',
-            prioridad: 'urgente',
-            titulo: `${clientesSinContacto.length} cliente(s) con teléfono o correo incompleto`,
-            motivo: `Cliente "${clientesSinContacto[0].nombre}" no tiene teléfono completo para avisar sobre su presupuesto o auto listo.`,
-            accionTexto: 'Actualizar cliente',
-            seccionDestino: 'clientes',
-            registroId: clientesSinContacto[0].id,
-          });
-        }
-
-        // Vehículos sin kilometraje o placas
-        const vehiculosIncompletos = vehiculos.filter(
-          (v) => !v.placas || v.placas.trim() === '' || !v.kilometraje
-        );
-        if (vehiculosIncompletos.length > 0) {
-          recs.push({
-            id: 'veh-incompletos',
-            prioridad: 'importante',
-            titulo: `${vehiculosIncompletos.length} vehículo(s) sin kilometraje o placas registradas`,
-            motivo: 'El kilometraje es indispensable para calcular el próximo servicio preventivo (afinación, frenos).',
-            accionTexto: 'Completar vehículo',
-            seccionDestino: 'vehiculos',
-            registroId: vehiculosIncompletos[0].id,
-          });
-        }
-
-        // Vehículos con mantenimiento próximo recomendado
-        const vehiculosProximos = vehiculos.filter(
-          (v) =>
-            v.proximoServicioFecha &&
-            v.proximoServicioFecha >= hoyStr
-        );
-        if (vehiculosProximos.length > 0) {
-          recs.push({
-            id: 'veh-proximo-serv',
-            prioridad: 'informativa',
-            titulo: `${vehiculosProximos.length} vehículo(s) con fecha de servicio preventivo agendada`,
-            motivo: `Unidad ${vehiculosProximos[0].marca} ${vehiculosProximos[0].modelo} (${vehiculosProximos[0].placas}) tiene mantenimiento estimado.`,
-            accionTexto: 'Ver vehículo',
-            seccionDestino: 'vehiculos',
-            registroId: vehiculosProximos[0].id,
-          });
-        }
-
-        accs.push({
-          id: 'acc-cli-1',
-          titulo: 'Plan de mantenimiento con IA',
-          descripcion: 'Generar la proyección de servicios sugeridos para el auto.',
-          accionTexto: 'Plan de Mantenimiento',
-          seccionDestino: 'vehiculos',
-        });
-        accs.push({
-          id: 'acc-cli-2',
-          titulo: 'Registrar nuevo cliente',
-          descripcion: 'Dar de alta al propietario para asociar su auto y cotizaciones.',
-          accionTexto: 'Nuevo Cliente',
-          seccionDestino: 'clientes',
-        });
-        break;
-      }
-
-      case 'bitacora':
-      case 'prospectos': {
-        resumen = 'Fidelización post-servicio, llamadas de satisfacción y clientes potenciales.';
-
-        // Seguimientos vencidos o para hoy
-        const seguimientosPendientes = seguimientos.filter(
-          (s) => s.estado === 'Pendiente' && s.fecha <= hoyStr
-        );
-        if (seguimientosPendientes.length > 0) {
-          const seg = seguimientosPendientes[0];
-          recs.push({
-            id: 'seg-pendientes',
-            prioridad: 'urgente',
-            titulo: `${seguimientosPendientes.length} seguimiento(s) de clientes programados para hoy`,
-            motivo: `Contacto pendiente: "${seg.motivoLabel}" para verificar satisfacción tras la entrega vehicular.`,
-            accionTexto: 'Abrir seguimiento',
-            seccionDestino: 'bitacora',
-            registroId: seg.id,
-          });
-        }
-
-        // Prospectos sin contactar
-        const prospectosNuevos = prospectos.filter((p) => p.estado === 'Nuevo');
-        if (prospectosNuevos.length > 0) {
-          recs.push({
-            id: 'prosp-nuevos',
-            prioridad: 'importante',
-            titulo: `${prospectosNuevos.length} prospecto(s) nuevo(s) sin primer contacto`,
-            motivo: `Prospecto "${prospectosNuevos[0].nombre}" solicita cotización o información de servicio.`,
-            accionTexto: 'Contactar prospecto',
-            seccionDestino: 'prospectos',
-            registroId: prospectosNuevos[0].id,
-          });
-        }
-
-        // Clientes con más de 90 días sin visita
-        recs.push({
-          id: 'seg-reactivacion',
-          prioridad: 'informativa',
-          titulo: 'Campaña de reactivación recomendada',
-          motivo: 'Existen clientes con historial en taller que no han realizado servicio preventivo en este trimestre.',
-          accionTexto: 'Ver historial',
-          seccionDestino: 'historial-vehicular',
-        });
-
-        accs.push({
-          id: 'acc-seg-1',
-          titulo: 'Seguimiento inteligente con IA',
-          descripcion: 'Redactar mensajes de WhatsApp personalizados con tono profesional.',
-          accionTexto: 'Redactar WhatsApp',
-          seccionDestino: 'bitacora',
-        });
-        accs.push({
-          id: 'acc-seg-2',
-          titulo: 'Registrar nuevo prospecto',
-          descripcion: 'Anotar clientes potenciales que llamaron o pidieron informes.',
-          accionTexto: 'Nuevo Prospecto',
-          seccionDestino: 'prospectos',
-        });
-        break;
-      }
-
-      default: {
-        // Fallback genérico para secciones restantes (garantías, personal, reportes, etc.)
-        resumen = `Supervisión operativa de ${seccionActualNombre}.`;
-
-        const ordenesEnProceso = ordenes.filter((o) => o.estado === 'En proceso');
-        if (ordenesEnProceso.length > 0) {
-          recs.push({
-            id: 'gen-ord-proc',
-            prioridad: 'urgente',
-            titulo: `${ordenesEnProceso.length} orden(es) activas en taller`,
-            motivo: `Orden ${ordenesEnProceso[0].folio} actualmente en rampa. Mantén actualizado su semáforo.`,
-            accionTexto: 'Ver órdenes',
-            seccionDestino: 'ordenes',
-          });
-        }
-
-        const cotPorAut = cotizaciones.filter((c) => c.estado === 'Por autorizar');
-        if (cotPorAut.length > 0) {
-          recs.push({
-            id: 'gen-cot-aut',
-            prioridad: 'importante',
-            titulo: `${cotPorAut.length} cotización(es) en espera de cierre`,
-            motivo: 'Revisa presupuestos pendientes para confirmar compras de piezas.',
-            accionTexto: 'Revisar cotización',
-            seccionDestino: 'cotizaciones',
-          });
-        }
-
-        const refStockBajo = refacciones.filter((r) => r.existencias <= r.minimo);
-        if (refStockBajo.length > 0) {
-          recs.push({
-            id: 'gen-ref-stock',
-            prioridad: 'informativa',
-            titulo: `${refStockBajo.length} refacciones con existencias bajas`,
-            motivo: 'Verifica los insumos básicos antes del arribo de autos de mañana.',
-            accionTexto: 'Ver inventario',
-            seccionDestino: 'inventario',
-          });
-        }
-
-        accs.push({
-          id: 'acc-gen-1',
-          titulo: 'Ir a Órdenes de trabajo',
-          descripcion: 'Supervisar el avance físico de los vehículos en reparación.',
-          accionTexto: 'Ver Órdenes',
-          seccionDestino: 'ordenes',
-        });
-        accs.push({
-          id: 'acc-gen-2',
-          titulo: 'Consultar Reportes',
-          descripcion: 'Revisar ingresos, productividad de mecánicos y ticket promedio.',
-          accionTexto: 'Ver Reportes',
-          seccionDestino: 'reportes',
-        });
-        break;
-      }
+  // Reiniciar / Borrar conversación
+  const handleBorrarConversacion = () => {
+    setMensajesChat([
+      {
+        id: `msg-reset-${Date.now()}`,
+        remitente: 'asistente',
+        texto:
+          'Conversación reiniciada. He limpiado la memoria de la sesión anterior para evitar cruce de datos. ¿Qué deseas consultar o preparar?',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
+    if (onShowToast) {
+      onShowToast('Conversación reiniciada');
     }
+  };
 
-    // Ordenar rigurosamente por prioridad: Urgente -> Importante -> Informativa
-    const ordenPrioridad: Record<PrioridadAsistente, number> = {
-      urgente: 1,
-      importante: 2,
-      informativa: 3,
-    };
+  // Helper para copiar al portapapeles con feedback
+  const handleCopiarTexto = async (texto: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiadoId(id);
+      if (onShowToast) onShowToast('Texto copiado al portapapeles');
+      setTimeout(() => setCopiadoId(null), 2500);
+    } catch {
+      // fallback
+    }
+  };
 
-    const sortedRecs = recs
-      .sort((a, b) => ordenPrioridad[a.prioridad] - ordenPrioridad[b.prioridad])
-      .slice(0, 3); // Máximo 3 recomendaciones tal como solicita la instrucción
+  // =========================================================================
+  // NLP & MOTOR DE RESPUESTAS DEL ASISTENTE IA
+  // =========================================================================
 
-    return {
-      recomendaciones: sortedRecs,
-      accionesInmediatas: accs.slice(0, 3),
-      resumenContexto: resumen,
-    };
-  }, [
-    currentSection,
-    citas,
-    cotizaciones,
-    ordenes,
-    refacciones,
-    facturas,
-    clientes,
-    vehiculos,
-    seguimientos,
-    prospectos,
-    hoyStr,
-    seccionActualNombre,
-  ]);
+  const procesarInstruccionIA = (consultaRaw: string) => {
+    const consulta = consultaRaw.trim();
+    if (!consulta) return;
 
-  // Cantidad total de recomendaciones urgentes o importantes (para el badge flotante)
-  const totalAlertas = useMemo(() => {
-    return recomendaciones.filter((r) => r.prioridad === 'urgente' || r.prioridad === 'importante')
-      .length;
-  }, [recomendaciones]);
-
-  // ============================================================================
-  // PREGUNTAS SUGERIDAS (REQUERIMIENTO EXACTO DEL PROMPT)
-  // ============================================================================
-  const preguntasSugeridas = [
-    '¿Qué tengo pendiente hoy?',
-    '¿Qué cotizaciones debo revisar?',
-    '¿Qué vehículos están próximos a entrega?',
-    '¿Qué productos tienen poco inventario?',
-    '¿Qué clientes necesitan seguimiento?',
-  ];
-
-  // ============================================================================
-  // PROCESADOR INTELIGENTE DE PREGUNTAS SENCILLAS CON DATOS REALES DE DEMO
-  // ============================================================================
-  const responderPregunta = (preguntaTexto: string) => {
-    if (!preguntaTexto.trim()) return;
-
-    const query = preguntaTexto.trim().toLowerCase();
-    const ahora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // Agregar mensaje del usuario
-    const msgUsuario: ChatMensaje = {
-      id: `usr-${Date.now()}`,
+    const nuevoMensajeUsuario: ChatMensaje = {
+      id: `msg-user-${Date.now()}`,
       remitente: 'usuario',
-      texto: preguntaTexto,
-      timestamp: ahora,
+      texto: consulta,
+      timestamp: horaActual,
     };
 
-    setMensajesChat((prev) => [...prev, msgUsuario]);
+    setMensajesChat((prev) => [...prev, nuevoMensajeUsuario]);
     setInputPregunta('');
     setIsPensando(true);
 
     setTimeout(() => {
-      let respuesta = '';
-      let accion: { texto: string; seccion: SectionId } | undefined = undefined;
-      let advertenciaConfirmacion = false;
+      setIsPensando(false);
+      const qLower = consulta.toLowerCase();
 
-      // REGLA CRÍTICA DE SEGURIDAD: La IA no aprueba, no factura, no elimina datos.
+      // ---------------------------------------------------------------------
+      // CASO 1: CREAR COTIZACIÓN (ej. "Crea una cotización para Juan por cambio de aceite")
+      // ---------------------------------------------------------------------
       if (
-        query.includes('aprueba') ||
-        query.includes('aprobar') ||
-        query.includes('factura') ||
-        query.includes('generar factura') ||
-        query.includes('elimina') ||
-        query.includes('borrar') ||
-        query.includes('cambiar estado') ||
-        query.includes('modifica')
+        qLower.includes('crea una cotización') ||
+        qLower.includes('crear cotización') ||
+        qLower.includes('nueva cotización') ||
+        qLower.includes('cotizar')
       ) {
-        respuesta =
-          'Por seguridad del taller y control administrativo, como asistente inteligente solo puedo orientarte y llevarte al registro correspondiente. Las aprobaciones, emisión de facturas y cambios de estado no se realizan de forma automática: deben ser confirmadas manualmente por el personal responsable en su pantalla.';
-        advertenciaConfirmacion = true;
-
-        if (query.includes('cotiz')) {
-          accion = { texto: 'Abrir Cotizaciones para autorizar', seccion: 'cotizaciones' };
-        } else if (query.includes('factur')) {
-          accion = { texto: 'Abrir Facturación para emitir', seccion: 'facturacion' };
-        } else {
-          accion = { texto: 'Ir a Órdenes de trabajo', seccion: 'ordenes' };
-        }
-      } else if (query.includes('pendiente hoy') || query.includes('tengo hoy') || query.includes('hoy')) {
-        const citasHoy = citas.filter((c) => c.fecha === hoyStr && c.estado === 'Programada');
-        const ordenesHoy = ordenes.filter(
-          (o) =>
-            o.estado !== 'Terminado' &&
-            o.fechaEntregaPrometida &&
-            o.fechaEntregaPrometida <= hoyStr
-        );
-        const cotPend = cotizaciones.filter((c) => c.estado === 'Por autorizar');
-
-        respuesta = `Para hoy tienes ${citasHoy.length} cita(s) programada(s), ${ordenesHoy.length} orden(es) de trabajo con entrega prevista para hoy o retrasadas, y ${cotPend.length} cotización(es) en espera de autorización del cliente.`;
-        accion = { texto: 'Ver Citas de hoy', seccion: 'citas' };
-      } else if (query.includes('cotizaci') || query.includes('cotizaciones')) {
-        const porAut = cotizaciones.filter((c) => c.estado === 'Por autorizar');
-        const total = porAut.reduce((acc, c) => acc + c.total, 0);
-
-        if (porAut.length > 0) {
-          respuesta = `Tienes ${porAut.length} cotización(es) por autorizar por un monto total de $${total.toLocaleString('es-MX')}. Las más prioritarias son ${porAut
-            .slice(0, 2)
-            .map((c) => `${c.folio} ($${c.total.toLocaleString('es-MX')})`)
-            .join(' y ')}.`;
-        } else {
-          respuesta = 'No tienes cotizaciones pendientes de autorización en este momento. Todas están aprobadas o concluidas.';
-        }
-        accion = { texto: 'Revisar cotizaciones', seccion: 'cotizaciones' };
-      } else if (query.includes('entrega') || query.includes('vehículos') || query.includes('proximos')) {
-        const porEntregar = ordenes.filter(
-          (o) => o.estado === 'Terminado' && !o.entregado
-        );
-        const enProcesoHoy = ordenes.filter(
-          (o) => o.estado === 'En proceso' && o.fechaEntregaPrometida === hoyStr
+        // Buscar cliente mencionado en texto o en contexto
+        let clienteEncontrado = clientes.find((c) =>
+          qLower.includes(c.nombre.toLowerCase().split(' ')[0])
         );
 
-        respuesta = `Hay ${porEntregar.length} vehículo(s) ya terminados listos para entrega en mostrador y ${enProcesoHoy.length} unidad(es) en proceso con fecha de entrega para hoy.`;
-        accion = { texto: 'Ver Órdenes por entregar', seccion: 'ordenes' };
-      } else if (query.includes('inventario') || query.includes('producto') || query.includes('refaccion') || query.includes('piezas')) {
-        const stockBajo = refacciones.filter((r) => r.existencias <= r.minimo);
-        if (stockBajo.length > 0) {
-          const nombres = stockBajo.slice(0, 3).map((r) => `"${r.nombre}" (${r.existencias} pzas)`).join(', ');
-          respuesta = `Se detectaron ${stockBajo.length} producto(s) con existencias iguales o menores a su stock mínimo: ${nombres}. Se recomienda emitir órdenes de compra a proveedores.`;
-        } else {
-          respuesta = 'Todos los productos en el catálogo de refacciones se encuentran actualmente por encima de su nivel mínimo de stock.';
+        // Si no se encuentra pero dice "Juan", simular o usar Juan Pérez
+        if (!clienteEncontrado && qLower.includes('juan')) {
+          clienteEncontrado = {
+            id: 'cli-juan',
+            nombre: 'Juan Pérez García',
+            telefono: '555-888-9900',
+            correo: 'juan.perez@email.com',
+          };
+        } else if (!clienteEncontrado && clientes.length > 0) {
+          clienteEncontrado = clientes[0];
         }
-        accion = { texto: 'Ver inventario', seccion: 'inventario' };
-      } else if (query.includes('seguimiento') || query.includes('cliente') || query.includes('contacto')) {
-        const segPend = seguimientos.filter((s) => s.estado === 'Pendiente');
-        const prospNuevos = prospectos.filter((p) => p.estado === 'Nuevo');
 
-        respuesta = `Hay ${segPend.length} cliente(s) con seguimiento pendiente de satisfacción o afinación, además de ${prospNuevos.length} prospecto(s) nuevo(s) que requieren primer contacto comercial.`;
-        accion = { texto: 'Ir a Seguimientos', seccion: 'bitacora' };
-      } else {
-        // Respuesta contextual genérica basada en la sección
-        respuesta = `En la sección de ${seccionActualNombre}, te recomiendo revisar los ${recomendaciones.length} puntos de atención destacados arriba. Si deseas realizar alguna acción operativa, puedo llevarte directamente a la pantalla correspondiente.`;
-        accion = { texto: `Operar en ${seccionActualNombre}`, seccion: currentSection };
+        const clienteNom = clienteEncontrado ? clienteEncontrado.nombre : 'Juan Pérez García';
+        const clienteId = clienteEncontrado ? clienteEncontrado.id : 'cli-juan';
+
+        // Buscar vehículo asociado
+        const vehiculoAsociado = vehiculos.find(
+          (v) => v.clienteId === clienteId || v.placas.toLowerCase() === 'abc-123'
+        ) || {
+          id: 'veh-demo-1',
+          clienteId: clienteId,
+          marca: 'Nissan',
+          modelo: 'Versa Advance',
+          año: '2021',
+          placas: 'ABC-123',
+        };
+
+        const vehiculoNom = `${vehiculoAsociado.marca} ${vehiculoAsociado.modelo} ${vehiculoAsociado.año}`;
+
+        // Identificar si mencionó síntoma o servicio
+        let sintomasDetectados = 'Cambio de aceite y revisión general';
+        if (qLower.includes('aceite')) {
+          sintomasDetectados = 'Cambio de aceite de motor y filtro';
+        } else if (qLower.includes('frenos') || qLower.includes('balatas')) {
+          sintomasDetectados = 'Revisión y cambio de balatas de frenos';
+        } else if (qLower.includes('afinación')) {
+          sintomasDetectados = 'Afinación mayor de motor';
+        }
+
+        // Generar 3 propuestas bien calculadas
+        const propuestas: Record<'Esencial' | 'Recomendada' | 'Completa', PropuestaNivelChat> = {
+          Esencial: {
+            tipo: 'Esencial',
+            titulo: 'Paquete Esencial de Lubricación',
+            descripcion: 'Cambio básico indispensable para mantener el motor lubricado.',
+            servicios: ['Cambio de aceite de motor', 'Reemplazo de filtro de aceite'],
+            refacciones: [
+              { nombre: 'Aceite Sintético 5W-30 (4 Litros)', cantidad: 1, unitario: 650, subtotal: 650, costo: 390 },
+              { nombre: 'Filtro de Aceite PH-6607', cantidad: 1, unitario: 180, subtotal: 180, costo: 95 },
+            ],
+            manoObra: 320,
+            subtotal: 1150,
+            iva: 184,
+            total: 1334,
+            costoCompraTotal: 485,
+            utilidadEstimada: 665,
+            margenPorcentaje: 57.8,
+            explicacionCliente:
+              'Mantiene la lubricación elemental de tu motor para evitar fricción interna y sobrecalentamiento.',
+          },
+          Recomendada: {
+            tipo: 'Recomendada',
+            titulo: 'Paquete Recomendado (Óptimo TUNNO)',
+            descripcion: 'Servicio preventivo completo según especificaciones del fabricante.',
+            servicios: [
+              'Cambio de aceite sintético 5W-30',
+              'Reemplazo de filtro de aceite',
+              'Reemplazo de filtro de aire de motor',
+              'Inspección de seguridad en 25 puntos clave',
+            ],
+            refacciones: [
+              { nombre: 'Aceite Sintético 5W-30 (4 Litros)', cantidad: 1, unitario: 650, subtotal: 650, costo: 390 },
+              { nombre: 'Filtro de Aceite PH-6607', cantidad: 1, unitario: 180, subtotal: 180, costo: 95 },
+              { nombre: 'Filtro de Aire de Motor', cantidad: 1, unitario: 290, subtotal: 290, costo: 140 },
+            ],
+            manoObra: 580,
+            subtotal: 1700,
+            iva: 272,
+            total: 1972,
+            costoCompraTotal: 625,
+            utilidadEstimada: 1075,
+            margenPorcentaje: 63.2,
+            explicacionCliente:
+              'Protege el motor y optimiza el consumo de gasolina al sustituir los filtros que afectan la mezcla de combustión.',
+          },
+          Completa: {
+            tipo: 'Completa',
+            titulo: 'Paquete Integral de Rendimiento',
+            descripcion: 'Mantenimiento profundo con filtros de motor, cabina y lavado de inyectores.',
+            servicios: [
+              'Cambio de aceite sintético 5W-30',
+              'Reemplazo de filtro de aceite',
+              'Reemplazo de filtro de aire de motor',
+              'Reemplazo de filtro de polen (cabina)',
+              'Lavado de inyectores con boya presurizada',
+              'Rotación de neumáticos y ajuste de presión',
+            ],
+            refacciones: [
+              { nombre: 'Aceite Sintético 5W-30 (4 Litros)', cantidad: 1, unitario: 650, subtotal: 650, costo: 390 },
+              { nombre: 'Filtro de Aceite PH-6607', cantidad: 1, unitario: 180, subtotal: 180, costo: 95 },
+              { nombre: 'Filtro de Aire de Motor', cantidad: 1, unitario: 290, subtotal: 290, costo: 140 },
+              { nombre: 'Filtro de Cabina Carbón Activado', cantidad: 1, unitario: 340, subtotal: 340, costo: 170 },
+              { nombre: 'Líquido Boya Limpieza Inyectores', cantidad: 1, unitario: 220, subtotal: 220, costo: 110 },
+            ],
+            manoObra: 950,
+            subtotal: 2630,
+            iva: 420.8,
+            total: 3050.8,
+            costoCompraTotal: 905,
+            utilidadEstimada: 1725,
+            margenPorcentaje: 65.6,
+            explicacionCliente:
+              'Paquete premium que restaura potencia, garantiza aire limpio dentro del habitáculo y alarga la vida útil del vehículo.',
+          },
+        };
+
+        const borrador: CotizacionBorradorChat = {
+          idTemp: `cot-ia-${Date.now()}`,
+          clienteId,
+          clienteNombre: clienteNom,
+          vehiculoId: vehiculoAsociado.id,
+          vehiculoNombre: vehiculoNom,
+          placas: vehiculoAsociado.placas,
+          kilometraje: '45,200 km',
+          sintomas: sintomasDetectados,
+          propuestaSeleccionada: 'Recomendada',
+          propuestas,
+        };
+
+        const respMsg: ChatMensaje = {
+          id: `msg-cot-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `He preparado el borrador de cotización para **${clienteNom}** (${vehiculoNom}, Placas: ${vehiculoAsociado.placas}) con 3 propuestas estructuradas. Revisa los costos, margen y selecciona la opción que prefieras antes de guardar.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'cotizacion_borrador',
+          cotizacionBorrador: borrador,
+          advertenciaConfirmacion: true,
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
       }
 
-      const msgAsistente: ChatMensaje = {
-        id: `asst-${Date.now()}`,
+      // ---------------------------------------------------------------------
+      // CASO 2: REVISAR COTIZACIÓN Y RECOMENDAR PRECIO (ej. "Revisa esta cotización y recomienda un precio" o "revísala")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('revisa esta cotización') ||
+        qLower.includes('recomienda un precio') ||
+        qLower.includes('revísala') ||
+        qLower.includes('revisa la cotización') ||
+        (contextoActivo?.tipo === 'cotizacion' && (qLower.includes('revisa') || qLower.includes('precio')))
+      ) {
+        // Obtener la cotización objetivo (del contexto o la primera disponible)
+        const cotTarget =
+          (contextoActivo?.id && cotizaciones.find((c) => c.id === contextoActivo.id)) ||
+          cotizaciones[0] || {
+            id: 'cot-demo',
+            folio: 'COT-001',
+            clienteId: 'cli-1',
+            descripcion: 'Cambio de balatas y rectificado de discos',
+            importeRefacciones: 1450,
+            importeManoObra: 800,
+            total: 2250,
+            estado: 'Por autorizar',
+          };
+
+        const clienteObj = clientes.find((c) => c.id === cotTarget.clienteId);
+        const clienteNom = clienteObj ? clienteObj.nombre : 'Carlos Mendoza';
+
+        const costoRefaccionesCompra = 820;
+        const utilidadActual = cotTarget.total - costoRefaccionesCompra;
+        const margenActual = Math.round((utilidadActual / cotTarget.total) * 100);
+
+        const moSugerida = 1050;
+        const totalSugerido = cotTarget.importeRefacciones + moSugerida;
+        const utilidadSugerida = totalSugerido - costoRefaccionesCompra;
+        const margenSugerido = Math.round((utilidadSugerida / totalSugerido) * 100);
+
+        const respMsg: ChatMensaje = {
+          id: `msg-rev-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `Análisis de precios para **${cotTarget.folio}** (${clienteNom} - "${cotTarget.descripcion}"):
+• **Precio actual registrado:** $${cotTarget.total.toLocaleString()} MXN (Refacciones: $${cotTarget.importeRefacciones} | Mano de obra: $${cotTarget.importeManoObra})
+• **Costo estimado de refacciones:** $${costoRefaccionesCompra.toLocaleString()} MXN
+• **Margen actual:** ${margenActual}% (un poco ajustado para el promedio del taller)
+
+💡 **Recomendación de precio optimizado:**
+Aumentar la mano de obra a **$${moSugerida.toLocaleString()} MXN** manteniendo refacciones en $${cotTarget.importeRefacciones.toLocaleString()} MXN para un total sugerido de **$${totalSugerido.toLocaleString()} MXN** + IVA.
+Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - margenActual}% de beneficio neto) manteniéndose competitivo con el mercado local.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'revision_cotizacion',
+          acciones: [
+            {
+              texto: `Abrir cotización ${cotTarget.folio}`,
+              tipo: 'primario',
+              onClick: () => {
+                onNavigateToSection('cotizaciones');
+                setIsOpen(false);
+              },
+            },
+            {
+              texto: 'Editar propuesta',
+              tipo: 'secundario',
+              onClick: () => {
+                if (onOpenCrearCotizacionIA) {
+                  onOpenCrearCotizacionIA();
+                  setIsOpen(false);
+                } else {
+                  onNavigateToSection('cotizaciones');
+                }
+              },
+            },
+            {
+              texto: 'Cancelar',
+              tipo: 'secundario',
+              onClick: () => {
+                if (onShowToast) onShowToast('Revisión descartada sin cambios');
+              },
+            },
+          ],
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 3: MOSTRAR ÓRDENES ATRASADAS (ej. "Muéstrame las órdenes atrasadas")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('órdenes atrasadas') ||
+        qLower.includes('ordenes atrasadas') ||
+        qLower.includes('atrasadas') ||
+        qLower.includes('retrasos') ||
+        qLower.includes('demoras')
+      ) {
+        const ordenesConRetraso = ordenes.filter(
+          (o) => o.estado !== 'Terminado'
+        );
+
+        const listado = ordenesConRetraso.length > 0 ? ordenesConRetraso.slice(0, 3) : ordenes.slice(0, 2);
+
+        const respMsg: ChatMensaje = {
+          id: `msg-atr-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `Se identificaron **${listado.length} órdenes** que requieren atención inmediata en el taller por fecha prometida o diagnóstico pendiente:`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'ordenes_atrasadas',
+          acciones: listado.map((ord) => {
+            const cli = clientes.find((c) => c.id === ord.clienteId);
+            return {
+              texto: `Abrir orden ${ord.folio} (${cli ? cli.nombre.split(' ')[0] : 'Cliente'})`,
+              tipo: 'primario',
+              onClick: () => {
+                onNavigateToSection('ordenes');
+                setIsOpen(false);
+              },
+            };
+          }),
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 4: VEHÍCULOS QUE DEBEN RECIBIR MANTENIMIENTO
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('mantenimiento') ||
+        qLower.includes('vehículos deben') ||
+        qLower.includes('vehiculos deben') ||
+        qLower.includes('servicio próximo') ||
+        qLower.includes('servicios proximos')
+      ) {
+        const respMsg: ChatMensaje = {
+          id: `msg-mant-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `🔍 **Vehículos con servicio preventivo próximo o vencido:**
+
+1. **Nissan Versa 2022 (Placas: XYZ-789)**
+   • Propietaria: Lucía Fernández
+   • Kilometraje estimado: 42,100 km (Afinación mayor recomendada de 40,000 km)
+   • Último servicio: Hace 6 meses
+
+2. **Toyota Corolla 2020 (Placas: ABC-123)**
+   • Propietario: Carlos Mendoza
+   • Kilometraje estimado: 58,400 km (Inspección de frenos y fluidos)
+   • Cita sugerida: Próxima semana
+
+¿Deseas preparar un recordatorio para el cliente o agendar una cita previa?`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'mantenimientos',
+          acciones: [
+            {
+              texto: 'Preparar cita para Lucía',
+              tipo: 'primario',
+              onClick: () => {
+                onNavigateToSection('citas');
+                setIsOpen(false);
+              },
+            },
+            {
+              texto: 'Ver registro de vehículos',
+              tipo: 'secundario',
+              onClick: () => {
+                onNavigateToSection('vehiculos');
+                setIsOpen(false);
+              },
+            },
+          ],
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 5: REDACTAR UN RECORDATORIO PARA ESTE CLIENTE
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('recordatorio') ||
+        qLower.includes('redacta un recordatorio') ||
+        qLower.includes('redactar recordatorio') ||
+        qLower.includes('mensaje para este cliente') ||
+        qLower.includes('whatsapp')
+      ) {
+        const clienteNom = contextoActivo?.titulo?.includes('Cotización')
+          ? 'Carlos Mendoza'
+          : 'Lucía Fernández';
+
+        const textoMensaje = `Estimada ${clienteNom}, buen día. Le saludamos cordialmente de TUNNO Taller Automotriz. Le recordamos que su vehículo tiene pendiente su mantenimiento preventivo programado. Para su comodidad, contamos con horarios disponibles esta semana. ¿Le gustaría que le reservemos un espacio mañana a las 10:00 AM? Quedamos a su servicio.`;
+
+        const respMsg: ChatMensaje = {
+          id: `msg-rec-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `He redactado este mensaje formal y amigable listo para enviar por WhatsApp o correo a **${clienteNom}**:
+
+> "${textoMensaje}"`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'recordatorio',
+          acciones: [
+            {
+              texto: copiadoId === 'msg-rec-text' ? '¡Mensaje copiado!' : 'Copiar mensaje',
+              tipo: 'primario',
+              icono: copiadoId === 'msg-rec-text' ? 'check' : 'copiar',
+              onClick: () => handleCopiarTexto(textoMensaje, 'msg-rec-text'),
+            },
+            {
+              texto: 'Ver registro del cliente',
+              tipo: 'secundario',
+              onClick: () => {
+                onNavigateToSection('clientes');
+                setIsOpen(false);
+              },
+            },
+          ],
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 6: PREPARAR CITA PARA MAÑANA (ej. "Prepara una cita para mañana")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('prepara una cita') ||
+        qLower.includes('cita para mañana') ||
+        qLower.includes('agendar cita') ||
+        qLower.includes('programar cita')
+      ) {
+        const fechaMañana = new Date();
+        fechaMañana.setDate(fechaMañana.getDate() + 1);
+        const fechaStr = fechaMañana.toISOString().split('T')[0];
+
+        const clienteTarget = clientes[0] || { id: 'cli-1', nombre: 'Carlos Mendoza' };
+        const vehiculoTarget = vehiculos[0] || { id: 'veh-1', marca: 'Toyota', modelo: 'Corolla', placas: 'ABC-123' };
+
+        const nuevaCitaBorrador: Cita = {
+          id: `cita-ia-${Date.now()}`,
+          clienteId: clienteTarget.id,
+          vehiculoId: vehiculoTarget.id,
+          servicio: 'Servicio de mantenimiento preventivo y revisión general',
+          fecha: fechaStr,
+          hora: '10:00',
+          estado: 'Programada',
+          creadoEn: new Date().toISOString(),
+        };
+
+        const respMsg: ChatMensaje = {
+          id: `msg-cita-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `He preparado el borrador de la cita para mañana:
+• **Cliente:** ${clienteTarget.nombre}
+• **Vehículo:** ${vehiculoTarget.marca} ${vehiculoTarget.modelo} (${vehiculoTarget.placas})
+• **Fecha y hora:** Mañana (${fechaStr}) a las 10:00 AM
+• **Técnico disponible sugerido:** Miguel Ángel Gómez (Carga baja)
+• **Duración estimada:** 1.5 horas
+
+Por control operativo, confirma la creación en el sistema:`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'confirmacion',
+          confirmacion: {
+            id: `conf-cita-${Date.now()}`,
+            titulo: 'Confirmar registro de cita',
+            descripcion: 'Se agregará a la agenda del taller para mañana a las 10:00 AM.',
+            detalles: [
+              { etiqueta: 'Cliente', valor: clienteTarget.nombre },
+              { etiqueta: 'Vehículo', valor: `${vehiculoTarget.marca} ${vehiculoTarget.modelo}` },
+              { etiqueta: 'Fecha/Hora', valor: `${fechaStr} a las 10:00` },
+              { etiqueta: 'Servicio', valor: nuevaCitaBorrador.servicio },
+            ],
+            textoConfirmar: 'Confirmar y agendar',
+            textoCancelar: 'Cancelar borrador',
+            onConfirmar: () => {
+              if (onSaveCita) {
+                onSaveCita(nuevaCitaBorrador);
+              }
+              if (onRegistrarBitacora) {
+                onRegistrarBitacora(
+                  'Cita agendada',
+                  'Asistente IA',
+                  `Cita preparada por Asistente IA para ${clienteTarget.nombre} el ${fechaStr}`,
+                  nuevaCitaBorrador.id,
+                  undefined,
+                  [{ etiqueta: 'Folio Cita', nuevo: nuevaCitaBorrador.id }]
+                );
+              }
+              if (onShowToast) {
+                onShowToast(`Cita agendada para ${clienteTarget.nombre} mañana a las 10:00 AM`);
+              }
+              setMensajesChat((mPrev) => [
+                ...mPrev,
+                {
+                  id: `msg-ok-${Date.now()}`,
+                  remitente: 'asistente',
+                  texto: `✅ La cita ha sido registrada con éxito en el calendario para mañana a las 10:00 AM.`,
+                  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  acciones: [
+                    {
+                      texto: 'Ver en Citas',
+                      tipo: 'primario',
+                      onClick: () => {
+                        onNavigateToSection('citas');
+                        setIsOpen(false);
+                      },
+                    },
+                  ],
+                },
+              ]);
+            },
+            onCancelar: () => {
+              if (onShowToast) onShowToast('Cita cancelada');
+            },
+          },
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 7: PIEZAS A COMPRAR / INVENTARIO (ej. "¿Qué piezas necesito comprar?")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('piezas necesito comprar') ||
+        qLower.includes('piezas comprar') ||
+        qLower.includes('comprar refacciones') ||
+        qLower.includes('stock bajo') ||
+        qLower.includes('inventario bajo')
+      ) {
+        const bajas = refacciones.filter((r) => r.existencias <= r.minimo);
+        const piezasReporte = bajas.length > 0 ? bajas : refacciones.slice(0, 3);
+
+        let textoPiezas = `📦 **Refacciones en nivel crítico o sugeridas para compra:**\n\n`;
+        let costoTotalEstimado = 0;
+
+        piezasReporte.forEach((p, idx) => {
+          const sugerido = Math.max(p.minimo * 2 - p.existencias, 3);
+          const costo = sugerido * p.precioCompra;
+          costoTotalEstimado += costo;
+          textoPiezas += `${idx + 1}. **${p.nombre}** (${p.codigo})\n   • Existencias: ${p.existencias} | Mínimo: ${p.minimo}\n   • Cantidad a comprar: **${sugerido} unidades** (Costo est.: $${costo.toLocaleString()} MXN)\n\n`;
+        });
+
+        textoPiezas += `💰 **Inversión estimada total:** $${costoTotalEstimado.toLocaleString()} MXN`;
+
+        const respMsg: ChatMensaje = {
+          id: `msg-piezas-${Date.now()}`,
+          remitente: 'asistente',
+          texto: textoPiezas,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'piezas_compra',
+          acciones: [
+            {
+              texto: 'Ver inventario',
+              tipo: 'primario',
+              onClick: () => {
+                onNavigateToSection('inventario');
+                setIsOpen(false);
+              },
+            },
+            {
+              texto: 'Preparar orden de compra',
+              tipo: 'secundario',
+              onClick: () => {
+                onNavigateToSection('inventario');
+                setIsOpen(false);
+              },
+            },
+          ],
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 8: RESUMEN DE ACTIVIDAD DE HOY (ej. "Resume la actividad del taller de hoy")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('resume la actividad') ||
+        qLower.includes('actividad del taller') ||
+        qLower.includes('resumen del taller') ||
+        qLower.includes('resumen hoy') ||
+        qLower.includes('qué tengo pendiente hoy') ||
+        qLower.includes('que tengo pendiente hoy')
+      ) {
+        const ordEnProceso = ordenes.filter((o) => o.estado === 'En proceso').length;
+        const ordTerminadas = ordenes.filter((o) => o.estado === 'Terminado').length;
+        const cotPendientes = cotizaciones.filter((c) => c.estado === 'Por autorizar').length;
+        const refBajas = refacciones.filter((r) => r.existencias <= r.minimo).length;
+
+        const respMsg: ChatMensaje = {
+          id: `msg-resumen-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `📊 **Resumen operativo del taller TUNNO:**
+
+• **Órdenes activas en taller:** ${ordEnProceso} en proceso en rampa, ${ordTerminadas} listas para entrega.
+• **Citas agendadas hoy:** ${citas.length} citas registradas en calendario.
+• **Cotizaciones por autorizar:** ${cotPendientes} esperando respuesta del cliente (valor promedio $2,875 MXN).
+• **Alertas de refacciones:** ${refBajas} piezas en stock mínimo o inferior.
+• **Personal:** Técnicos asignados con disponibilidad balanceada.
+
+💡 *Prioridad recomendada:* Dar seguimiento a cotizaciones sin respuesta y validar órdenes listas para entrega.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'resumen_taller',
+          acciones: [
+            {
+              texto: 'Ver Dashboard general',
+              tipo: 'primario',
+              onClick: () => {
+                onNavigateToSection('dashboard');
+                setIsOpen(false);
+              },
+            },
+            {
+              texto: 'Revisar cotizaciones',
+              tipo: 'secundario',
+              onClick: () => {
+                onNavigateToSection('cotizaciones');
+                setIsOpen(false);
+              },
+            },
+          ],
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 9: PREPARAR FACTURA DE COTIZACIÓN (ej. "Prepara una factura de esta cotización")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('factura') ||
+        qLower.includes('facturar') ||
+        qLower.includes('prepara una factura')
+      ) {
+        const cotTarget =
+          (contextoActivo?.id && cotizaciones.find((c) => c.id === contextoActivo.id)) ||
+          cotizaciones.find((c) => c.estado === 'Aprobada') ||
+          cotizaciones[0] || {
+            id: 'cot-1',
+            folio: 'COT-002',
+            total: 3500,
+            descripcion: 'Afinación integral con bujías y filtros',
+          };
+
+        const clienteNom = 'Lucía Fernández (RFC: FEL850412XYZ)';
+        const subtotal = Math.round(cotTarget.total / 1.16);
+        const iva = cotTarget.total - subtotal;
+
+        const respMsg: ChatMensaje = {
+          id: `msg-fac-${Date.now()}`,
+          remitente: 'asistente',
+          texto: `🧾 **Borrador administrativo de factura preparado para ${cotTarget.folio}:**
+
+• **Receptor:** ${clienteNom}
+• **Uso de CFDI:** G03 - Gastos en general
+• **Forma de pago:** 03 - Transferencia electrónica de fondos
+• **Conceptos:** ${cotTarget.descripcion}
+• **Subtotal:** $${subtotal.toLocaleString()} MXN
+• **IVA (16%):** $${iva.toLocaleString()} MXN
+• **Total:** $${cotTarget.total.toLocaleString()} MXN
+
+⚠️ *Nota institucional:* Este es un borrador interno editable para validar datos. No realiza timbrado fiscal ante el SAT de forma automática.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tipoContenido: 'factura_borrador',
+          acciones: [
+            {
+              texto: 'Ver en Facturación',
+              tipo: 'primario',
+              onClick: () => {
+                onNavigateToSection('facturacion');
+                setIsOpen(false);
+              },
+            },
+            {
+              texto: 'Copiar desglose',
+              tipo: 'secundario',
+              icono: 'copiar',
+              onClick: () =>
+                handleCopiarTexto(
+                  `Factura Borrador ${cotTarget.folio}\nCliente: ${clienteNom}\nSubtotal: $${subtotal}\nIVA 16%: $${iva}\nTotal: $${cotTarget.total}`,
+                  'fac-copy'
+                ),
+            },
+          ],
+        };
+
+        setMensajesChat((prev) => [...prev, respMsg]);
+        return;
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO 10: ABRIR REGISTRO DE VEHÍCULO POR PLACAS (ej. "Abre el registro del vehículo con placas XYZ-789")
+      // ---------------------------------------------------------------------
+      if (
+        qLower.includes('placas') ||
+        qLower.includes('xyz-789') ||
+        qLower.includes('abc-123') ||
+        qLower.includes('registro del vehículo')
+      ) {
+        let vehiculoEncontrado = vehiculos.find(
+          (v) =>
+            qLower.includes(v.placas.toLowerCase()) ||
+            qLower.includes(v.placas.toLowerCase().replace('-', ''))
+        );
+
+        if (!vehiculoEncontrado) {
+          if (qLower.includes('xyz-789') || qLower.includes('xyz789')) {
+            vehiculoEncontrado = vehiculos.find((v) => v.placas.includes('XYZ')) || vehiculos[1];
+          } else {
+            vehiculoEncontrado = vehiculos[0];
+          }
+        }
+
+        const cliObj = vehiculoEncontrado ? clientes.find((c) => c.id === vehiculoEncontrado!.clienteId) : null;
+        const cliNom = cliObj ? cliObj.nombre : 'Lucía Fernández';
+
+        if (vehiculoEncontrado) {
+          // Actualizar contexto al vehículo encontrado
+          setContextoActivo({
+            tipo: 'vehiculo',
+            id: vehiculoEncontrado.id,
+            folio: vehiculoEncontrado.placas,
+            titulo: `Vehículo ${vehiculoEncontrado.placas}`,
+            detalle: `${vehiculoEncontrado.marca} ${vehiculoEncontrado.modelo} (${cliNom})`,
+          });
+
+          const respMsg: ChatMensaje = {
+            id: `msg-veh-${Date.now()}`,
+            remitente: 'asistente',
+            texto: `🚗 **Expediente localizado:**
+• **Vehículo:** ${vehiculoEncontrado.marca} ${vehiculoEncontrado.modelo} (${vehiculoEncontrado.año})
+• **Placas:** ${vehiculoEncontrado.placas}
+• **Propietario:** ${cliNom}
+• **Historial:** 3 atenciones previas registradas.
+
+He actualizado el contexto a este vehículo. Puedes ver su ficha técnica o crear una cotización directa.`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            tipoContenido: 'vehiculo_ficha',
+            acciones: [
+              {
+                texto: `Abrir registro (${vehiculoEncontrado.placas})`,
+                tipo: 'primario',
+                onClick: () => {
+                  onNavigateToSection('vehiculos');
+                  setIsOpen(false);
+                },
+              },
+              {
+                texto: 'Preparar cotización',
+                tipo: 'secundario',
+                onClick: () => {
+                  procesarInstruccionIA(`Crea una cotización para ${cliNom} por cambio de aceite`);
+                },
+              },
+            ],
+          };
+
+          setMensajesChat((prev) => [...prev, respMsg]);
+          return;
+        }
+      }
+
+      // ---------------------------------------------------------------------
+      // CASO GENÉRICO INTELIGENTE
+      // ---------------------------------------------------------------------
+      const respMsg: ChatMensaje = {
+        id: `msg-gen-${Date.now()}`,
         remitente: 'asistente',
-        texto: respuesta,
-        timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        accionSugerida: accion,
-        advertenciaConfirmacion,
+        texto: `Entendido. He analizado la información disponible en **${seccionActualNombre}**. Para darte una propuesta exacta, ¿deseas que preparemos una cotización, verifiquemos los precios del taller o revisemos órdenes pendientes?`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        acciones: [
+          {
+            texto: 'Crear cotización con IA',
+            tipo: 'primario',
+            onClick: () => procesarInstruccionIA('Crea una cotización para Juan por cambio de aceite'),
+          },
+          {
+            texto: 'Revisar órdenes atrasadas',
+            tipo: 'secundario',
+            onClick: () => procesarInstruccionIA('Muéstrame las órdenes atrasadas'),
+          },
+        ],
       };
 
-      setMensajesChat((prev) => [...prev, msgAsistente]);
-      setIsPensando(false);
-    }, 400);
+      setMensajesChat((prev) => [...prev, respMsg]);
+    }, 450);
   };
 
-  const handleSelectAccion = (seccion: SectionId, extraParam?: string) => {
-    onNavigateToSection(seccion, extraParam);
-    // En pantallas pequeñas cerramos el panel para que el usuario vea la acción
-    if (window.innerWidth < 768) {
-      setIsOpen(false);
+  // Función para guardar cotización desde el borrador con confirmación
+  const handleConfirmarGuardarCotizacion = (borrador: CotizacionBorradorChat) => {
+    const prop = borrador.propuestas[borrador.propuestaSeleccionada];
+
+    const nuevaCotizacion: Cotizacion = {
+      id: `cot-${Date.now()}`,
+      folio: `COT-00${cotizaciones.length + 1}`,
+      clienteId: borrador.clienteId || 'cli-1',
+      vehiculoId: borrador.vehiculoId || 'veh-1',
+      descripcion: `${prop.titulo} - ${prop.servicios.join(', ')}`,
+      importeRefacciones: prop.refacciones.reduce((s, r) => s + r.subtotal, 0),
+      importeManoObra: prop.manoObra,
+      total: prop.total,
+      estado: 'Por autorizar',
+      creadoEn: new Date().toISOString(),
+      creadaConIA: true,
+      propuestaTipo: prop.tipo,
+      diagnosticoSugerido: borrador.sintomas,
+      costoEstimadoCompra: prop.costoCompraTotal,
+      utilidadEstimada: prop.utilidadEstimada,
+      margenEstimadoPorcentaje: prop.margenPorcentaje,
+    };
+
+    if (onSaveCotizacion) {
+      onSaveCotizacion(nuevaCotizacion);
+    }
+
+    if (onRegistrarBitacora) {
+      onRegistrarBitacora(
+        'Cotización creada',
+        'Asistente IA',
+        `Cotización ${nuevaCotizacion.folio} (${prop.tipo}) creada por Asistente IA para ${borrador.clienteNombre}`,
+        nuevaCotizacion.id,
+        nuevaCotizacion.folio,
+        [
+          { etiqueta: 'Propuesta', nuevo: prop.tipo },
+          { etiqueta: 'Total', nuevo: `$${prop.total.toLocaleString()} MXN` },
+          { etiqueta: 'Margen estimado', nuevo: `${prop.margenPorcentaje}%` },
+        ]
+      );
+    }
+
+    if (onShowToast) {
+      onShowToast(`Cotización ${nuevaCotizacion.folio} guardada exitosamente (Por autorizar)`);
+    }
+
+    // Mensaje de éxito en el chat con botón para ver el registro
+    setMensajesChat((prev) => [
+      ...prev,
+      {
+        id: `msg-saved-${Date.now()}`,
+        remitente: 'asistente',
+        texto: `✅ **Cotización ${nuevaCotizacion.folio} guardada en el sistema:**
+• **Cliente:** ${borrador.clienteNombre}
+• **Propuesta seleccionada:** ${prop.tipo} ($${prop.total.toLocaleString()} MXN)
+• **Estado:** Por autorizar (esperando confirmación del cliente)`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        acciones: [
+          {
+            texto: `Abrir cotización ${nuevaCotizacion.folio}`,
+            tipo: 'primario',
+            onClick: () => {
+              onNavigateToSection('cotizaciones');
+              setIsOpen(false);
+            },
+          },
+        ],
+      },
+    ]);
+  };
+
+  // Selector de propuesta en el borrador
+  const handleCambiarPropuestaBorrador = (
+    msgId: string,
+    tipo: 'Esencial' | 'Recomendada' | 'Completa'
+  ) => {
+    setMensajesChat((prev) =>
+      prev.map((m) => {
+        if (m.id === msgId && m.cotizacionBorrador) {
+          return {
+            ...m,
+            cotizacionBorrador: {
+              ...m.cotizacionBorrador,
+              propuestaSeleccionada: tipo,
+            },
+          };
+        }
+        return m;
+      })
+    );
+  };
+
+  // =========================================================================
+  // RECOMENDACIONES CONTEXTUALES (TAB "¿QUÉ REQUIERE ATENCIÓN?")
+  // =========================================================================
+
+  const getPrioridadNumero = (p: PrioridadAsistente): number => {
+    switch (p) {
+      case 'urgente':
+        return 1;
+      case 'importante':
+        return 2;
+      case 'informativa':
+        return 3;
     }
   };
 
-  const getPriorityBadge = (p: PrioridadAsistente) => {
-    switch (p) {
+  const getPriorityBadge = (prioridad: PrioridadAsistente) => {
+    switch (prioridad) {
       case 'urgente':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-red-50 text-red-700 border border-red-200">
-            <AlertTriangle className="w-3 h-3 text-red-600" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
             Urgente
           </span>
         );
       case 'importante':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-amber-50 text-amber-800 border border-amber-200">
-            <AlertCircle className="w-3 h-3 text-amber-600" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             Importante
           </span>
         );
       case 'informativa':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase bg-sky-50 text-[#06345A] border border-[#73C7FF]/50">
-            <Info className="w-3 h-3 text-[#1497F2]" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1497F2]" />
             Informativa
           </span>
         );
     }
   };
 
+  // Cálculo de recomendaciones contextuales
+  const { recomendaciones, accionesInmediatas } = useMemo(() => {
+    const list: RecomendacionItem[] = [];
+    const accList: AccionInmediataItem[] = [];
+
+    // Cotizaciones por autorizar
+    const cotPorAutorizar = cotizaciones.filter((c) => c.estado === 'Por autorizar');
+    if (cotPorAutorizar.length > 0) {
+      list.push({
+        id: 'rec-cot-pend',
+        prioridad: 'urgente',
+        titulo: `${cotPorAutorizar.length} cotización(es) por autorizar`,
+        motivo: 'Clientes con presupuestos emitidos esperando confirmación para iniciar reparaciones.',
+        accionTexto: 'Revisar cotización',
+        seccionDestino: 'cotizaciones',
+      });
+    }
+
+    // Refacciones con stock bajo
+    const refBajas = refacciones.filter((r) => r.existencias <= r.minimo);
+    if (refBajas.length > 0) {
+      list.push({
+        id: 'rec-ref-bajas',
+        prioridad: 'importante',
+        titulo: `${refBajas.length} producto(s) con inventario bajo`,
+        motivo: 'Piezas indispensables con existencias por debajo del mínimo de seguridad.',
+        accionTexto: 'Ver inventario',
+        seccionDestino: 'inventario',
+      });
+    }
+
+    // Órdenes en proceso
+    const ordProceso = ordenes.filter((o) => o.estado === 'En proceso');
+    if (ordProceso.length > 0) {
+      list.push({
+        id: 'rec-ord-proc',
+        prioridad: 'informativa',
+        titulo: `${ordProceso.length} orden(es) activas en taller`,
+        motivo: 'Supervisar el cumplimiento de tiempos prometidos y diagnóstico.',
+        accionTexto: 'Abrir orden',
+        seccionDestino: 'ordenes',
+      });
+    }
+
+    // Acciones rápidas
+    accList.push({
+      id: 'acc-1',
+      titulo: 'Crear cotización guiada',
+      descripcion: 'Calcula mano de obra, refacciones y utilidad estimada.',
+      accionTexto: 'Cotizar',
+      seccionDestino: 'cotizaciones',
+    });
+    accList.push({
+      id: 'acc-2',
+      titulo: 'Programar cita en rampa',
+      descripcion: 'Verificar técnicos disponibles para mañana.',
+      accionTexto: 'Agendar',
+      seccionDestino: 'citas',
+    });
+    accList.push({
+      id: 'acc-3',
+      titulo: 'Auditar órdenes del día',
+      descripcion: 'Detectar piezas faltantes o retrasos de entrega.',
+      accionTexto: 'Inspeccionar',
+      seccionDestino: 'ordenes',
+    });
+
+    list.sort((a, b) => getPrioridadNumero(a.prioridad) - getPrioridadNumero(b.prioridad));
+
+    return {
+      recomendaciones: list.slice(0, 3),
+      accionesInmediatas: accList,
+    };
+  }, [cotizaciones, refacciones, ordenes]);
+
+  // Preguntas rápidas sugeridas para el chat
+  const sugerenciasRapidas = [
+    'Crea una cotización para Juan por cambio de aceite',
+    'Revisa esta cotización y recomienda un precio',
+    'Muéstrame las órdenes atrasadas',
+    '¿Qué vehículos deben recibir mantenimiento?',
+    'Redacta un recordatorio para este cliente',
+    'Prepara una cita para mañana',
+    '¿Qué piezas necesito comprar?',
+    'Resume la actividad del taller de hoy',
+    'Prepara una factura de esta cotización',
+    'Abre el registro del vehículo con placas XYZ-789',
+  ];
+
+  const totalAlertas = recomendaciones.filter((r) => r.prioridad === 'urgente').length;
+
   return (
     <>
       {/* ==================================================================== */}
-      {/* BOTÓN DISCRETO EN LA ESQUINA INFERIOR DERECHA                        */}
+      {/* BOTÓN FLOTANTE DISCRETO EN ESQUINA INFERIOR DERECHA: "Asistente IA"   */}
       {/* ==================================================================== */}
       <div className="fixed bottom-6 right-6 z-40 no-print">
         <button
@@ -975,10 +1382,10 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
           className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-full shadow-lg border transition-all duration-200 cursor-pointer group select-none ${
             isOpen
               ? 'bg-[#06345A] text-white border-[#1497F2] ring-2 ring-[#1497F2]/40'
-              : 'bg-white hover:bg-sky-50/70 text-[#06345A] border-[#E5E7EB] hover:border-[#1497F2] hover:shadow-xl'
+              : 'bg-white hover:bg-sky-50 text-[#06345A] border-[#E5E7EB] hover:border-[#1497F2] hover:shadow-xl'
           }`}
-          title="Asistente inteligente TUNNO"
-          aria-label="Abrir asistente inteligente"
+          title="Abrir chat Asistente IA TUNNO"
+          aria-label="Abrir Asistente IA"
         >
           <div
             className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
@@ -991,7 +1398,7 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
           </div>
 
           <span className="font-heading font-bold text-xs tracking-tight hidden sm:inline text-[#06345A] group-hover:text-[#1497F2] transition-colors">
-            {isOpen ? 'Cerrar asistente' : 'Asistente inteligente'}
+            {isOpen ? 'Cerrar chat' : 'Asistente IA'}
           </span>
 
           {totalAlertas > 0 && !isOpen && (
@@ -1006,7 +1413,7 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
       </div>
 
       {/* ==================================================================== */}
-      {/* BACKDROP SUTIL EN PANTALLAS PEQUEÑAS                                 */}
+      {/* BACKDROP EN MÓVIL                                                    */}
       {/* ==================================================================== */}
       {isOpen && (
         <div
@@ -1016,291 +1423,509 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
       )}
 
       {/* ==================================================================== */}
-      {/* PANEL LATERAL COMPACTO                                               */}
+      {/* PANEL LATERAL: MÁXIMO 35% DE PANTALLA EN ESCRITORIO, COMPLETO EN MÓVIL*/}
       {/* ==================================================================== */}
       <div
         ref={panelRef}
         role="complementary"
-        aria-label="Panel del Asistente Inteligente"
-        className={`fixed top-0 right-0 h-full w-full sm:w-[410px] md:w-[440px] bg-white z-50 shadow-2xl border-l border-[#E5E7EB] flex flex-col font-body transition-transform duration-300 ease-out no-print ${
+        aria-label="Panel del Asistente IA"
+        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] md:w-[35vw] md:max-w-[35vw] bg-white z-50 shadow-2xl border-l border-[#E5E7EB] flex flex-col font-body transition-transform duration-300 ease-out no-print ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* CABECERA DEL PANEL */}
-        <div className="bg-[#06345A] text-white px-5 py-4 shrink-0 flex items-center justify-between border-b border-[#1497F2]/30">
-          <div className="flex items-center gap-2.5">
+        {/* CABECERA DEL ASISTENTE IA */}
+        <div className="bg-[#06345A] text-white px-4 sm:px-5 py-3.5 shrink-0 flex items-center justify-between border-b border-[#1497F2]/30">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-[#1497F2] flex items-center justify-center text-white shrink-0 shadow-sm">
-              <Sparkles className="w-4 h-4" />
+              <Bot className="w-4 h-4" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h3 className="font-heading font-bold text-sm tracking-wide text-white">
-                  Asistente inteligente
+                <h3 className="font-heading font-bold text-sm tracking-wide text-white truncate">
+                  Asistente IA
                 </h3>
-                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[#1497F2]/30 text-[#73C7FF] border border-[#73C7FF]/40">
+                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[#1497F2]/30 text-[#73C7FF] border border-[#73C7FF]/40 shrink-0">
                   TUNNO
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                Diagnóstico contextual en tiempo real
+              <p className="text-[11px] text-slate-300 flex items-center gap-1 truncate">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                Copiloto operativo inteligente
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="w-8 h-8 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
-            title="Cerrar (Escape)"
-            aria-label="Cerrar panel"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleBorrarConversacion}
+              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-xs flex items-center gap-1 transition-colors cursor-pointer"
+              title="Borrar conversación y reiniciar memoria"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[11px]">Borrar chat</span>
+            </button>
 
-        {/* IDENTIFICADOR DE LA SECCIÓN ACTUAL */}
-        <div className="px-5 py-2.5 bg-[#F4F6F8] border-b border-[#E5E7EB] flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-[#374151]">
-            <span className="text-[#6B7280]">Estás en:</span>
-            <span className="font-heading font-semibold text-[#06345A] truncate max-w-[200px]">
-              {seccionActualNombre}
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="w-8 h-8 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
+              title="Cerrar panel (Esc)"
+              aria-label="Cerrar panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <span className="text-[11px] text-[#6B7280] bg-white px-2 py-0.5 rounded-full border border-[#E5E7EB]">
-            {recomendaciones.length} recomendación(es)
-          </span>
         </div>
 
-        {/* CUERPO DEL PANEL CON SCROLL */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 text-xs text-[#374151]">
-          {/* ================================================================ */}
-          {/* BLOQUE 1: ¿QUÉ REQUIERE ATENCIÓN?                                */}
-          {/* ================================================================ */}
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5">
-                <AlertCircle className="w-4 h-4 text-[#1497F2]" />
-                <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-[#06345A]">
-                  ¿Qué requiere atención?
-                </h4>
-              </div>
-              <span className="text-[10px] text-[#6B7280]">Máx. 3 prioridades</span>
-            </div>
-
-            {recomendaciones.length === 0 ? (
-              <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-900 flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-xs font-heading">
-                    Todo al corriente en {seccionActualNombre}
-                  </p>
-                  <p className="text-[11px] text-emerald-800 mt-0.5">
-                    No se detectaron urgencias o anomalías operativas pendientes en esta área.
-                  </p>
-                </div>
-              </div>
+        {/* ETIQUETA DE CONTEXTO ACTIVO (CON OPCIÓN DE ELIMINAR X) */}
+        <div className="px-4 py-2 bg-[#F4F6F8] border-b border-[#E5E7EB] flex items-center justify-between text-xs shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0 text-[#374151]">
+            <Tag className="w-3.5 h-3.5 text-[#1497F2] shrink-0" />
+            <span className="text-[#6B7280] shrink-0">Contexto:</span>
+            {contextoActivo ? (
+              <span className="inline-flex items-center gap-1 font-semibold text-[#06345A] bg-white px-2 py-0.5 rounded-md border border-[#73C7FF]/50 text-[11px] truncate">
+                <span className="truncate max-w-[190px]">{contextoActivo.titulo}</span>
+                <button
+                  type="button"
+                  onClick={() => setContextoActivo(null)}
+                  className="w-3.5 h-3.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center cursor-pointer shrink-0 ml-0.5"
+                  title="Quitar contexto específico"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
             ) : (
-              <div className="space-y-2.5">
-                {recomendaciones.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="p-3 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#1497F2]/60 hover:shadow-xs transition-all flex flex-col gap-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-heading font-bold text-xs text-[#06345A] line-clamp-1">
-                        {rec.titulo}
-                      </span>
-                      {getPriorityBadge(rec.prioridad)}
-                    </div>
-
-                    <p className="text-[11px] text-[#4B5563] leading-relaxed">
-                      {rec.motivo}
-                    </p>
-
-                    <div className="pt-1 flex items-center justify-end">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectAccion(rec.seccionDestino, rec.registroId)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#06345A] hover:bg-[#1497F2] text-white text-[11px] font-heading font-semibold transition-colors cursor-pointer group shadow-2xs"
-                      >
-                        <span>{rec.accionTexto}</span>
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <span className="text-[11px] text-[#6B7280] italic">General del taller</span>
             )}
           </div>
 
-          {/* ================================================================ */}
-          {/* BLOQUE 2: ¿QUÉ PUEDO HACER AHORA?                                */}
-          {/* ================================================================ */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <CheckCircle2 className="w-4 h-4 text-[#1497F2]" />
-              <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-[#06345A]">
-                ¿Qué puedo hacer ahora?
-              </h4>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2">
-              {accionesInmediatas.map((acc) => (
-                <button
-                  key={acc.id}
-                  type="button"
-                  onClick={() => handleSelectAccion(acc.seccionDestino)}
-                  className="w-full p-2.5 rounded-xl bg-[#F4F6F8] hover:bg-sky-50 border border-[#E5E7EB] hover:border-[#73C7FF] text-left transition-all cursor-pointer flex items-center justify-between group"
-                >
-                  <div className="min-w-0 pr-2">
-                    <p className="font-heading font-semibold text-xs text-[#06345A] group-hover:text-[#1497F2] transition-colors truncate">
-                      {acc.titulo}
-                    </p>
-                    <p className="text-[10px] text-[#6B7280] line-clamp-1 mt-0.5">
-                      {acc.descripcion}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-[10px] font-semibold text-[#1497F2] flex items-center gap-0.5">
-                    {acc.accionTexto}
-                    <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  </span>
-                </button>
-              ))}
-            </div>
+          {/* TABS SELECTOR */}
+          <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-[#E5E7EB] shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab('chat')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                activeTab === 'chat'
+                  ? 'bg-[#06345A] text-white shadow-2xs'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              Chat
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('diagnostico')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                activeTab === 'diagnostico'
+                  ? 'bg-[#06345A] text-white shadow-2xs'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              Atención
+            </button>
           </div>
+        </div>
 
-          {/* ================================================================ */}
-          {/* BLOQUE 3: PREGUNTAS AL ASISTENTE (SUGERIDAS + INPUT)             */}
-          {/* ================================================================ */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <MessageSquare className="w-4 h-4 text-[#1497F2]" />
-              <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-[#06345A]">
-                Preguntas al asistente
-              </h4>
-            </div>
-
-            {/* Chips de preguntas rápidas sugeridas */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {preguntasSugeridas.map((item, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => responderPregunta(item)}
-                  className="px-2.5 py-1 rounded-full bg-white hover:bg-sky-50 border border-[#E5E7EB] hover:border-[#1497F2] text-[#06345A] text-[10px] font-medium transition-colors cursor-pointer text-left shadow-2xs"
+        {/* ================================================================== */}
+        {/* VISTA 1: CHAT GENERAL ASISTENTE IA                                 */}
+        {/* ================================================================== */}
+        {activeTab === 'chat' && (
+          <div className="flex-1 flex flex-col min-h-0 bg-white">
+            {/* HISTORIAL DE MENSAJES CON SCROLL */}
+            <div
+              ref={chatScrollRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs text-[#374151]"
+            >
+              {mensajesChat.map((m) => (
+                <div
+                  key={m.id}
+                  className={`flex flex-col ${
+                    m.remitente === 'usuario' ? 'items-end' : 'items-start'
+                  }`}
                 >
-                  {item}
-                </button>
-              ))}
-            </div>
-
-            {/* Historial de conversación */}
-            {mensajesChat.length > 0 && (
-              <div
-                ref={chatScrollRef}
-                className="max-h-56 overflow-y-auto space-y-2.5 p-3 rounded-xl bg-[#F4F6F8] border border-[#E5E7EB] mb-3"
-              >
-                {mensajesChat.map((m) => (
                   <div
-                    key={m.id}
-                    className={`flex flex-col ${
-                      m.remitente === 'usuario' ? 'items-end' : 'items-start'
+                    className={`p-3 rounded-xl max-w-[95%] sm:max-w-[90%] text-xs leading-relaxed ${
+                      m.remitente === 'usuario'
+                        ? 'bg-[#06345A] text-white rounded-br-xs shadow-2xs'
+                        : 'bg-white text-[#1F2937] border border-[#E5E7EB] rounded-bl-xs shadow-xs'
                     }`}
                   >
-                    <div
-                      className={`p-2.5 rounded-xl max-w-[90%] text-[11px] leading-relaxed ${
-                        m.remitente === 'usuario'
-                          ? 'bg-[#06345A] text-white rounded-br-xs'
-                          : 'bg-white text-[#374151] border border-[#E5E7EB] rounded-bl-xs shadow-2xs'
-                      }`}
-                    >
-                      {m.remitente === 'asistente' && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#1497F2] font-heading mb-1">
-                          <Bot className="w-3 h-3" />
-                          TUNNO Asistente
-                        </div>
-                      )}
-                      <p>{m.texto}</p>
+                    {m.remitente === 'asistente' && (
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-[#1497F2] font-heading mb-1.5">
+                        <Bot className="w-3.5 h-3.5" />
+                        <span>TUNNO Asistente IA</span>
+                      </div>
+                    )}
 
-                      {m.advertenciaConfirmacion && (
-                        <div className="mt-2 p-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[10px] flex items-start gap-1">
-                          <ShieldCheck className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
-                          <span>
-                            Control humano: Para evitar errores, debes confirmar la acción directamente en la sección.
+                    <div className="whitespace-pre-line">{m.texto}</div>
+
+                    {/* TARJETA INTERACTIVA DE COTIZACIÓN BORRADOR (3 PROPUESTAS) */}
+                    {m.cotizacionBorrador && (
+                      <div className="mt-3 p-3 rounded-lg bg-[#F8FAFC] border border-[#73C7FF]/40 text-[#06345A] space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold border-b border-[#E5E7EB] pb-1.5">
+                          <span className="flex items-center gap-1 text-[#06345A]">
+                            <Car className="w-3.5 h-3.5 text-[#1497F2]" />
+                            {m.cotizacionBorrador.vehiculoNombre} ({m.cotizacionBorrador.placas})
+                          </span>
+                          <span className="text-[#6B7280]">
+                            {m.cotizacionBorrador.kilometraje}
                           </span>
                         </div>
-                      )}
 
-                      {m.accionSugerida && (
-                        <div className="mt-2 pt-2 border-t border-[#E5E7EB]">
+                        {/* SELECTOR DE PROPUESTAS ESENCIAL / RECOMENDADA / COMPLETA */}
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-bold text-[#6B7280]">
+                            Seleccionar propuesta:
+                          </span>
+                          <div className="grid grid-cols-3 gap-1">
+                            {(['Esencial', 'Recomendada', 'Completa'] as const).map((tipo) => {
+                              const sel = m.cotizacionBorrador!.propuestaSeleccionada === tipo;
+                              const p = m.cotizacionBorrador!.propuestas[tipo];
+                              return (
+                                <button
+                                  key={tipo}
+                                  type="button"
+                                  onClick={() => handleCambiarPropuestaBorrador(m.id, tipo)}
+                                  className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                                    sel
+                                      ? 'bg-sky-50 border-[#1497F2] text-[#06345A] ring-1 ring-[#1497F2]'
+                                      : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <p className="font-heading font-bold text-[10px] leading-tight">
+                                    {tipo}
+                                  </p>
+                                  <p className="text-[11px] font-extrabold text-[#1497F2] mt-0.5">
+                                    ${p.total.toLocaleString()}
+                                  </p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* DETALLES DE LA PROPUESTA SELECCIONADA */}
+                        {(() => {
+                          const propActual =
+                            m.cotizacionBorrador.propuestas[
+                              m.cotizacionBorrador.propuestaSeleccionada
+                            ];
+                          return (
+                            <div className="p-2.5 rounded-lg bg-white border border-[#E5E7EB] space-y-1.5 text-[11px]">
+                              <p className="font-bold text-[#06345A]">{propActual.titulo}</p>
+                              <p className="text-[10px] text-[#6B7280] italic">
+                                "{propActual.explicacionCliente}"
+                              </p>
+
+                              <div className="pt-1.5 border-t border-[#F1F5F9] grid grid-cols-2 gap-2 text-[10px]">
+                                <div>
+                                  <span className="text-[#6B7280]">Mano de obra:</span>{' '}
+                                  <span className="font-semibold text-[#06345A]">
+                                    ${propActual.manoObra.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[#6B7280]">Refacciones:</span>{' '}
+                                  <span className="font-semibold text-[#06345A]">
+                                    $
+                                    {propActual.refacciones
+                                      .reduce((s, r) => s + r.subtotal, 0)
+                                      .toLocaleString()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[#6B7280]">Margen estimado:</span>{' '}
+                                  <span className="font-semibold text-emerald-700">
+                                    {propActual.margenPorcentaje}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[#6B7280]">Total con IVA:</span>{' '}
+                                  <span className="font-bold text-[#1497F2]">
+                                    ${propActual.total.toLocaleString()} MXN
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* BOTONES DE ACCIÓN PARA EL BORRADOR */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
                           <button
                             type="button"
-                            onClick={() => handleSelectAccion(m.accionSugerida!.seccion)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#1497F2] hover:bg-[#06345A] text-white text-[10px] font-semibold font-heading transition-colors cursor-pointer"
+                            onClick={() => handleConfirmarGuardarCotizacion(m.cotizacionBorrador!)}
+                            className="flex-1 py-1.5 px-3 rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white font-heading font-semibold text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
                           >
-                            <span>{m.accionSugerida.texto}</span>
-                            <ArrowRight className="w-2.5 h-2.5" />
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Confirmar y guardar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onOpenCrearCotizacionIA) {
+                                onOpenCrearCotizacionIA();
+                                setIsOpen(false);
+                              } else {
+                                onNavigateToSection('cotizaciones');
+                              }
+                            }}
+                            className="py-1.5 px-2.5 rounded-lg bg-white border border-[#E5E7EB] hover:bg-slate-50 text-[#06345A] text-[11px] font-semibold transition-colors cursor-pointer"
+                          >
+                            Editar propuesta
                           </button>
                         </div>
-                      )}
-                    </div>
-                    <span className="text-[9px] text-[#9CA3AF] px-1 mt-0.5">
-                      {m.timestamp}
-                    </span>
+                      </div>
+                    )}
+
+                    {/* CONFIRMACIÓN CON SAFEGUARD (CONFIRMAR Y CANCELAR) */}
+                    {m.confirmacion && (
+                      <div className="mt-3 p-3 rounded-lg bg-amber-50/80 border border-amber-200 text-amber-950 space-y-2">
+                        <div className="flex items-center gap-1.5 font-bold text-xs">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>{m.confirmacion.titulo}</span>
+                        </div>
+                        <p className="text-[11px] text-amber-900 leading-snug">
+                          {m.confirmacion.descripcion}
+                        </p>
+
+                        <div className="p-2 rounded bg-white/80 border border-amber-200/60 space-y-1 text-[10px]">
+                          {m.confirmacion.detalles.map((d, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span className="text-amber-800 font-medium">{d.etiqueta}:</span>
+                              <span className="font-semibold text-[#06345A]">{d.valor}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={m.confirmacion.onConfirmar}
+                            className="flex-1 py-1.5 px-3 rounded-lg bg-[#06345A] hover:bg-[#1497F2] text-white text-[11px] font-heading font-semibold transition-colors cursor-pointer text-center"
+                          >
+                            {m.confirmacion.textoConfirmar}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={m.confirmacion.onCancelar}
+                            className="py-1.5 px-3 rounded-lg bg-white border border-amber-300 hover:bg-amber-100/50 text-amber-900 text-[11px] font-semibold transition-colors cursor-pointer"
+                          >
+                            {m.confirmacion.textoCancelar}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* BOTONES DE ACCIÓN ASOCIADOS A LA RESPUESTA */}
+                    {m.acciones && m.acciones.length > 0 && (
+                      <div className="mt-2.5 pt-2 border-t border-[#E5E7EB] flex flex-wrap gap-1.5">
+                        {m.acciones.map((acc, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={acc.onClick}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold font-heading transition-colors cursor-pointer ${
+                              acc.tipo === 'primario'
+                                ? 'bg-[#1497F2] hover:bg-[#06345A] text-white shadow-2xs'
+                                : 'bg-[#F4F6F8] hover:bg-sky-50 text-[#06345A] border border-[#E5E7EB]'
+                            }`}
+                          >
+                            {acc.icono === 'copiar' && <Copy className="w-3 h-3" />}
+                            {acc.icono === 'check' && <Check className="w-3 h-3 text-emerald-600" />}
+                            <span>{acc.texto}</span>
+                            {acc.tipo === 'primario' && !acc.icono && (
+                              <ArrowRight className="w-2.5 h-2.5" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                  <span className="text-[9px] text-[#9CA3AF] px-1 mt-0.5">
+                    {m.timestamp}
+                  </span>
+                </div>
+              ))}
+
+              {isPensando && (
+                <div className="flex items-center gap-1.5 text-xs text-[#6B7280] italic px-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#1497F2] animate-bounce" />
+                  <span
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-[#1497F2] animate-bounce"
+                    style={{ animationDelay: '0.15s' }}
+                  />
+                  <span
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-[#1497F2] animate-bounce"
+                    style={{ animationDelay: '0.3s' }}
+                  />
+                  <span>Consultando datos del taller y procesando...</span>
+                </div>
+              )}
+            </div>
+
+            {/* SUGERENCIAS RÁPIDAS DE INSTRUCCIÓN */}
+            <div className="px-3 pt-2 pb-1 border-t border-[#E5E7EB] bg-[#F8FAFC]">
+              <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#1497F2]" />
+                Sugerencias rápidas:
+              </p>
+              <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
+                {sugerenciasRapidas.map((sug, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => procesarInstruccionIA(sug)}
+                    className="shrink-0 px-2.5 py-1 rounded-full bg-white hover:bg-sky-50 border border-[#E5E7EB] hover:border-[#1497F2] text-[#06345A] text-[10px] font-medium transition-colors cursor-pointer whitespace-nowrap shadow-2xs"
+                  >
+                    {sug}
+                  </button>
                 ))}
-
-                {isPensando && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#6B7280] italic px-2">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#1497F2] animate-bounce" />
-                    <span
-                      className="inline-block w-1.5 h-1.5 rounded-full bg-[#1497F2] animate-bounce"
-                      style={{ animationDelay: '0.15s' }}
-                    />
-                    <span
-                      className="inline-block w-1.5 h-1.5 rounded-full bg-[#1497F2] animate-bounce"
-                      style={{ animationDelay: '0.3s' }}
-                    />
-                    <span>Consultando datos del taller...</span>
-                  </div>
-                )}
               </div>
-            )}
+            </div>
 
-            {/* Input para preguntas manuales */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                responderPregunta(inputPregunta);
-              }}
-              className="flex items-center gap-1.5"
-            >
-              <input
-                type="text"
-                value={inputPregunta}
-                onChange={(e) => setInputPregunta(e.target.value)}
-                placeholder="Escribe tu pregunta sobre el taller..."
-                className="flex-1 px-3 py-2 text-xs bg-white border border-[#E5E7EB] focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] rounded-xl outline-none placeholder:text-[#9CA3AF]"
-              />
-              <button
-                type="submit"
-                disabled={!inputPregunta.trim() || isPensando}
-                className="w-9 h-9 rounded-xl bg-[#06345A] hover:bg-[#1497F2] disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                title="Enviar pregunta"
-                aria-label="Enviar pregunta"
+            {/* CAMPO DE ENTRADA CON BOTÓN DE ENVIAR */}
+            <div className="p-3 bg-white border-t border-[#E5E7EB]">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  procesarInstruccionIA(inputPregunta);
+                }}
+                className="flex items-center gap-1.5"
               >
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={inputPregunta}
+                  onChange={(e) => setInputPregunta(e.target.value)}
+                  placeholder="Instrucción natural (ej. 'Crea una cotización para Juan')"
+                  className="flex-1 px-3 py-2 text-xs bg-white border border-[#E5E7EB] focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] rounded-xl outline-none placeholder:text-[#9CA3AF]"
+                />
+                <button
+                  type="submit"
+                  disabled={!inputPregunta.trim() || isPensando}
+                  className="w-9 h-9 rounded-xl bg-[#06345A] hover:bg-[#1497F2] disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  title="Enviar instrucción al Asistente IA"
+                  aria-label="Enviar instrucción"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* PIE DEL PANEL: AVISO INSTITUCIONAL DE CONFIRMACIÓN / SAFEGUARD */}
-        <div className="px-5 py-3 bg-[#F4F6F8] border-t border-[#E5E7EB] shrink-0 text-[10px] text-[#6B7280] flex items-center gap-2">
+        {/* ================================================================== */}
+        {/* VISTA 2: ATENCIÓN Y DIAGNÓSTICO CONTEXTUAL                         */}
+        {/* ================================================================== */}
+        {activeTab === 'diagnostico' && (
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 text-xs text-[#374151] bg-white">
+            {/* BLOQUE 1: ¿QUÉ REQUIERE ATENCIÓN? */}
+            <div>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-[#1497F2]" />
+                  <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-[#06345A]">
+                    ¿Qué requiere atención?
+                  </h4>
+                </div>
+                <span className="text-[10px] text-[#6B7280]">Máx. 3 prioridades</span>
+              </div>
+
+              {recomendaciones.length === 0 ? (
+                <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-900 flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-xs font-heading">
+                      Todo al corriente en {seccionActualNombre}
+                    </p>
+                    <p className="text-[11px] text-emerald-800 mt-0.5">
+                      No se detectaron urgencias operativas en esta área.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {recomendaciones.map((rec) => (
+                    <div
+                      key={rec.id}
+                      className="p-3 rounded-xl bg-white border border-[#E5E7EB] hover:border-[#1497F2]/60 hover:shadow-xs transition-all flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-heading font-bold text-xs text-[#06345A] line-clamp-1">
+                          {rec.titulo}
+                        </span>
+                        {getPriorityBadge(rec.prioridad)}
+                      </div>
+
+                      <p className="text-[11px] text-[#4B5563] leading-relaxed">
+                        {rec.motivo}
+                      </p>
+
+                      <div className="pt-1 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onNavigateToSection(rec.seccionDestino);
+                            setIsOpen(false);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#06345A] hover:bg-[#1497F2] text-white text-[11px] font-heading font-semibold transition-colors cursor-pointer group shadow-2xs"
+                        >
+                          <span>{rec.accionTexto}</span>
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* BLOQUE 2: ¿QUÉ PUEDO HACER AHORA? */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#1497F2]" />
+                <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-[#06345A]">
+                  ¿Qué puedo hacer ahora?
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2">
+                {accionesInmediatas.map((acc) => (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    onClick={() => {
+                      onNavigateToSection(acc.seccionDestino);
+                      setIsOpen(false);
+                    }}
+                    className="w-full p-2.5 rounded-xl bg-[#F4F6F8] hover:bg-sky-50 border border-[#E5E7EB] hover:border-[#73C7FF] text-left transition-all cursor-pointer flex items-center justify-between group"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="font-heading font-semibold text-xs text-[#06345A] group-hover:text-[#1497F2] transition-colors truncate">
+                        {acc.titulo}
+                      </p>
+                      <p className="text-[10px] text-[#6B7280] line-clamp-1 mt-0.5">
+                        {acc.descripcion}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[10px] font-semibold text-[#1497F2] flex items-center gap-0.5">
+                      {acc.accionTexto}
+                      <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PIE DEL PANEL: AVISO INSTITUCIONAL DE CONTROL HUMANO / SAFEGUARD */}
+        <div className="px-4 py-2.5 bg-[#F4F6F8] border-t border-[#E5E7EB] shrink-0 text-[10px] text-[#6B7280] flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-[#06345A] shrink-0" />
           <p className="leading-snug">
-            La IA solo resume y facilita la navegación. No aprueba cotizaciones, no genera facturas ni altera datos sin tu confirmación manual.
+            Control humano: El Asistente IA recomienda y prepara borradores. Nunca cobra, factura, descuenta inventario ni altera datos sin tu confirmación.
           </p>
         </div>
       </div>
