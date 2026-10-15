@@ -95,6 +95,8 @@ import { GuiaInteractiva } from './components/GuiaInteractiva';
 import { GuiaMenuDropdown } from './components/GuiaMenuDropdown';
 import { GuiaBienvenidaModal } from './components/GuiaBienvenidaModal';
 import { AsistenteInteligente } from './components/AsistenteInteligente';
+import { CrearCotizacionIAModal } from './components/CrearCotizacionIAModal';
+import { CopilotoTallerPanel } from './components/CopilotoTallerPanel';
 import { TipoGuia, guardarPreferenciasGuia, obtenerPreferenciasGuia } from './data/guiaData';
 import { TunnoLogo } from './components/TunnoLogo';
 import { PlanMantenimientoModal } from './components/PlanMantenimientoModal';
@@ -1435,6 +1437,10 @@ export default function App() {
       console.error(e);
     }
   }, [bitacora]);
+
+  // Copiloto Operativo e IA States
+  const [isCopilotoOpen, setIsCopilotoOpen] = useState(false);
+  const [isCrearCotizacionIAOpen, setIsCrearCotizacionIAOpen] = useState(false);
 
   // Helper para registrar eventos en la bitácora de actividad (ETAPA 22)
   const registrarEvento = (
@@ -3730,6 +3736,17 @@ export default function App() {
               />
             </div>
 
+            {/* Botón discreto Copiloto Operativo IA */}
+            <button
+              type="button"
+              onClick={() => setIsCopilotoOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-50 text-[#06345A] border border-[#73C7FF]/40 hover:bg-[#1497F2]/10 transition-colors cursor-pointer shadow-2xs min-h-[36px]"
+              title="Abrir Copiloto Operativo TUNNO"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
+              <span className="hidden md:inline">Copiloto IA</span>
+            </button>
+
             {/* Campana de avisos (discreta) */}
             <button
               ref={desktopBellRef}
@@ -3820,6 +3837,7 @@ export default function App() {
               seguimientos={seguimientos}
               onNavigate={handleSelectSection}
               currentUser={sesion || undefined}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -3860,7 +3878,17 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCopilotoOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
+                    title="Abrir Copiloto de Clientes"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#1497F2]" />
+                    <span>Ayudarme con IA</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleOpenAddCliente}
@@ -4061,7 +4089,17 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCopilotoOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
+                    title="Abrir Copiloto de Vehículos"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#1497F2]" />
+                    <span>Ayudarme con IA</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleOpenAddVehiculo}
@@ -4318,6 +4356,7 @@ export default function App() {
               clientes={clientes}
               onSaveFlotilla={handleSaveFlotilla}
               onDeleteFlotilla={handleDeleteFlotilla}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4346,6 +4385,7 @@ export default function App() {
               servicios={servicios}
               onSaveCita={handleSaveCita}
               onCancelCita={handleCancelCita}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4366,6 +4406,8 @@ export default function App() {
               onCreateOrdenFromCotizacion={handleCreateOrdenFromCotizacion}
               onNavigateToOrden={(ordId) => setActiveSection('ordenes')}
               onNavigateToFacturacion={handleNavigateToFacturacion}
+              onOpenCrearCotizacionIA={() => setIsCrearCotizacionIAOpen(true)}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4393,6 +4435,7 @@ export default function App() {
               garantias={garantias}
               onSaveSeguimiento={handleSaveSeguimiento}
               onNavigateToSection={handleSelectSection}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4401,6 +4444,7 @@ export default function App() {
             <ServiciosSection
               servicios={servicios}
               onSaveServicio={handleSaveServicio}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4416,6 +4460,7 @@ export default function App() {
               onRecordMovement={handleRecordMovement}
               onSaveOrdenCompra={handleSaveOrdenCompra}
               onMarcarOrdenCompraRecibida={handleMarcarOrdenCompraRecibida}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4443,6 +4488,7 @@ export default function App() {
               onUpdateFactura={handleUpdateFactura}
               initialCotizacionId={facturacionInitialCotizacionId}
               onClearInitialCotizacionId={() => setFacturacionInitialCotizacionId(null)}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4475,6 +4521,7 @@ export default function App() {
               onUpdateSeguimientoEstado={handleUpdateSeguimientoEstado}
               onSaveGarantia={handleSaveGarantia}
               onNavigateToSection={handleSelectSection}
+              onOpenCopiloto={() => setIsCopilotoOpen(true)}
             />
           )}
 
@@ -4954,6 +5001,49 @@ export default function App() {
         prospectos={prospectos}
         empleados={empleados}
         garantias={garantias}
+      />
+
+      {/* COPILOTO OPERATIVO TUNNO (PANEL LATERAL EN CADA SECCIÓN) */}
+      <CopilotoTallerPanel
+        isOpen={isCopilotoOpen}
+        onClose={() => setIsCopilotoOpen(false)}
+        currentSection={activeSection}
+        onNavigateToSection={(sec) => handleSelectSection(sec)}
+        currentUser={sesion || undefined}
+        citas={citas}
+        cotizaciones={cotizaciones}
+        ordenes={ordenes}
+        refacciones={refacciones}
+        facturas={facturas}
+        clientes={clientes}
+        vehiculos={vehiculos}
+        seguimientos={seguimientos}
+        prospectos={prospectos}
+        empleados={empleados}
+        garantias={garantias}
+        flotillas={flotillas}
+        bitacora={bitacora}
+        onSaveCotizacion={handleSaveCotizacion}
+        onUpdateEstadoCotizacion={handleUpdateCotizacionEstado}
+        onSaveOrden={handleSaveOrden}
+        onSaveCita={handleSaveCita}
+        onRegistrarBitacora={registrarEvento}
+        onOpenCrearCotizacionIA={() => setIsCrearCotizacionIAOpen(true)}
+        onShowToast={(msg) => mostrarMensaje(msg)}
+      />
+
+      {/* MODAL CREAR COTIZACIÓN CON IA (3 PROPUESTAS) */}
+      <CrearCotizacionIAModal
+        isOpen={isCrearCotizacionIAOpen}
+        onClose={() => setIsCrearCotizacionIAOpen(false)}
+        clientes={clientes}
+        vehiculos={vehiculos}
+        refacciones={refacciones}
+        currentUser={sesion || undefined}
+        onSaveCotizacion={handleSaveCotizacion}
+        onRegistrarBitacora={registrarEvento}
+        onShowToast={(msg) => mostrarMensaje(msg)}
+        totalCotizacionesExistentes={cotizaciones.length}
       />
 
       {/* Toast Feedback Notification (ETAPA 23) */}

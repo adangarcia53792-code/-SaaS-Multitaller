@@ -43,6 +43,7 @@ interface InventarioSectionProps {
   onRecordMovement: (movement: MovimientoInventario) => void;
   onSaveOrdenCompra?: (ordenCompra: OrdenCompra) => void;
   onMarcarOrdenCompraRecibida?: (ordenCompraId: string) => void;
+  onOpenCopiloto?: () => void;
 }
 
 type FilterStock = 'todas' | 'stock-bajo';
@@ -57,6 +58,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
   onRecordMovement,
   onSaveOrdenCompra,
   onMarcarOrdenCompraRecibida,
+  onOpenCopiloto,
 }) => {
   const [activeMainTab, setActiveMainTab] = useState<'refacciones' | 'ordenes-compra'>('refacciones');
   const [searchQuery, setSearchQuery] = useState('');
@@ -519,6 +521,18 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-[#73C7FF]/50 bg-sky-50 hover:bg-sky-100/80 text-[#06345A] text-sm font-semibold transition-all min-h-[42px] cursor-pointer shadow-2xs"
+              title="Abrir Copiloto de Inventario"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setIsAnalisisModalOpen(true)}

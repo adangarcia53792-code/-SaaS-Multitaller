@@ -44,6 +44,7 @@ const SECCIONES_FILTRO: SeccionBitacora[] = [
   'Configuración',
   'Usuarios',
   'Respaldos',
+  'Copiloto IA',
 ];
 
 export const BitacoraSection: React.FC<BitacoraSectionProps> = ({

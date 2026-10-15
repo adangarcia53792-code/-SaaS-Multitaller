@@ -19,6 +19,7 @@ import {
   ChevronUp,
   User,
   ShieldAlert,
+  Sparkles,
 } from 'lucide-react';
 
 interface FlotillasSectionProps {
@@ -27,6 +28,7 @@ interface FlotillasSectionProps {
   clientes: Cliente[];
   onSaveFlotilla: (flotilla: Flotilla) => void;
   onDeleteFlotilla?: (flotillaId: string) => void;
+  onOpenCopiloto?: () => void;
 }
 
 export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
@@ -34,6 +36,7 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
   vehiculos,
   clientes,
   onSaveFlotilla,
+  onOpenCopiloto,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterEstado, setFilterEstado] = useState<'todas' | 'Activa' | 'Inactiva'>('todas');
@@ -259,14 +262,28 @@ export const FlotillasSection: React.FC<FlotillasSectionProps> = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nueva flotilla</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              title="Abrir Copiloto de Flotillas"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nueva flotilla</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

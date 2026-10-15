@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Cliente, Vehiculo, Cita, ServicioCatalogo } from '../types';
-import { Search, Plus, Pencil, X, Calendar as CalendarIcon, Clock, AlertTriangle, MoreVertical, ChevronDown, Ban } from 'lucide-react';
+import { Search, Plus, Pencil, X, Calendar as CalendarIcon, Clock, AlertTriangle, MoreVertical, ChevronDown, Ban, Sparkles } from 'lucide-react';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface CitasSectionProps {
@@ -10,6 +10,7 @@ interface CitasSectionProps {
   servicios: ServicioCatalogo[];
   onSaveCita: (cita: Cita) => void;
   onCancelCita: (citaId: string) => void;
+  onOpenCopiloto?: () => void;
 }
 
 type CitaFilter = 'proximas' | 'todas' | 'canceladas';
@@ -21,6 +22,7 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
   servicios,
   onSaveCita,
   onCancelCita,
+  onOpenCopiloto,
 }) => {
   const [filter, setFilter] = useState<CitaFilter>('proximas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -302,7 +304,19 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
           </div>
         </div>
 
-        <div className="shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
+              title="Abrir Copiloto de Citas"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleOpenAdd}

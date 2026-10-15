@@ -38,6 +38,8 @@ interface CotizacionesSectionProps {
   onCreateOrdenFromCotizacion: (cot: Cotizacion) => void;
   onNavigateToOrden?: (ordenId: string) => void;
   onNavigateToFacturacion?: (cotizacionId?: string) => void;
+  onOpenCrearCotizacionIA?: () => void;
+  onOpenCopiloto?: () => void;
 }
 
 type EstadoFilter = 'todas' | 'Por autorizar' | 'Aprobada' | 'Rechazada';
@@ -57,6 +59,8 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   onCreateOrdenFromCotizacion,
   onNavigateToOrden,
   onNavigateToFacturacion,
+  onOpenCrearCotizacionIA,
+  onOpenCopiloto,
 }) => {
   const [filter, setFilter] = useState<EstadoFilter>('todas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -533,7 +537,31 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
             </p>
           </div>
         </div>
-        <div className="shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              title="Abrir Copiloto de Cotizaciones"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
+          {onOpenCrearCotizacionIA && (
+            <button
+              type="button"
+              onClick={onOpenCrearCotizacionIA}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[42px] rounded-lg bg-gradient-to-r from-[#06345A] to-[#1497F2] hover:opacity-95 text-white text-xs md:text-sm font-semibold shadow-xs transition-all cursor-pointer"
+              title="Crear cotización guiada por IA en 3 propuestas"
+            >
+              <Sparkles className="w-4 h-4 text-[#73C7FF]" />
+              <span>Crear con IA</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleOpenAdd}

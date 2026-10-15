@@ -264,7 +264,8 @@ export type SeccionBitacora =
   | 'Garantías'
   | 'Configuración'
   | 'Usuarios'
-  | 'Respaldos';
+  | 'Respaldos'
+  | 'Copiloto IA';
 
 export interface DetalleCambioBitacora {
   etiqueta: string;
@@ -476,6 +477,52 @@ export interface Cotizacion {
   autorizacion?: AutorizacionRegistro;
   historialAutorizaciones?: AutorizacionRegistro[];
   creadoEn: string;
+  // Metadata de Copiloto IA:
+  creadaConIA?: boolean;
+  propuestaTipo?: 'Esencial' | 'Recomendada' | 'Completa';
+  diagnosticoSugerido?: string;
+  costoEstimadoCompra?: number;
+  utilidadEstimada?: number;
+  margenEstimadoPorcentaje?: number;
+  partidasDetalladas?: PartidaCotizacionIA[];
+}
+
+export interface PartidaCotizacionIA {
+  id: string;
+  tipo: 'servicio' | 'refaccion';
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  costoUnitario: number;
+  subtotal: number;
+  urgente: boolean; // Urgente vs Preventivo
+  motivoExplicacion: string;
+  refaccionId?: string;
+  stockDisponible?: number;
+  alertaStockBajo?: boolean;
+  alertaMargenBajo?: boolean;
+  alertaPrecioAtipico?: boolean;
+}
+
+export type TipoPropuestaIA = 'Esencial' | 'Recomendada' | 'Completa';
+
+export interface PropuestaCotizacionIA {
+  tipo: TipoPropuestaIA;
+  titulo: string;
+  descripcionCorta: string;
+  diagnosticoPreliminar: string;
+  revisionesNecesarias: string[];
+  partidas: PartidaCotizacionIA[];
+  importeManoObra: number;
+  importeRefacciones: number;
+  subtotal: number;
+  iva: number;
+  total: number;
+  costoCompraTotal: number;
+  utilidadEstimada: number;
+  margenPorcentaje: number;
+  advertencias: string[];
+  explicacionGeneral: string;
 }
 
 export type EstadoOrden = 'Por autorizar' | 'Pendiente' | 'En proceso' | 'Terminado';

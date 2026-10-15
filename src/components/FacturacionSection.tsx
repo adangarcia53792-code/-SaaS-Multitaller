@@ -26,6 +26,7 @@ import {
   ArrowRight,
   Info,
   MoreVertical,
+  Sparkles,
 } from 'lucide-react';
 import {
   Factura,
@@ -49,6 +50,7 @@ interface FacturacionSectionProps {
   onUpdateFactura: (factura: Factura) => void;
   initialCotizacionId?: string | null;
   onClearInitialCotizacionId?: () => void;
+  onOpenCopiloto?: () => void;
 }
 
 type FilterEstado = 'todas' | EstadoFactura;
@@ -82,6 +84,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
   onUpdateFactura,
   initialCotizacionId,
   onClearInitialCotizacionId,
+  onOpenCopiloto,
 }) => {
   const [activeTab, setActiveTab] = useState<'facturas' | 'listas_para_facturar'>('facturas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -584,7 +587,19 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-[#73C7FF]/50 bg-sky-50 hover:bg-sky-100/80 text-[#06345A] text-xs md:text-sm font-semibold transition-all min-h-[42px] cursor-pointer shadow-2xs"
+              title="Abrir Copiloto de Facturación"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
           <button
             type="button"
             data-tour="facturacion-generar-btn"

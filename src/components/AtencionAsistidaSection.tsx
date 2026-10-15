@@ -73,6 +73,7 @@ interface AtencionAsistidaSectionProps {
   ) => void;
   onSaveGarantia?: (garantia: Garantia) => void;
   onNavigateToSection?: (sectionId: any) => void;
+  onOpenCopiloto?: () => void;
 }
 
 export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = ({
@@ -90,6 +91,7 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
   onUpdateSeguimientoEstado,
   onSaveGarantia,
   onNavigateToSection,
+  onOpenCopiloto,
 }) => {
   // Modal de Seguimiento inteligente con IA
   const [isSeguimientoIAOpen, setIsSeguimientoIAOpen] = useState<boolean>(false);
@@ -579,6 +581,18 @@ export const AtencionAsistidaSection: React.FC<AtencionAsistidaSectionProps> = (
         </div>
 
         <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 text-[#06345A] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              title="Abrir Copiloto de Seguimientos"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {

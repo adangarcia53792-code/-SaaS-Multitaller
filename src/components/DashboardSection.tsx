@@ -15,6 +15,7 @@ import {
   Users,
   LayoutDashboard,
   Plus,
+  Sparkles,
 } from 'lucide-react';
 import {
   SectionId,
@@ -38,6 +39,7 @@ interface DashboardSectionProps {
   seguimientos?: Seguimiento[];
   onNavigate: (section: SectionId) => void;
   currentUser?: SesionUsuario;
+  onOpenCopiloto?: () => void;
 }
 
 interface PendienteItem {
@@ -61,6 +63,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   seguimientos = [],
   onNavigate,
   currentUser,
+  onOpenCopiloto,
 }) => {
   const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
 
@@ -425,7 +428,19 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 relative z-10 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 relative z-10 shrink-0">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
+              title="Abrir Copiloto del Taller"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => onNavigate('nueva-atencion')}

@@ -6,11 +6,13 @@ import { Search, Plus, Pencil, X, CheckCircle2, AlertCircle, Sparkles, Wrench } 
 interface ServiciosSectionProps {
   servicios: ServicioCatalogo[];
   onSaveServicio: (servicio: ServicioCatalogo) => void;
+  onOpenCopiloto?: () => void;
 }
 
 export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
   servicios,
   onSaveServicio,
+  onOpenCopiloto,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterEstado, setFilterEstado] = useState<'todos' | 'activos' | 'inactivos'>('todos');
@@ -196,14 +198,28 @@ export const ServiciosSection: React.FC<ServiciosSectionProps> = ({
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors min-h-[42px] cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Agregar servicio</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
+              title="Abrir Copiloto de Servicios"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors min-h-[42px] cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Agregar servicio</span>
+          </button>
+        </div>
       </div>
 
       {/* Controls: Search & Filter */}

@@ -78,6 +78,7 @@ interface OrdenesSectionProps {
   garantias?: Garantia[];
   onSaveSeguimiento?: (seguimiento: Seguimiento) => void;
   onNavigateToSection?: (section: SectionId) => void;
+  onOpenCopiloto?: () => void;
 }
 
 type EstadoFilter = 'todas' | EstadoOrden;
@@ -104,6 +105,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   garantias = [],
   onSaveSeguimiento,
   onNavigateToSection,
+  onOpenCopiloto,
 }) => {
   const [filter, setFilter] = useState<EstadoFilter>('todas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -1279,8 +1281,20 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             </p>
           </div>
         </div>
-        {canCreateOrden && (
-          <div className="shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {onOpenCopiloto && (
+            <button
+              type="button"
+              onClick={onOpenCopiloto}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              title="Abrir Copiloto de Órdenes de Trabajo"
+            >
+              <Sparkles className="w-4 h-4 text-[#1497F2]" />
+              <span>Ayudarme con IA</span>
+            </button>
+          )}
+
+          {canCreateOrden && (
             <button
               type="button"
               onClick={handleOpenAdd}
@@ -1289,8 +1303,8 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
               <Plus className="w-4 h-4" />
               <span>Nueva orden</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Controls: Search & Tabs */}
