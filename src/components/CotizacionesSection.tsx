@@ -21,6 +21,9 @@ import {
   ChevronDown,
   Receipt,
   Sparkles,
+  Eye,
+  ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 
 interface CotizacionesSectionProps {
@@ -136,9 +139,10 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     });
   };
 
-  // Modal: Add / Edit
+  // Modal: Add / Edit (3 pasos)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingCotizacion, setEditingCotizacion] = useState<Cotizacion | null>(null);
+  const [formStep, setFormStep] = useState<1 | 2 | 3>(1);
 
   // Form fields
   const [formClientId, setFormClientId] = useState('');
@@ -179,6 +183,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     onClose: () => {
       setIsFormModalOpen(false);
       setEditingCotizacion(null);
+      setFormStep(1);
       setFormErrors({});
     },
     isDirty: () => {
@@ -301,6 +306,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   // Handlers for Add / Edit
   const handleOpenAdd = () => {
     setEditingCotizacion(null);
+    setFormStep(1);
     const defClient = clientes[0]?.id || '';
     setFormClientId(defClient);
     const clientVehs = vehiculos.filter((v) => v.clienteId === defClient);
@@ -323,6 +329,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
 
   const handleOpenEdit = (cot: Cotizacion) => {
     setEditingCotizacion(cot);
+    setFormStep(1);
     setFormClientId(cot.clienteId);
     setFormVehiculoId(cot.vehiculoId);
     setSelectedCatalogId('');
@@ -339,6 +346,45 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
       manoObra: cot.importeManoObra.toString(),
     };
     setIsFormModalOpen(true);
+  };
+
+  const handleStep1Next = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const errors: Record<string, string> = {};
+    if (!formClientId) errors.clienteId = 'Debe seleccionar un cliente registrado.';
+    if (!formVehiculoId) errors.vehiculoId = 'Debe seleccionar un vehículo.';
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
+    setFormStep(2);
+  };
+
+  const handleStep2Next = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const errors: Record<string, string> = {};
+    if (!formDescripcion.trim()) errors.descripcion = 'La descripción del trabajo es obligatoria.';
+    const refNum = parseFloat(formRefacciones);
+    if (isNaN(refNum) || refNum < 0) {
+      errors.refacciones = 'El importe no puede ser negativo.';
+    }
+    const moNum = parseFloat(formManoObra);
+    if (isNaN(moNum) || moNum < 0) {
+      errors.manoObra = 'El importe no puede ser negativo.';
+    }
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
+    setFormStep(3);
+  };
+
+  const handlePrevStep = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setFormErrors({});
+    setFormStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2) : 1));
   };
 
   const handleSelectCatalogService = (servId: string) => {
@@ -727,52 +773,18 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                       {/* Acciones */}
                       <td className="py-3.5 px-5 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-2">
-                          {/* Botón visible Revisar con IA */}
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              data-tour="cotizaciones-analisis-ia"
-                              onClick={() => setAnalizandoCotizacion(cot)}
-                              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors cursor-pointer shadow-xs"
-                              title={`Revisar cotización ${cot.folio} con Inteligencia Artificial`}
-                            >
-                              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                              <span>Revisar con IA</span>
-                            </button>
-                            <ContextualHelp tema="funciones-ia" />
-                          </div>
-
-                          {/* Botón visible Generar factura si está aprobada */}
-                          {cot.estado === 'Aprobada' && (
-                            <button
-                              type="button"
-                              onClick={() => onNavigateToFacturacion?.(cot.id)}
-                              className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs ${
-                                facturaVinculada
-                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                  : 'bg-[#1497F2] hover:bg-[#06345A] text-white'
-                              }`}
-                              title={
-                                facturaVinculada
-                                  ? `Factura emitida ${facturaVinculada.folio}. Clic para ver comprobante.`
-                                  : `Generar comprobante administrativo para ${cot.folio}`
-                              }
-                            >
-                              <Receipt className="w-3.5 h-3.5" />
-                              <span>{facturaVinculada ? `Factura ${facturaVinculada.folio}` : 'Generar factura'}</span>
-                            </button>
-                          )}
-
+                          {/* Botón visible Ver detalle / imprimir */}
                           <button
                             type="button"
-                            onClick={() => handleOpenEdit(cot)}
-                            className="inline-flex items-center gap-1 px-3 py-2 min-h-[40px] text-xs font-medium text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer shadow-xs"
+                            onClick={() => setPrintingCotizacion(cot)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                            title={`Ver detalle formal de ${cot.folio}`}
                           >
-                            <Pencil className="w-3.5 h-3.5" />
-                            <span>Editar</span>
+                            <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
+                            <span>Ver</span>
                           </button>
 
-                          {/* Botón trigger para menú de tres puntos (Portal) */}
+                          {/* Menú de tres puntos (desplegable sobre los demás elementos) */}
                           <button
                             type="button"
                             onClick={(e) => handleToggleMenu(e, cot)}
@@ -979,22 +991,37 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     </button>
                   </div>
 
-                  {/* Si la cotización está "Por autorizar": mostrar opciones Ver/imprimir, Aprobar y Rechazar */}
+                  {/* Acciones principales: Ver/imprimir y Editar */}
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setPrintingCotizacion(cot);
+                        setActiveMenu(null);
+                      }}
+                      className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 text-slate-500" />
+                      <span>Ver / imprimir</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        handleOpenEdit(cot);
+                        setActiveMenu(null);
+                      }}
+                      className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-4 h-4 text-slate-500" />
+                      <span>Editar cotización</span>
+                    </button>
+                  </div>
+
+                  {/* Si la cotización está "Por autorizar": opciones Aprobar y Rechazar */}
                   {cot.estado === 'Por autorizar' && (
                     <div className="py-1">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setPrintingCotizacion(cot);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4 text-slate-500" />
-                        <span>Ver / imprimir</span>
-                      </button>
-
                       <button
                         type="button"
                         role="menuitem"
@@ -1027,22 +1054,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     </div>
                   )}
 
-                  {/* Si la cotización está "Aprobada": en aprobadas ya no debe aparecer la opción Aprobar */}
+                  {/* Si la cotización está "Aprobada": orden y facturación */}
                   {cot.estado === 'Aprobada' && (
                     <div className="py-1">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setPrintingCotizacion(cot);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4 text-slate-500" />
-                        <span>Ver / imprimir</span>
-                      </button>
-
                       {linkedOrden ? (
                         <button
                           type="button"
@@ -1088,22 +1102,9 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                     </div>
                   )}
 
-                  {/* Si la cotización está "Rechazada": Ver / imprimir y opción para aprobar/reactivar */}
+                  {/* Si la cotización está "Rechazada": opción para aprobar/reactivar */}
                   {cot.estado === 'Rechazada' && (
                     <div className="py-1">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setPrintingCotizacion(cot);
-                          setActiveMenu(null);
-                        }}
-                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4 text-slate-500" />
-                        <span>Ver / imprimir</span>
-                      </button>
-
                       <button
                         type="button"
                         role="menuitem"
@@ -1322,6 +1323,29 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
               </button>
             </div>
 
+            {/* INDICADOR DE PASOS (1. DATOS PRINCIPALES, 2. SERVICIO Y COSTOS, 3. REVISIÓN Y CONFIRMACIÓN) */}
+            <div className="px-6 pt-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/70">
+              <div className="flex items-center justify-between text-xs font-semibold mb-2">
+                <span className={formStep === 1 ? 'text-[#1497F2] font-bold' : formStep > 1 ? 'text-emerald-700 font-semibold' : 'text-slate-400'}>
+                  1. Datos principales
+                </span>
+                <span className="text-slate-300">→</span>
+                <span className={formStep === 2 ? 'text-[#1497F2] font-bold' : formStep > 2 ? 'text-emerald-700 font-semibold' : 'text-slate-400'}>
+                  2. Servicio y costos
+                </span>
+                <span className="text-slate-300">→</span>
+                <span className={formStep === 3 ? 'text-[#1497F2] font-bold' : 'text-slate-400'}>
+                  3. Revisión
+                </span>
+              </div>
+              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-[#1497F2] h-full transition-all duration-300 ease-out"
+                  style={{ width: formStep === 1 ? '33.3%' : formStep === 2 ? '66.6%' : '100%' }}
+                />
+              </div>
+            </div>
+
             <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto flex-1">
               {isModifyingApproved && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
@@ -1333,182 +1357,299 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
                 </div>
               )}
 
-              {/* Cliente */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Cliente registrado <span className="text-red-500">*</span>
-                </label>
-                {clientes.length > 0 ? (
-                  <select
-                    autoFocus
-                    value={formClientId}
-                    onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
-                  >
-                    <option value="" disabled>Seleccione un cliente</option>
-                    {clientes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                    No hay clientes registrados en el sistema.
-                  </p>
-                )}
-                {formErrors.clienteId && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.clienteId}</p>
-                )}
-              </div>
+              {/* ============================================================== */}
+              {/* PASO 1: DATOS PRINCIPALES (CLIENTE Y VEHÍCULO)                 */}
+              {/* ============================================================== */}
+              {formStep === 1 && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {/* Cliente */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Cliente registrado <span className="text-red-500">*</span>
+                    </label>
+                    {clientes.length > 0 ? (
+                      <select
+                        autoFocus
+                        value={formClientId}
+                        onChange={(e) => handleClientChange(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
+                      >
+                        <option value="" disabled>Seleccione un cliente</option>
+                        {clientes.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                        No hay clientes registrados en el sistema.
+                      </p>
+                    )}
+                    {formErrors.clienteId && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.clienteId}</p>
+                    )}
+                  </div>
 
-              {/* Vehículo */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Vehículo del cliente <span className="text-red-500">*</span>
-                </label>
-                {availableVehicles.length > 0 ? (
-                  <select
-                    value={formVehiculoId}
-                    onChange={(e) => {
-                      setFormVehiculoId(e.target.value);
-                      if (formErrors.vehiculoId) setFormErrors((prev) => ({ ...prev, vehiculoId: '' }));
-                    }}
-                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
-                  >
-                    <option value="" disabled>Seleccione un vehículo</option>
-                    {availableVehicles.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.marca} {v.modelo} — Placas: {v.placas}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                    Este cliente no tiene vehículos registrados aún.
-                  </p>
-                )}
-                {formErrors.vehiculoId && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.vehiculoId}</p>
-                )}
-              </div>
+                  {/* Vehículo */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Vehículo del cliente <span className="text-red-500">*</span>
+                    </label>
+                    {availableVehicles.length > 0 ? (
+                      <select
+                        value={formVehiculoId}
+                        onChange={(e) => {
+                          setFormVehiculoId(e.target.value);
+                          if (formErrors.vehiculoId) setFormErrors((prev) => ({ ...prev, vehiculoId: '' }));
+                        }}
+                        className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
+                      >
+                        <option value="" disabled>Seleccione un vehículo</option>
+                        {availableVehicles.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.marca} {v.modelo} — Placas: {v.placas}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                        Este cliente no tiene vehículos registrados aún.
+                      </p>
+                    )}
+                    {formErrors.vehiculoId && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.vehiculoId}</p>
+                    )}
+                  </div>
 
-              {/* Apartado desplegable opcional: Servicio del catálogo */}
-              <details className="group pt-1" open={Boolean(selectedCatalogId)}>
-                <summary className="text-xs text-slate-500 hover:text-slate-800 cursor-pointer font-medium flex items-center justify-between py-1 select-none">
-                  <span>Datos opcionales (autocompletar con catálogo de servicios)</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
-                </summary>
-                <div className="pt-2">
-                  <select
-                    value={selectedCatalogId}
-                    onChange={(e) => handleSelectCatalogService(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
-                  >
-                    <option value="">Seleccionar del catálogo o capturar abajo...</option>
-                    {activeCatalogServices.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.nombre} (${s.total.toFixed(2)} MXN)
-                      </option>
-                    ))}
-                  </select>
+                  {/* Botones Paso 1 */}
+                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
+                    <button
+                      type="button"
+                      onClick={cotizacionFormDismiss.handleClose}
+                      className="px-4 py-2.5 min-h-[42px] border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStep1Next}
+                      disabled={clientes.length === 0 || availableVehicles.length === 0}
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                    >
+                      <span>Siguiente: Servicio y costos</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </details>
+              )}
 
-              {/* Descripción */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Descripción del trabajo <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={formDescripcion}
-                  onChange={(e) => {
-                    setFormDescripcion(e.target.value);
-                    if (formErrors.descripcion) setFormErrors((prev) => ({ ...prev, descripcion: '' }));
-                  }}
-                  placeholder="Detalle de trabajos y refacciones solicitados..."
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
-                    formErrors.descripcion ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
-                  }`}
-                />
-                {formErrors.descripcion && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.descripcion}</p>
-                )}
-              </div>
+              {/* ============================================================== */}
+              {/* PASO 2: SERVICIO Y COSTOS                                      */}
+              {/* ============================================================== */}
+              {formStep === 2 && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {/* Apartado desplegable opcional: Servicio del catálogo */}
+                  <details className="group pt-1" open={Boolean(selectedCatalogId)}>
+                    <summary className="text-xs text-slate-500 hover:text-slate-800 cursor-pointer font-medium flex items-center justify-between py-1 select-none">
+                      <span>Datos opcionales (autocompletar con catálogo de servicios)</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <div className="pt-2">
+                      <select
+                        value={selectedCatalogId}
+                        onChange={(e) => handleSelectCatalogService(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] bg-white focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20"
+                      >
+                        <option value="">Seleccionar del catálogo o capturar abajo...</option>
+                        {activeCatalogServices.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.nombre} (${s.total.toFixed(2)} MXN)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </details>
 
-              {/* Desglose de importes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Importe de refacciones ($ MXN)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formRefacciones}
-                    onChange={(e) => {
-                      setFormRefacciones(e.target.value);
-                      if (formErrors.refacciones) setFormErrors((prev) => ({ ...prev, refacciones: '' }));
-                    }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
-                      formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
-                    }`}
-                  />
-                  {formErrors.refacciones && (
-                    <p className="text-xs text-red-600 mt-1">{formErrors.refacciones}</p>
-                  )}
+                  {/* Descripción */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Descripción del trabajo <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formDescripcion}
+                      onChange={(e) => {
+                        setFormDescripcion(e.target.value);
+                        if (formErrors.descripcion) setFormErrors((prev) => ({ ...prev, descripcion: '' }));
+                      }}
+                      placeholder="Detalle de trabajos y refacciones solicitados..."
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                        formErrors.descripcion ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                      }`}
+                    />
+                    {formErrors.descripcion && (
+                      <p className="text-xs text-red-600 mt-1">{formErrors.descripcion}</p>
+                    )}
+                  </div>
+
+                  {/* Desglose de importes */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Importe de refacciones ($ MXN)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formRefacciones}
+                        onChange={(e) => {
+                          setFormRefacciones(e.target.value);
+                          if (formErrors.refacciones) setFormErrors((prev) => ({ ...prev, refacciones: '' }));
+                        }}
+                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                          formErrors.refacciones ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                        }`}
+                      />
+                      {formErrors.refacciones && (
+                        <p className="text-xs text-red-600 mt-1">{formErrors.refacciones}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Importe de mano de obra ($ MXN)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formManoObra}
+                        onChange={(e) => {
+                          setFormManoObra(e.target.value);
+                          if (formErrors.manoObra) setFormErrors((prev) => ({ ...prev, manoObra: '' }));
+                        }}
+                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
+                          formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
+                        }`}
+                      />
+                      {formErrors.manoObra && (
+                        <p className="text-xs text-red-600 mt-1">{formErrors.manoObra}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Total display */}
+                  <div className="bg-slate-50 p-3.5 rounded-lg border border-[#E5E7EB] flex items-center justify-between">
+                    <span className="font-semibold text-slate-700 text-sm">Total calculado:</span>
+                    <span className="text-lg font-bold text-[#1497F2]">
+                      ${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+                    </span>
+                  </div>
+
+                  {/* Botones Paso 2 */}
+                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[42px] border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Anterior</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStep2Next}
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                    >
+                      <span>Siguiente: Revisar</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Importe de mano de obra ($ MXN)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formManoObra}
-                    onChange={(e) => {
-                      setFormManoObra(e.target.value);
-                      if (formErrors.manoObra) setFormErrors((prev) => ({ ...prev, manoObra: '' }));
-                    }}
-                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 ${
-                      formErrors.manoObra ? 'border-red-400 bg-red-50/20' : 'border-[#E5E7EB]'
-                    }`}
-                  />
-                  {formErrors.manoObra && (
-                    <p className="text-xs text-red-600 mt-1">{formErrors.manoObra}</p>
-                  )}
+              {/* ============================================================== */}
+              {/* PASO 3: REVISIÓN Y CONFIRMACIÓN                                */}
+              {/* ============================================================== */}
+              {formStep === 3 && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {(() => {
+                    const client = clientes.find((c) => c.id === formClientId);
+                    const veh = vehiculos.find((v) => v.id === formVehiculoId);
+                    return (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-3">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                          <span className="font-semibold text-[#06345A] uppercase tracking-wider text-[11px]">
+                            Resumen de la propuesta
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            Por autorizar
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <span className="text-slate-400 font-medium block">Cliente:</span>
+                            <span className="font-semibold text-[#06345A] text-sm">{client?.nombre || 'No asignado'}</span>
+                            <span className="text-slate-500 block text-[11px]">{client?.telefono}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-medium block">Vehículo:</span>
+                            <span className="font-semibold text-[#06345A] text-sm">
+                              {veh ? `${veh.marca} ${veh.modelo}` : 'No asignado'}
+                            </span>
+                            <span className="font-mono text-slate-500 block text-[11px]">{veh?.placas}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 font-medium block">Trabajo solicitado:</span>
+                          <p className="text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 mt-1 whitespace-pre-line">
+                            {formDescripcion || 'Sin descripción'}
+                          </p>
+                        </div>
+
+                        <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1.5">
+                          <div className="flex justify-between text-slate-600">
+                            <span>Refacciones:</span>
+                            <span className="font-mono">${parseFloat(formRefacciones || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                          </div>
+                          <div className="flex justify-between text-slate-600">
+                            <span>Mano de obra:</span>
+                            <span className="font-mono">${parseFloat(formManoObra || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                          </div>
+                          <div className="flex justify-between font-bold text-sm text-[#06345A] pt-1.5 border-t border-slate-100">
+                            <span>Total estimado:</span>
+                            <span className="text-[#1497F2] font-mono">${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Botones Paso 3 */}
+                  <div className="flex items-center justify-between pt-4 border-t border-[#E5E7EB]">
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[42px] border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Modificar datos</span>
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={clientes.length === 0 || availableVehicles.length === 0}
+                      className="inline-flex items-center gap-1.5 px-6 py-2.5 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Confirmar y guardar</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {/* Total display */}
-              <div className="bg-slate-50 p-3.5 rounded-lg border border-[#E5E7EB] flex items-center justify-between">
-                <span className="font-semibold text-slate-700 text-sm">Total calculado:</span>
-                <span className="text-lg font-bold text-[#1497F2]">
-                  ${calculatedTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
-                </span>
-              </div>
-
-              {/* Botones */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E7EB]">
-                <button
-                  type="button"
-                  onClick={cotizacionFormDismiss.handleClose}
-                  className="px-4 py-2.5 min-h-[42px] border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={clientes.length === 0 || availableVehicles.length === 0}
-                  className="px-5 py-2.5 min-h-[42px] bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
-                >
-                  Guardar
-                </button>
-              </div>
+              )}
             </form>
           </div>
         </div>

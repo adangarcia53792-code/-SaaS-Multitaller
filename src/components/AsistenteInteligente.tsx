@@ -38,6 +38,7 @@ import {
   Clock,
   ShieldCheck,
   ChevronRight,
+  ChevronDown,
   ExternalLink,
   MessageSquare,
   Bot,
@@ -152,6 +153,10 @@ export interface ChatMensaje {
   confirmacion?: ConfirmacionResumenChat;
   acciones?: MensajeAccionBoton[];
   advertenciaConfirmacion?: boolean;
+  resultadoBreve?: string;
+  recomendaciones?: string[];
+  accionSugeridaTexto?: string;
+  analisisCompleto?: string;
 }
 
 export interface ContextoChatActivo {
@@ -163,6 +168,8 @@ export interface ContextoChatActivo {
 }
 
 interface AsistenteInteligenteProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   currentSection: SectionId;
   onNavigateToSection: (section: SectionId, extraParam?: string) => void;
   userRol?: RolUsuario;
@@ -194,6 +201,8 @@ interface AsistenteInteligenteProps {
 }
 
 export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
+  isOpen: propsIsOpen,
+  onOpenChange,
   currentSection,
   onNavigateToSection,
   userRol,
@@ -216,11 +225,22 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
   onShowToast,
   onOpenCrearCotizacionIA,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = propsIsOpen !== undefined ? propsIsOpen : internalIsOpen;
+  const setIsOpen = (valOrFn: boolean | ((prev: boolean) => boolean)) => {
+    const nextVal = typeof valOrFn === 'function' ? valOrFn(isOpen) : valOrFn;
+    setInternalIsOpen(nextVal);
+    if (onOpenChange) onOpenChange(nextVal);
+  };
   const [activeTab, setActiveTab] = useState<'chat' | 'diagnostico'>('chat');
   const [inputPregunta, setInputPregunta] = useState('');
   const [isPensando, setIsPensando] = useState(false);
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
+  const [expandedAnalisisIds, setExpandedAnalisisIds] = useState<Record<string, boolean>>({});
+
+  const toggleAnalisis = (id: string) => {
+    setExpandedAnalisisIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Contexto activo del chat (puede ser borrado con la X)
   const [contextoActivo, setContextoActivo] = useState<ContextoChatActivo | null>(null);
@@ -544,7 +564,17 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
         const respMsg: ChatMensaje = {
           id: `msg-cot-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Borrador preparado para ${clienteNom} (${vehiculoNom}) con 3 propuestas seleccionables: Esencial ($1,334), Recomendada ($1,972) y Completa ($3,050).`,
+          recomendaciones: [
+            'La propuesta Recomendada ofrece el mejor balance de margen (63.2%) y satisfacción.',
+            'Verificar existencias de filtros en almacén antes de confirmar la orden.',
+            'Puedes elegir la propuesta Esencial o Completa con un clic en las opciones arriba.',
+          ],
           texto: `He preparado el borrador de cotización para **${clienteNom}** (${vehiculoNom}, Placas: ${vehiculoAsociado.placas}) con 3 propuestas estructuradas. Revisa los costos, margen y selecciona la opción que prefieras antes de guardar.`,
+          analisisCompleto: `DESGLOSE TÉCNICO Y FINANCIERO:
+1. Propuesta Esencial ($1,334 MXN): Mano de obra $320 + Refacciones $650 + IVA $184. Costo compra refacciones: $485 MXN. Margen estimado: 57.8%.
+2. Propuesta Recomendada ($1,972 MXN): Mano de obra $580 + Refacciones $1,120 + IVA $272. Costo compra refacciones: $625 MXN. Margen estimado: 63.2%.
+3. Propuesta Completa ($3,050.80 MXN): Mano de obra $950 + Refacciones $1,680 + IVA $420.80. Costo compra refacciones: $905 MXN. Margen estimado: 65.6%.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'cotizacion_borrador',
           cotizacionBorrador: borrador,
@@ -594,14 +624,21 @@ export const AsistenteInteligente: React.FC<AsistenteInteligenteProps> = ({
         const respMsg: ChatMensaje = {
           id: `msg-rev-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `La cotización ${cotTarget.folio} tiene un margen actual del ${margenActual}%, susceptible de optimización al ${margenSugerido}%.`,
+          recomendaciones: [
+            `Ajustar mano de obra a $${moSugerida} MXN (+${margenSugerido - margenActual}% de beneficio neto).`,
+            'Mantener el precio de refacciones para conservar competitividad frente a refaccionarias.',
+            'Enviar recordatorio amigable por WhatsApp para agilizar la autorización.',
+          ],
           texto: `Análisis de precios para **${cotTarget.folio}** (${clienteNom} - "${cotTarget.descripcion}"):
-• **Precio actual registrado:** $${cotTarget.total.toLocaleString()} MXN (Refacciones: $${cotTarget.importeRefacciones} | Mano de obra: $${cotTarget.importeManoObra})
-• **Costo estimado de refacciones:** $${costoRefaccionesCompra.toLocaleString()} MXN
-• **Margen actual:** ${margenActual}% (un poco ajustado para el promedio del taller)
-
-💡 **Recomendación de precio optimizado:**
-Aumentar la mano de obra a **$${moSugerida.toLocaleString()} MXN** manteniendo refacciones en $${cotTarget.importeRefacciones.toLocaleString()} MXN para un total sugerido de **$${totalSugerido.toLocaleString()} MXN** + IVA.
-Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - margenActual}% de beneficio neto) manteniéndose competitivo con el mercado local.`,
+• **Precio actual:** $${cotTarget.total.toLocaleString()} MXN (Refacciones: $${cotTarget.importeRefacciones} | Mano de obra: $${cotTarget.importeManoObra})
+• **Margen actual:** ${margenActual}% (por debajo del promedio óptimo del taller)
+• **Precio optimizado sugerido:** $${totalSugerido.toLocaleString()} MXN + IVA (Margen: ${margenSugerido}%)`,
+          analisisCompleto: `AUDITORÍA DE PRECIOS Y COSTOS:
+- Mano de obra registrada: $${cotTarget.importeManoObra} MXN (~$350/hr rampa).
+- Tarifa recomendada en zona metropolitana: $450 - $550/hr.
+- Incremento proyectado de utilidad neta: +$${utilidadSugerida - utilidadActual} MXN.
+- Posicionamiento de mercado: El precio optimizado continúa en el percentil 45 local.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'revision_cotizacion',
           acciones: [
@@ -658,7 +695,15 @@ Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - 
         const respMsg: ChatMensaje = {
           id: `msg-atr-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Se identificaron ${listado.length} órdenes que presentan retrasos o están próximas a su fecha límite de entrega.`,
+          recomendaciones: [
+            'Priorizar asignación de técnicos en la orden con mayor antigüedad.',
+            'Confirmar si las refacciones faltantes ya fueron entregadas por el proveedor.',
+            'Notificar preventivamente al cliente vía WhatsApp para reprogramar hora.',
+          ],
           texto: `Se identificaron **${listado.length} órdenes** que requieren atención inmediata en el taller por fecha prometida o diagnóstico pendiente:`,
+          analisisCompleto: `REPORTE DE ATRASOS EN TALLER:
+${listado.map((o) => `• Orden ${o.folio}: ${o.servicio} (Estado: ${o.estado}, Mecánico: ${o.mecanicoNombre || 'Sin asignar'})`).join('\n')}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'ordenes_atrasadas',
           acciones: listado.map((ord) => {
@@ -691,19 +736,25 @@ Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - 
         const respMsg: ChatMensaje = {
           id: `msg-mant-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `2 vehículos en el padrón requieren servicio preventivo inmediato por kilometraje y tiempo transcurrido.`,
+          recomendaciones: [
+            'Agendar cita de afinación de 40,000 km para el Nissan Versa (XYZ-789).',
+            'Inspeccionar desgaste de balatas en el Toyota Corolla (ABC-123).',
+            'Enviar recordatorios de mantenimiento preventivo a los propietarios.',
+          ],
           texto: `🔍 **Vehículos con servicio preventivo próximo o vencido:**
 
 1. **Nissan Versa 2022 (Placas: XYZ-789)**
    • Propietaria: Lucía Fernández
-   • Kilometraje estimado: 42,100 km (Afinación mayor recomendada de 40,000 km)
-   • Último servicio: Hace 6 meses
+   • Kilometraje estimado: 42,100 km (Afinación mayor recomendada)
 
 2. **Toyota Corolla 2020 (Placas: ABC-123)**
    • Propietario: Carlos Mendoza
-   • Kilometraje estimado: 58,400 km (Inspección de frenos y fluidos)
-   • Cita sugerida: Próxima semana
-
-¿Deseas preparar un recordatorio para el cliente o agendar una cita previa?`,
+   • Kilometraje estimado: 58,400 km (Inspección de frenos y fluidos)`,
+          analisisCompleto: `CALENDARIO TÉCNICO DE MANTENIMIENTO:
+- Nissan Versa 2022: Cambio de bujías platino, filtros de aire/cabina y aceite 5W-30.
+- Toyota Corolla 2020: Cambio de líquido de frenos DOT-4 y rotación de neumáticos.
+- Tasa de retorno estimada: 82% cuando se envía recordatorio dentro de los 7 días.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'mantenimientos',
           acciones: [
@@ -749,9 +800,19 @@ Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - 
         const respMsg: ChatMensaje = {
           id: `msg-rec-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Recordatorio redactado para ${clienteNom} listo para copiar y enviar por WhatsApp o correo.`,
+          recomendaciones: [
+            'Enviar en horario laboral habitual (9:00 a 18:00 hrs) para mejor tasa de lectura.',
+            'Confirmar si el cliente prefiere turno matutino o vespertino.',
+            'Registrar la respuesta del cliente en el módulo de Clientes / Seguimientos.',
+          ],
           texto: `He redactado este mensaje formal y amigable listo para enviar por WhatsApp o correo a **${clienteNom}**:
 
 > "${textoMensaje}"`,
+          analisisCompleto: `PLANTILLA Y RECOMENDACIÓN DE SEGUIMIENTO:
+- Tono: Profesional, cordial e institucional TUNNO.
+- Canal óptimo: WhatsApp Business o SMS directo.
+- Conversión promedio: 68% de citas confirmadas al sugerir fecha y hora específica.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'recordatorio',
           acciones: [
@@ -806,6 +867,12 @@ Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - 
         const respMsg: ChatMensaje = {
           id: `msg-cita-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Cita preparada para mañana a las 10:00 AM (${clienteTarget.nombre} - ${vehiculoTarget.marca} ${vehiculoTarget.modelo}). Requiere tu confirmación.`,
+          recomendaciones: [
+            'Rampa 2 y técnico disponible asignados para las 10:00 AM.',
+            'Duración estimada de 1.5 hrs para mantenimiento preventivo.',
+            'Pulsa "Confirmar y agendar" para registrarla formalmente en la agenda.',
+          ],
           texto: `He preparado el borrador de la cita para mañana:
 • **Cliente:** ${clienteTarget.nombre}
 • **Vehículo:** ${vehiculoTarget.marca} ${vehiculoTarget.modelo} (${vehiculoTarget.placas})
@@ -814,6 +881,10 @@ Esto eleva el margen de utilidad al **${margenSugerido}%** (+${margenSugerido - 
 • **Duración estimada:** 1.5 horas
 
 Por control operativo, confirma la creación en el sistema:`,
+          analisisCompleto: `DISPONIBILIDAD DE RAMPAS Y HORARIOS:
+- Rampa 1: Ocupada con orden de trabajo hasta las 11:30 AM.
+- Rampa 2: Disponible de 9:00 a 13:00 hrs.
+- Insumos de afinación: En almacén listos para surtir al momento del ingreso.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'confirmacion',
           confirmacion: {
@@ -903,7 +974,15 @@ Por control operativo, confirma la creación en el sistema:`,
         const respMsg: ChatMensaje = {
           id: `msg-piezas-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Se detectaron ${piezasReporte.length} refacciones con existencias por debajo del stock mínimo. Inversión sugerida: $${costoTotalEstimado.toLocaleString()} MXN.`,
+          recomendaciones: [
+            'Emitir orden de compra para piezas con stock en 0 hoy mismo.',
+            'Verificar con proveedores locales tiempos de entrega menores a 4 hrs.',
+            'Revisar si existen órdenes en rampa esperando estas piezas.',
+          ],
           texto: textoPiezas,
+          analisisCompleto: `DETALLE DE RESURTIDO SUGERIDO:
+${piezasReporte.map((p) => `• ${p.nombre} (${p.codigo}): Stock ${p.existencias} / Mínimo ${p.minimo}. Precio compra: $${p.precioCompra} MXN. Proveedor sugerido: AutoPartes Express`).join('\n')}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'piezas_compra',
           acciones: [
@@ -949,6 +1028,12 @@ Por control operativo, confirma la creación en el sistema:`,
         const respMsg: ChatMensaje = {
           id: `msg-resumen-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Actividad de hoy: ${citas.length} citas, ${ordEnProceso} órdenes activas en rampa, ${ordTerminadas} listas para entrega y ${cotPendientes} cotizaciones por autorizar.`,
+          recomendaciones: [
+            'Priorizar entrega de vehículos con trabajo concluido.',
+            'Contactar a clientes con cotizaciones por autorizar para no retrasar ingresos.',
+            'Revisar refacciones de alta rotación antes del corte vespertino.',
+          ],
           texto: `📊 **Resumen operativo del taller TUNNO:**
 
 • **Órdenes activas en taller:** ${ordEnProceso} en proceso en rampa, ${ordTerminadas} listas para entrega.
@@ -958,6 +1043,11 @@ Por control operativo, confirma la creación en el sistema:`,
 • **Personal:** Técnicos asignados con disponibilidad balanceada.
 
 💡 *Prioridad recomendada:* Dar seguimiento a cotizaciones sin respuesta y validar órdenes listas para entrega.`,
+          analisisCompleto: `KPIs OPERATIVOS DEL DÍA:
+- Tasa de ocupación de rampas: 75%
+- Tiempo promedio de entrega: 4.2 horas
+- Ventas en proceso de autorización: $${(cotPendientes * 2875).toLocaleString()} MXN
+- Clientes atendidos en la semana: ${clientes.length}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'resumen_taller',
           acciones: [
@@ -1009,6 +1099,12 @@ Por control operativo, confirma la creación en el sistema:`,
         const respMsg: ChatMensaje = {
           id: `msg-fac-${Date.now()}`,
           remitente: 'asistente',
+          resultadoBreve: `Borrador administrativo de factura preparado para ${cotTarget.folio} por $${cotTarget.total.toLocaleString()} MXN (IVA incluido).`,
+          recomendaciones: [
+            'Validar RFC (FEL850412XYZ) y régimen fiscal antes de timbrar.',
+            'Confirmar método de pago: 03 Transferencia con comprobante bancario.',
+            'Revisar si el cliente requiere desglose por conceptos o paquete único.',
+          ],
           texto: `🧾 **Borrador administrativo de factura preparado para ${cotTarget.folio}:**
 
 • **Receptor:** ${clienteNom}
@@ -1020,6 +1116,11 @@ Por control operativo, confirma la creación en el sistema:`,
 • **Total:** $${cotTarget.total.toLocaleString()} MXN
 
 ⚠️ *Nota institucional:* Este es un borrador interno editable para validar datos. No realiza timbrado fiscal ante el SAT de forma automática.`,
+          analisisCompleto: `DETALLES FISCALES CFDI 4.0:
+- ClaveProdServ SAT: 78181500 (Servicios de mantenimiento y reparación de vehículos).
+- ClaveUnidad SAT: E48 (Unidad de servicio).
+- Impuesto: Trasladado Base $${subtotal} IVA 16% = $${iva}.
+- Moneda: MXN (Tipo de cambio 1.000000).`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           tipoContenido: 'factura_borrador',
           acciones: [
@@ -1087,6 +1188,12 @@ Por control operativo, confirma la creación en el sistema:`,
           const respMsg: ChatMensaje = {
             id: `msg-veh-${Date.now()}`,
             remitente: 'asistente',
+            resultadoBreve: `Expediente localizado: ${vehiculoEncontrado.marca} ${vehiculoEncontrado.modelo} (${vehiculoEncontrado.placas}) registrado a nombre de ${cliNom}.`,
+            recomendaciones: [
+              'Revisar el historial previo de afinaciones y cambio de balatas.',
+              'Registrar kilometraje actual antes de abrir nueva orden de servicio.',
+              'Consultar si cuenta con garantía vigente de piezas instaladas.',
+            ],
             texto: `🚗 **Expediente localizado:**
 • **Vehículo:** ${vehiculoEncontrado.marca} ${vehiculoEncontrado.modelo} (${vehiculoEncontrado.año})
 • **Placas:** ${vehiculoEncontrado.placas}
@@ -1094,6 +1201,12 @@ Por control operativo, confirma la creación en el sistema:`,
 • **Historial:** 3 atenciones previas registradas.
 
 He actualizado el contexto a este vehículo. Puedes ver su ficha técnica o crear una cotización directa.`,
+            analisisCompleto: `FICHA TÉCNICA VEHICULAR:
+- Marca y Modelo: ${vehiculoEncontrado.marca} ${vehiculoEncontrado.modelo} (${vehiculoEncontrado.año})
+- Placas: ${vehiculoEncontrado.placas}
+- Propietario: ${cliNom}
+- Órdenes vinculadas en sistema: 3
+- Estado general: Al corriente en servicios preventivos.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             tipoContenido: 'vehiculo_ficha',
             acciones: [
@@ -1354,19 +1467,66 @@ He actualizado el contexto a este vehículo. Puedes ver su ficha técnica o crea
     };
   }, [cotizaciones, refacciones, ordenes]);
 
-  // Preguntas rápidas sugeridas para el chat
-  const sugerenciasRapidas = [
-    'Crea una cotización para Juan por cambio de aceite',
-    'Revisa esta cotización y recomienda un precio',
-    'Muéstrame las órdenes atrasadas',
-    '¿Qué vehículos deben recibir mantenimiento?',
-    'Redacta un recordatorio para este cliente',
-    'Prepara una cita para mañana',
-    '¿Qué piezas necesito comprar?',
-    'Resume la actividad del taller de hoy',
-    'Prepara una factura de esta cotización',
-    'Abre el registro del vehículo con placas XYZ-789',
-  ];
+  // Preguntas rápidas sugeridas adaptadas dinámicamente al contexto de la sección abierta
+  const sugerenciasRapidas = useMemo(() => {
+    switch (currentSection) {
+      case 'cotizaciones':
+        return [
+          'Crea una cotización para Juan por cambio de aceite',
+          'Revisa esta cotización y recomienda un precio',
+          'Calcular margen y optimizar precios',
+          'Muéstrame cotizaciones pendientes',
+        ];
+      case 'ordenes':
+        return [
+          'Muéstrame las órdenes atrasadas',
+          'Revisa diagnóstico y pendientes de entrega',
+          'Vehículos próximos a entregar',
+          'Auditar avance de órdenes activas',
+        ];
+      case 'inventario':
+        return [
+          '¿Qué piezas necesito comprar?',
+          'Detectar existencias bajas y sugerir compras',
+          'Refacciones críticas bajo el mínimo',
+          'Registrar orden de compra con proveedor',
+        ];
+      case 'clientes':
+        return [
+          'Redacta un recordatorio para este cliente',
+          'Proponer seguimientos de mantenimiento',
+          'Clientes inactivos sin servicio',
+          'Redactar mensaje por WhatsApp',
+        ];
+      case 'vehiculos':
+      case 'historial-vehicular':
+        return [
+          '¿Qué vehículos deben recibir mantenimiento?',
+          'Abre el registro del vehículo con placas XYZ-789',
+          'Generar planes de mantenimiento',
+          'Historial de reparaciones del vehículo',
+        ];
+      case 'facturacion':
+        return [
+          'Prepara una factura de esta cotización',
+          'Revisar coincidencias y datos incompletos',
+          'Comprobantes pendientes de cobro',
+          'Resumen de facturación del mes',
+        ];
+      case 'dashboard':
+      default:
+        return [
+          'Resume la actividad del taller de hoy',
+          'Crea una cotización para Juan por cambio de aceite',
+          'Revisa esta cotización y recomienda un precio',
+          'Muéstrame las órdenes atrasadas',
+          '¿Qué vehículos deben recibir mantenimiento?',
+          'Prepara una cita para mañana',
+          '¿Qué piezas necesito comprar?',
+          'Abre el registro del vehículo con placas XYZ-789',
+        ];
+    }
+  }, [currentSection]);
 
   const totalAlertas = recomendaciones.filter((r) => r.prioridad === 'urgente').length;
 
@@ -1558,6 +1718,34 @@ He actualizado el contexto a este vehículo. Puedes ver su ficha técnica o crea
                       </div>
                     )}
 
+                    {/* 1. RESULTADO BREVE */}
+                    {m.resultadoBreve && (
+                      <div className="mb-2 p-2.5 rounded-lg bg-sky-50 border border-[#73C7FF]/40 text-[#06345A]">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#1497F2] mb-0.5">
+                          <Sparkles className="w-3 h-3" />
+                          <span>Resultado breve</span>
+                        </div>
+                        <p className="font-semibold text-xs leading-snug">{m.resultadoBreve}</p>
+                      </div>
+                    )}
+
+                    {/* 2. MÁXIMO 3 RECOMENDACIONES */}
+                    {m.recomendaciones && m.recomendaciones.length > 0 && (
+                      <div className="mb-2.5 p-2 rounded-lg bg-slate-50 border border-[#E5E7EB] space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+                          Recomendaciones (máx. 3):
+                        </span>
+                        <ul className="space-y-1 mt-0.5">
+                          {m.recomendaciones.slice(0, 3).map((rec, rIdx) => (
+                            <li key={rIdx} className="flex items-start gap-1.5 text-[11px] text-[#374151]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#1497F2] shrink-0 mt-1.5" />
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <div className="whitespace-pre-line">{m.texto}</div>
 
                     {/* TARJETA INTERACTIVA DE COTIZACIÓN BORRADOR (3 PROPUESTAS) */}
@@ -1741,6 +1929,34 @@ He actualizado el contexto a este vehículo. Puedes ver su ficha técnica o crea
                             )}
                           </button>
                         ))}
+                      </div>
+                    )}
+
+                    {/* 4. BOTÓN VER ANÁLISIS COMPLETO (DESPLEGABLE) */}
+                    {m.analisisCompleto && (
+                      <div className="mt-2.5 pt-2 border-t border-[#E5E7EB]">
+                        <button
+                          type="button"
+                          onClick={() => toggleAnalisis(m.id)}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#1497F2] hover:text-[#06345A] transition-colors cursor-pointer"
+                        >
+                          <span>
+                            {expandedAnalisisIds[m.id]
+                              ? 'Ocultar análisis completo'
+                              : 'Ver análisis completo'}
+                          </span>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform ${
+                              expandedAnalisisIds[m.id] ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+
+                        {expandedAnalisisIds[m.id] && (
+                          <div className="mt-2 p-3 rounded-lg bg-[#F8FAFC] border border-[#E5E7EB] text-[11px] text-[#4B5563] whitespace-pre-line leading-relaxed animate-in fade-in">
+                            {m.analisisCompleto}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

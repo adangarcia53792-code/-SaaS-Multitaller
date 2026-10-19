@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Cliente,
   Vehiculo,
@@ -39,6 +40,7 @@ import {
   Wrench,
   ClipboardList,
   Sparkles,
+  Eye,
 } from 'lucide-react';
 import { TunnoLogo } from './TunnoLogo';
 import { useModalDismiss } from '../hooks/useModalDismiss';
@@ -110,8 +112,39 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   const [filter, setFilter] = useState<EstadoFilter>('todas');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Dropdown menu state per row
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  // Dropdown portal menu state (renderizado fuera de la tabla para evitar recorte)
+  const [activeMenuOrden, setActiveMenuOrden] = useState<{
+    orden: OrdenTrabajo;
+    top: number;
+    left: number;
+  } | null>(null);
+
+  const handleToggleMenu = (e: React.MouseEvent, ord: OrdenTrabajo) => {
+    e.stopPropagation();
+    if (activeMenuOrden?.orden.id === ord.id) {
+      setActiveMenuOrden(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menuWidth = 230;
+    const menuHeight = 280;
+    let top = rect.bottom + 4;
+    let left = rect.right - menuWidth;
+
+    if (top + menuHeight > window.innerHeight) {
+      top = Math.max(8, rect.top - menuHeight - 4);
+    }
+    if (left < 10) left = 10;
+    if (left + menuWidth > window.innerWidth) {
+      left = window.innerWidth - menuWidth - 10;
+    }
+
+    setActiveMenuOrden({
+      orden: ord,
+      top,
+      left,
+    });
+  };
 
   // Modal: Add / Edit (traditional form)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -779,7 +812,7 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     setReturningError('');
 
     setFormErrors({});
-    setOpenMenuId(null);
+    setActiveMenuOrden(null);
     initialFormValuesRef.current = {
       clientId: orden.clienteId,
       vehiculoId: orden.vehiculoId,
@@ -1400,7 +1433,6 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 filteredOrdenes.map((ord) => {
                   const client = clienteMap.get(ord.clienteId);
                   const veh = vehiculoMap.get(ord.vehiculoId);
-                  const isMenuOpen = openMenuId === ord.id;
                   const linkedCot = ord.cotizacionId ? cotizacionMap.get(ord.cotizacionId) : undefined;
                   const rent = getRentabilidadOrden(ord);
 
@@ -1574,173 +1606,34 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         })()}
                       </td>
 
-                      {/* Acciones: Botón principal según rol */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap relative">
+                      {/* Acciones: Visible Ver + Menú de tres puntos */}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-2">
-                          {isCaja ? (
-                            <button
-                              type="button"
-                              onClick={() => setPrintingOrden(ord)}
-                              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#1497F2] bg-[#1497F2]/10 hover:bg-[#1497F2]/20 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              <span>Ver resumen</span>
-                            </button>
-                          ) : isMecanico ? (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEdit(ord)}
-                              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1497F2] hover:bg-[#06345A] rounded-lg shadow-xs transition-colors cursor-pointer"
-                            >
-                              <Wrench className="w-3.5 h-3.5" />
-                              <span>Registrar trabajo</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenContinuar(ord)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1497F2] hover:bg-[#06345A] rounded-lg shadow-xs transition-colors cursor-pointer"
-                            >
-                              <span>{isControlCalidad ? 'Revisar orden' : 'Continuar'}</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => (isCaja ? setPrintingOrden(ord) : handleOpenContinuar(ord))}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                            title={`Ver detalle formal de ${ord.folio}`}
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
+                            <span>Ver</span>
+                          </button>
 
                           <button
                             type="button"
-                            onClick={() => handleOpenRevisionServicio(ord)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-[#06345A] bg-sky-50/80 hover:bg-sky-100 hover:text-[#1497F2] rounded-lg border border-[#73C7FF]/50 hover:border-[#1497F2] transition-colors cursor-pointer shadow-2xs"
-                            title="Revisión inteligente del servicio con IA"
+                            onClick={(e) => handleToggleMenu(e, ord)}
+                            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                              activeMenuOrden?.orden.id === ord.id
+                                ? 'bg-slate-200 text-slate-900'
+                                : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
+                            }`}
+                            title="Más opciones"
+                            aria-label={`Más opciones para ${ord.folio}`}
+                            aria-haspopup="menu"
+                            aria-expanded={activeMenuOrden?.orden.id === ord.id}
                           >
-                            <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-                            <span>Revisar con IA</span>
+                            <MoreVertical className="w-4 h-4" />
                           </button>
-
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              data-tour="ordenes-asistencia-ia"
-                              onClick={() => handleOpenAsistenciaTecnica(ord)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-[#1497F2]/10 hover:text-[#1497F2] rounded-lg border border-slate-200 transition-colors cursor-pointer"
-                              title="Asistencia técnica con IA"
-                            >
-                              <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-                              <span className="hidden xl:inline">Asistencia IA</span>
-                            </button>
-                            <ContextualHelp tema="funciones-ia" />
-                          </div>
-
-                          {(ord.estado === 'Terminado' || ord.trabajoTerminado) && (
-                            <div className="inline-flex items-center gap-1">
-                              <button
-                                type="button"
-                                data-tour="ordenes-control-calidad"
-                                onClick={() => setRevisionFinalOrden(ord)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-[#1497F2] bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition-colors cursor-pointer"
-                                title="Revisión final con IA antes de entregar"
-                              >
-                                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                <span className="hidden xl:inline">Revisión IA</span>
-                              </button>
-                              <ContextualHelp tema="control-calidad" />
-                            </div>
-                          )}
-
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setOpenMenuId(isMenuOpen ? null : ord.id)}
-                              className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
-                              title="Más opciones"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {isMenuOpen && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-20"
-                                  onClick={() => setOpenMenuId(null)}
-                                />
-                                <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                                  {(ord.estado === 'Terminado' || ord.trabajoTerminado) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setRevisionFinalOrden(ord);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-2 text-slate-700 hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2"
-                                    >
-                                      <Sparkles className="w-4 h-4 text-amber-500" />
-                                      <span>Revisión final con IA</span>
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleOpenRevisionServicio(ord);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2"
-                                  >
-                                    <Sparkles className="w-4 h-4 text-[#1497F2]" />
-                                    <span>Revisión inteligente del servicio</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleOpenAsistenciaTecnica(ord);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-[#1497F2]/10 hover:text-[#1497F2] flex items-center gap-2"
-                                  >
-                                    <Sparkles className="w-4 h-4 text-[#1497F2]" />
-                                    <span>Asistencia técnica con IA</span>
-                                  </button>
-                                  {!isCaja && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        handleOpenEdit(ord);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    >
-                                      <Pencil className="w-4 h-4 text-slate-500" />
-                                      <span>Editar orden</span>
-                                    </button>
-                                  )}
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setPrintingOrden(ord);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <FileText className="w-4 h-4 text-slate-500" />
-                                    <span>{isCaja ? 'Ver resumen' : 'Ver / imprimir'}</span>
-                                  </button>
-
-                                  {ord.entregado && !isMecanico && !isCaja && onRegistrarGarantia && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        onRegistrarGarantia(ord);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full px-3 py-2 text-[#1497F2] hover:bg-rose-50 flex items-center gap-2 font-medium"
-                                    >
-                                      <ShieldCheck className="w-4 h-4 text-[#1497F2]" />
-                                      <span>Registrar garantía</span>
-                                    </button>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1767,7 +1660,6 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
             filteredOrdenes.map((ord) => {
               const client = clienteMap.get(ord.clienteId);
               const veh = vehiculoMap.get(ord.vehiculoId);
-              const isMenuOpen = openMenuId === ord.id;
               const linkedCot = ord.cotizacionId ? cotizacionMap.get(ord.cotizacionId) : undefined;
 
               return (
@@ -1911,163 +1803,28 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                       })()}
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {isCaja ? (
-                        <button
-                          type="button"
-                          onClick={() => setPrintingOrden(ord)}
-                          className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#1497F2] bg-[#1497F2]/10 hover:bg-[#1497F2]/20 rounded-lg transition-colors cursor-pointer shadow-xs"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Resumen</span>
-                        </button>
-                      ) : isMecanico ? (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenContinuar(ord)}
-                          className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1497F2] hover:bg-[#06345A] rounded-lg transition-colors cursor-pointer shadow-xs"
-                        >
-                          <Wrench className="w-3.5 h-3.5" />
-                          <span>Registrar</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenContinuar(ord)}
-                          className="inline-flex items-center gap-1 px-3.5 py-2 min-h-[42px] text-xs font-semibold text-white bg-[#1497F2] hover:bg-[#06345A] rounded-lg transition-colors cursor-pointer shadow-xs"
-                        >
-                          <span>{isControlCalidad ? 'Revisar' : 'Continuar'}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
-                        onClick={() => handleOpenRevisionServicio(ord)}
-                        className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-[#06345A] bg-sky-50/80 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-xs"
-                        title="Revisión inteligente del servicio con IA"
+                        onClick={() => (isCaja ? setPrintingOrden(ord) : handleOpenContinuar(ord))}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-2xs"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-                        <span>Revisar con IA</span>
+                        <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
+                        <span>Ver</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => handleOpenAsistenciaTecnica(ord)}
-                        className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-[#1497F2]/10 hover:text-[#1497F2] rounded-lg border border-slate-200 transition-colors cursor-pointer shadow-xs"
-                        title="Asistencia técnica con IA"
+                        onClick={(e) => handleToggleMenu(e, ord)}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                          activeMenuOrden?.orden.id === ord.id
+                            ? 'bg-slate-200 text-slate-900'
+                            : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
+                        }`}
+                        aria-label={`Más opciones para ${ord.folio}`}
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-                        <span>IA</span>
+                        <MoreVertical className="w-4 h-4" />
                       </button>
-
-                      {(ord.estado === 'Terminado' || ord.trabajoTerminado) && (
-                        <button
-                          type="button"
-                          onClick={() => setRevisionFinalOrden(ord)}
-                          className="inline-flex items-center gap-1 px-2.5 py-2 min-h-[42px] text-xs font-semibold text-[#1497F2] bg-sky-50 border border-sky-200 hover:bg-sky-100 rounded-lg transition-colors cursor-pointer shadow-xs"
-                          title="Revisión final con IA antes de entregar"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Rev. IA</span>
-                        </button>
-                      )}
-
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setOpenMenuId(isMenuOpen ? null : ord.id)}
-                          className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-slate-500 hover:text-slate-800 rounded-lg"
-                          aria-label="Más opciones"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-
-                        {isMenuOpen && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-20"
-                              onClick={() => setOpenMenuId(null)}
-                            />
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleOpenRevisionServicio(ord);
-                                }}
-                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2 font-medium"
-                              >
-                                <Sparkles className="w-4 h-4 text-[#1497F2]" />
-                                <span>Revisión inteligente del servicio</span>
-                              </button>
-                              {(ord.estado === 'Terminado' || ord.trabajoTerminado) && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenMenuId(null);
-                                    setRevisionFinalOrden(ord);
-                                  }}
-                                  className="w-full px-3 py-2.5 text-slate-700 hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2 font-medium"
-                                >
-                                  <Sparkles className="w-4 h-4 text-amber-500" />
-                                  <span>Revisión final con IA</span>
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleOpenAsistenciaTecnica(ord);
-                                }}
-                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-[#1497F2]/10 hover:text-[#1497F2] flex items-center gap-2 font-medium"
-                              >
-                                <Sparkles className="w-4 h-4 text-[#1497F2]" />
-                                <span>Asistencia técnica con IA</span>
-                              </button>
-                              {!isCaja && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenMenuId(null);
-                                    handleOpenEdit(ord);
-                                  }}
-                                  className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <Pencil className="w-4 h-4 text-slate-500" />
-                                  <span>Editar orden</span>
-                                </button>
-                              )}
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setPrintingOrden(ord);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full px-3 py-2.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <FileText className="w-4 h-4 text-slate-500" />
-                                <span>{isCaja ? 'Ver resumen' : 'Ver / imprimir'}</span>
-                              </button>
-
-                              {ord.entregado && !isMecanico && !isCaja && onRegistrarGarantia && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onRegistrarGarantia(ord);
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-3 py-2.5 text-[#1497F2] hover:bg-rose-50 flex items-center gap-2 font-medium"
-                                >
-                                  <ShieldCheck className="w-4 h-4 text-[#1497F2]" />
-                                  <span>Registrar garantía</span>
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -2113,6 +1870,139 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
           </div>
         </div>
       </div>
+
+      {/* PORTAL: MENÚ FLOTANTE DE OPCIONES (RENDERIZADO DIRECTAMENTE EN BODY PARA EVITAR RECORTE) */}
+      {activeMenuOrden && typeof document !== 'undefined' && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[9990] bg-transparent cursor-default"
+            onClick={() => setActiveMenuOrden(null)}
+            aria-hidden="true"
+          />
+
+          <div
+            style={{
+              position: 'fixed',
+              top: `${activeMenuOrden.top}px`,
+              left: `${activeMenuOrden.left}px`,
+            }}
+            className="z-[9999] w-56 bg-white border border-[#E5E7EB] rounded-xl shadow-2xl py-1 text-left text-xs font-medium animate-in fade-in zoom-in-95 duration-100 divide-y divide-slate-100 focus:outline-none"
+            role="menu"
+            aria-orientation="vertical"
+          >
+            {(() => {
+              const ord = activeMenuOrden.orden;
+              return (
+                <>
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        handleOpenContinuar(ord);
+                        setActiveMenuOrden(null);
+                      }}
+                      className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 text-[#1497F2]" />
+                      <span>{isMecanico ? 'Registrar avance' : isControlCalidad ? 'Revisar orden' : 'Ver detalle / flujo'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setPrintingOrden(ord);
+                        setActiveMenuOrden(null);
+                      }}
+                      className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 text-slate-500" />
+                      <span>{isCaja ? 'Ver resumen' : 'Ver / imprimir ficha'}</span>
+                    </button>
+
+                    {!isCaja && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          handleOpenEdit(ord);
+                          setActiveMenuOrden(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                      >
+                        <Pencil className="w-4 h-4 text-slate-500" />
+                        <span>Editar orden</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="py-1 bg-sky-50/50">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        handleOpenRevisionServicio(ord);
+                        setActiveMenuOrden(null);
+                      }}
+                      className="w-full px-3.5 py-2 text-[#06345A] hover:bg-sky-100/60 flex items-center gap-2.5 transition-colors cursor-pointer font-medium"
+                    >
+                      <Sparkles className="w-4 h-4 text-[#1497F2]" />
+                      <span>Revisión inteligente IA</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        handleOpenAsistenciaTecnica(ord);
+                        setActiveMenuOrden(null);
+                      }}
+                      className="w-full px-3.5 py-2 text-slate-700 hover:bg-sky-100/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 text-[#1497F2]" />
+                      <span>Asistencia técnica IA</span>
+                    </button>
+
+                    {(ord.estado === 'Terminado' || ord.trabajoTerminado) && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setRevisionFinalOrden(ord);
+                          setActiveMenuOrden(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-amber-800 hover:bg-amber-50 flex items-center gap-2.5 transition-colors cursor-pointer font-semibold"
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span>Revisión final con IA</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {ord.entregado && !isMecanico && !isCaja && onRegistrarGarantia && (
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          onRegistrarGarantia(ord);
+                          setActiveMenuOrden(null);
+                        }}
+                        className="w-full px-3.5 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2.5 transition-colors cursor-pointer font-semibold"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        <span>Registrar garantía</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* ======================================================== */}
       {/* MODAL: CONTINUAR WORKFLOW (ETAPA 7) */}

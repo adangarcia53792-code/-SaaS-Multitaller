@@ -96,7 +96,6 @@ import { GuiaMenuDropdown } from './components/GuiaMenuDropdown';
 import { GuiaBienvenidaModal } from './components/GuiaBienvenidaModal';
 import { AsistenteInteligente } from './components/AsistenteInteligente';
 import { CrearCotizacionIAModal } from './components/CrearCotizacionIAModal';
-import { CopilotoTallerPanel } from './components/CopilotoTallerPanel';
 import { TipoGuia, guardarPreferenciasGuia, obtenerPreferenciasGuia } from './data/guiaData';
 import { TunnoLogo } from './components/TunnoLogo';
 import { PlanMantenimientoModal } from './components/PlanMantenimientoModal';
@@ -112,13 +111,16 @@ const TOP_LEVEL_MENU_ITEMS: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'nueva-atencion', label: 'Nueva atención', icon: PlusCircle },
   { id: 'clientes', label: 'Clientes', icon: Users },
-  { id: 'vehiculos', label: 'Vehículos', icon: Car },
-  { id: 'flotillas', label: 'Flotillas', icon: Truck },
-  { id: 'historial-vehicular', label: 'Historial vehicular', icon: History },
   { id: 'citas', label: 'Citas', icon: Calendar },
   { id: 'ordenes', label: 'Órdenes de trabajo', icon: Wrench },
   { id: 'cotizaciones', label: 'Cotizaciones', icon: FileText },
+];
+
+const OPERACION_ITEMS: MenuItem[] = [
+  { id: 'vehiculos', label: 'Vehículos', icon: Car },
+  { id: 'flotillas', label: 'Flotillas', icon: Truck },
   { id: 'calendario', label: 'Calendario', icon: CalendarDays },
+  { id: 'historial-vehicular', label: 'Historial vehicular', icon: History },
 ];
 
 const CATALOGOS_ITEMS: MenuItem[] = [
@@ -128,20 +130,21 @@ const CATALOGOS_ITEMS: MenuItem[] = [
 
 const ADMINISTRACION_ITEMS: MenuItem[] = [
   { id: 'facturacion', label: 'Facturación', icon: Receipt },
-  { id: 'personal-asistencia', label: 'Personal y asistencia', icon: UserCheck },
   { id: 'reportes', label: 'Reportes', icon: BarChart3 },
   { id: 'prospectos', label: 'Prospectos', icon: UserPlus },
   { id: 'garantias', label: 'Garantías', icon: ShieldCheck },
-  { id: 'bitacora', label: 'Bitácora', icon: ClipboardList },
+  { id: 'personal-asistencia', label: 'Personal y asistencia', icon: UserCheck },
+  { id: 'atencion-asistida', label: 'Seguimientos', icon: Clock },
 ];
 
 const CONFIGURACION_ITEMS: MenuItem[] = [
-  { id: 'configuracion', label: 'Configuración', icon: Settings },
-  { id: 'atencion-asistida', label: 'Seguimientos y Atención', icon: Sparkles },
+  { id: 'configuracion', label: 'Configuración y respaldos', icon: Settings },
+  { id: 'bitacora', label: 'Bitácora', icon: ClipboardList },
 ];
 
 const ALL_MENU_ITEMS: MenuItem[] = [
   ...TOP_LEVEL_MENU_ITEMS,
+  ...OPERACION_ITEMS,
   ...CATALOGOS_ITEMS,
   ...ADMINISTRACION_ITEMS,
   ...CONFIGURACION_ITEMS,
@@ -874,8 +877,7 @@ const INITIAL_SERVICIOS: ServicioCatalogo[] = [
 export default function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<'catalogos' | 'administracion' | 'configuracion' | null>(() => {
-    if (['servicios', 'inventario'].includes('dashboard')) return 'catalogos';
+  const [openDropdown, setOpenDropdown] = useState<'operacion' | 'catalogos' | 'administracion' | 'configuracion' | null>(() => {
     return null;
   });
   const [toastMensaje, setToastMensaje] = useState<string | null>(null);
@@ -2183,7 +2185,9 @@ export default function App() {
     setHistorialTarget(null);
     setIsCentroAvisosOpen(false);
     document.body.style.overflow = '';
-    if (CATALOGOS_ITEMS.some((i) => i.id === id)) {
+    if (OPERACION_ITEMS.some((i) => i.id === id)) {
+      setOpenDropdown('operacion');
+    } else if (CATALOGOS_ITEMS.some((i) => i.id === id)) {
       setOpenDropdown('catalogos');
     } else if (ADMINISTRACION_ITEMS.some((i) => i.id === id)) {
       setOpenDropdown('administracion');
@@ -2433,7 +2437,7 @@ export default function App() {
   const totalPendientesCount = avisosVisiblesNoVistos.length;
   const tieneAvisosUrgentes = avisosVisiblesNoVistos.some((a) => a.nivel === 'Urgente');
 
-  const toggleDropdown = (name: 'catalogos' | 'administracion' | 'configuracion') => {
+  const toggleDropdown = (name: 'operacion' | 'catalogos' | 'administracion' | 'configuracion') => {
     setOpenDropdown((prev) => (prev === name ? null : name));
   };
 
@@ -3496,7 +3500,65 @@ export default function App() {
             );
           })}
 
-          {/* Grupo desplegable 1: Catálogos */}
+          {/* Grupo desplegable 1: Operación */}
+          {OPERACION_ITEMS.some((i) => isSectionAllowed(i.id, sesion?.rol)) && (
+            <div className="pt-2">
+              {(() => {
+                const isOperacionActive = OPERACION_ITEMS.some((i) => i.id === activeSection);
+                const isOpen = openDropdown === 'operacion';
+                return (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => toggleDropdown('operacion')}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-semibold font-heading uppercase tracking-wider transition-colors text-left min-h-[42px] cursor-pointer ${
+                        isOperacionActive
+                          ? 'text-[#73C7FF] bg-white/10 pl-3'
+                          : 'text-blue-100/90 hover:text-white hover:bg-white/10'
+                      }`}
+                      aria-expanded={isOpen}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Car className="w-4 h-4 text-[#73C7FF]" />
+                        <span>Operación</span>
+                      </span>
+                      {isOpen ? (
+                        <ChevronUp className="w-4 h-4 text-[#73C7FF]" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-[#73C7FF]" />
+                      )}
+                    </button>
+                    {isOpen && (
+                      <div className="mt-1 space-y-1 pl-2">
+                        {OPERACION_ITEMS.filter((i) => isSectionAllowed(i.id, sesion?.rol)).map((item) => {
+                          const Icon = item.icon;
+                          const isSelected = activeSection === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              data-tour={`nav-${item.id}`}
+                              onClick={() => handleSelectSection(item.id)}
+                              className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-sm transition-all text-left min-h-[42px] cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#1497F2] text-white shadow-xs font-semibold font-heading'
+                                  : 'text-blue-100/90 hover:bg-white/10 hover:text-white font-medium'
+                              }`}
+                            >
+                              <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#73C7FF]'}`} />
+                              <span>{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Grupo desplegable 2: Catálogos */}
           {CATALOGOS_ITEMS.some((i) => isSectionAllowed(i.id, sesion?.rol)) && (
             <div className="pt-2">
               {(() => {
@@ -3736,15 +3798,15 @@ export default function App() {
               />
             </div>
 
-            {/* Botón discreto Copiloto Operativo IA */}
+            {/* Botón discreto Asistente IA */}
             <button
               type="button"
               onClick={() => setIsCopilotoOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-50 text-[#06345A] border border-[#73C7FF]/40 hover:bg-[#1497F2]/10 transition-colors cursor-pointer shadow-2xs min-h-[36px]"
-              title="Abrir Copiloto Operativo TUNNO"
+              title="Abrir Asistente IA TUNNO"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-              <span className="hidden md:inline">Copiloto IA</span>
+              <span className="hidden md:inline">Asistente IA</span>
             </button>
 
             {/* Campana de avisos (discreta) */}
@@ -4983,8 +5045,10 @@ export default function App() {
         totalNoVistosCount={totalPendientesCount}
       />
 
-      {/* ASISTENTE IA GENERAL Y COPILOTO CONTEXTUAL */}
+      {/* ASISTENTE IA GENERAL Y COPILOTO CONTEXTUAL (ÚNICA ENTRADA PRINCIPAL) */}
       <AsistenteInteligente
+        isOpen={isCopilotoOpen}
+        onOpenChange={setIsCopilotoOpen}
         currentSection={activeSection}
         onNavigateToSection={(sec) => {
           handleSelectSection(sec);
@@ -5008,35 +5072,6 @@ export default function App() {
         onRegistrarBitacora={registrarEvento}
         onShowToast={(msg) => mostrarMensaje(msg)}
         onOpenCrearCotizacionIA={() => setIsCrearCotizacionIAOpen(true)}
-      />
-
-      {/* COPILOTO OPERATIVO TUNNO (PANEL LATERAL EN CADA SECCIÓN) */}
-      <CopilotoTallerPanel
-        isOpen={isCopilotoOpen}
-        onClose={() => setIsCopilotoOpen(false)}
-        currentSection={activeSection}
-        onNavigateToSection={(sec) => handleSelectSection(sec)}
-        currentUser={sesion || undefined}
-        citas={citas}
-        cotizaciones={cotizaciones}
-        ordenes={ordenes}
-        refacciones={refacciones}
-        facturas={facturas}
-        clientes={clientes}
-        vehiculos={vehiculos}
-        seguimientos={seguimientos}
-        prospectos={prospectos}
-        empleados={empleados}
-        garantias={garantias}
-        flotillas={flotillas}
-        bitacora={bitacora}
-        onSaveCotizacion={handleSaveCotizacion}
-        onUpdateEstadoCotizacion={handleUpdateCotizacionEstado}
-        onSaveOrden={handleSaveOrden}
-        onSaveCita={handleSaveCita}
-        onRegistrarBitacora={registrarEvento}
-        onOpenCrearCotizacionIA={() => setIsCrearCotizacionIAOpen(true)}
-        onShowToast={(msg) => mostrarMensaje(msg)}
       />
 
       {/* MODAL CREAR COTIZACIÓN CON IA (3 PROPUESTAS) */}
