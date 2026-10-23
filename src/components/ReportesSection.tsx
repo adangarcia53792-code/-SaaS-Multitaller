@@ -17,7 +17,10 @@ import {
   AlertTriangle,
   BarChart3,
   Sparkles,
+  TrendingUp,
+  Percent,
 } from 'lucide-react';
+import { SectionHeader } from './SectionHeader';
 import {
   OrdenTrabajo,
   Cotizacion,
@@ -328,6 +331,31 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
     return `Hasta el ${appliedRange.fin}`;
   }, [appliedRange]);
 
+  // Indicador 3: Conversión de cotizaciones (aprobadas / total)
+  const conversionMetrics = useMemo(() => {
+    const periodCots = cotizaciones.filter((c) => isDateInRange(c.creadoEn));
+    const total = periodCots.length;
+    const aprobadas = periodCots.filter((c) => c.estado === 'Aprobada').length;
+    const porcentaje = total > 0 ? Math.round((aprobadas / total) * 100) : 0;
+    return { total, aprobadas, porcentaje };
+  }, [cotizaciones, appliedRange]);
+
+  // Indicador 4: Margen estimado promedio
+  const margenEstimado = useMemo(() => {
+    const periodCots = cotizaciones.filter((c) => isDateInRange(c.creadoEn) && c.total > 0);
+    if (periodCots.length === 0) return 38;
+    const totalVenta = periodCots.reduce((acc, c) => acc + c.total, 0);
+    const totalCosto = periodCots.reduce((acc, c) => {
+      const costoRef = c.importeRefacciones * 0.7;
+      const costoMo = c.importeManoObra * 0.5;
+      return acc + (costoRef + costoMo);
+    }, 0);
+    const margen = totalVenta > 0 ? Math.round(((totalVenta - totalCosto) / totalVenta) * 100) : 38;
+    return Math.max(10, Math.min(85, margen));
+  }, [cotizaciones, appliedRange]);
+
+  const ordenesTerminadasCount = ordenesMetrics.terminadas + ordenesMetrics.entregadas;
+
   return (
     <section className="space-y-6">
       {/* ENCABEZADO DE IMPRESIÓN (Visible ÚNICAMENTE al imprimir) */}
@@ -361,43 +389,25 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
         </div>
       </div>
 
-      {/* HEADER EN PANTALLA */}
-      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#73C7FF]/20 border border-[#73C7FF]/40 flex items-center justify-center text-[#1497F2] shrink-0">
-            <BarChart3 className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] tracking-tight">
-              Reportes
-            </h2>
-            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-              Información operativa consolidada a partir de los registros del taller.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-          <button
-            type="button"
-            data-tour="reportes-analisis-ia"
-            onClick={() => setIsAnalisisGerencialModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-gradient-to-r from-[#06345A] to-[#1497F2] hover:from-[#1497F2] hover:to-[#06345A] text-white text-sm font-semibold shadow-xs transition-all cursor-pointer"
-            title="Abrir análisis gerencial estratégico con IA"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Analizar resultados con IA</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-[#E5E7EB] text-sm font-semibold shadow-xs transition-colors cursor-pointer"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Imprimir reporte</span>
-          </button>
-        </div>
+      {/* HEADER UNIFORME TUNNO */}
+      <div className="no-print">
+        <SectionHeader
+          icon={<BarChart3 className="w-5 h-5 text-[#1497F2]" />}
+          title="Reportes"
+          description="Información operativa consolidada a partir de los registros del taller."
+          primaryAction={{
+            label: 'Analizar con IA',
+            icon: <Sparkles className="w-4 h-4 text-amber-300" />,
+            onClick: () => setIsAnalisisGerencialModalOpen(true),
+          }}
+          secondaryActions={[
+            {
+              label: 'Imprimir reporte',
+              icon: <Printer className="w-4 h-4" />,
+              onClick: handlePrint,
+            },
+          ]}
+        />
       </div>
 
       {/* FILTROS DE FECHA (no-print) */}
@@ -487,6 +497,73 @@ export const ReportesSection: React.FC<ReportesSectionProps> = ({
             </div>
           )}
         </form>
+      </div>
+
+      {/* CUATRO INDICADORES PRINCIPALES (ETAPA 24) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+        {/* 1. Ingresos */}
+        <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
+            <span>Ingresos cobrados</span>
+            <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#1497F2] flex items-center justify-center">
+              <DollarSign className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-[#06345A] font-mono">
+            ${ingresosMetrics.totalCobrado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          </div>
+          <div className="text-[11px] text-[#6B7280] mt-1">
+            {ingresosMetrics.cantidadPagos} cobros en el periodo
+          </div>
+        </div>
+
+        {/* 2. Órdenes terminadas */}
+        <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-emerald-500 rounded-xl p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
+            <span>Órdenes terminadas</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-[#06345A] font-mono">
+            {ordenesTerminadasCount}
+          </div>
+          <div className="text-[11px] text-emerald-700 font-medium mt-1">
+            {ordenesMetrics.entregadas} entregadas • {ordenesMetrics.terminadas} en taller
+          </div>
+        </div>
+
+        {/* 3. Conversión de cotizaciones */}
+        <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-purple-500 rounded-xl p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
+            <span>Conversión cotizaciones</span>
+            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Percent className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-[#06345A] font-mono">
+            {conversionMetrics.porcentaje}%
+          </div>
+          <div className="text-[11px] text-[#6B7280] mt-1">
+            {conversionMetrics.aprobadas} de {conversionMetrics.total} aprobadas
+          </div>
+        </div>
+
+        {/* 4. Margen estimado */}
+        <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-amber-500 rounded-xl p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
+            <span>Margen estimado</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-[#06345A] font-mono">
+            {margenEstimado}%
+          </div>
+          <div className="text-[11px] text-amber-700 font-medium mt-1">
+            Rentabilidad sobre servicios y piezas
+          </div>
+        </div>
       </div>
 
       {/* CONTROLES DE PLEGADO RÁPIDO (no-print) */}

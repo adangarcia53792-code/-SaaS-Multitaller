@@ -41,12 +41,17 @@ import {
   ClipboardList,
   Sparkles,
   Eye,
+  Camera,
+  Receipt,
+  CalendarDays,
 } from 'lucide-react';
 import { TunnoLogo } from './TunnoLogo';
 import { useModalDismiss } from '../hooks/useModalDismiss';
 import { AsistenciaTecnicaModal } from './AsistenciaTecnicaModal';
 import { RevisionFinalModal } from './RevisionFinalModal';
 import { ContextualHelp } from './ContextualHelp';
+import { SectionHeader } from './SectionHeader';
+import { EmptyState } from './EmptyState';
 import {
   RevisionInteligenteServicioPanel,
   HallazgoRevisionServicio,
@@ -83,7 +88,40 @@ interface OrdenesSectionProps {
   onOpenCopiloto?: () => void;
 }
 
-type EstadoFilter = 'todas' | EstadoOrden;
+export type FlowFilterOrden =
+  | 'todas'
+  | 'Por autorizar'
+  | 'Pendiente'
+  | 'En proceso'
+  | 'Control de calidad'
+  | 'Terminada'
+  | 'Entregada';
+
+export function getOrdenFlowStage(
+  ord: OrdenTrabajo
+): 'Por autorizar' | 'Pendiente' | 'En proceso' | 'Control de calidad' | 'Terminada' | 'Entregada' {
+  if (ord.entregado) return 'Entregada';
+  if (ord.estado === 'Por autorizar') return 'Por autorizar';
+  if (ord.estado === 'Pendiente') return 'Pendiente';
+  if (ord.estado === 'En proceso') return 'En proceso';
+  if (ord.estado === 'Terminado' || ord.trabajoTerminado) {
+    if (ord.revisionFinal) {
+      return 'Terminada';
+    }
+    return 'Control de calidad';
+  }
+  return 'Pendiente';
+}
+
+export const FLOW_STAGES: { id: FlowFilterOrden; label: string }[] = [
+  { id: 'todas', label: 'Todas' },
+  { id: 'Por autorizar', label: 'Por autorizar' },
+  { id: 'Pendiente', label: 'Pendiente' },
+  { id: 'En proceso', label: 'En proceso' },
+  { id: 'Control de calidad', label: 'Control de calidad' },
+  { id: 'Terminada', label: 'Terminada' },
+  { id: 'Entregada', label: 'Entregada' },
+];
 
 export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   ordenes,
@@ -109,8 +147,10 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
   onNavigateToSection,
   onOpenCopiloto,
 }) => {
-  const [filter, setFilter] = useState<EstadoFilter>('todas');
+  const [filter, setFilter] = useState<FlowFilterOrden>('todas');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [ordenDetailTab, setOrdenDetailTab] = useState<'resumen' | 'diagnostico' | 'refacciones' | 'evidencias' | 'calidad' | 'cobro'>('resumen');
 
   // Dropdown portal menu state (renderizado fuera de la tabla para evitar recorte)
   const [activeMenuOrden, setActiveMenuOrden] = useState<{
@@ -1254,8 +1294,15 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
     const q = searchQuery.toLowerCase().trim();
 
     return assignedOrdenes.filter((ord) => {
-      if (filter !== 'todas' && ord.estado !== filter) {
-        return false;
+      if (filter !== 'todas') {
+        const stage = getOrdenFlowStage(ord);
+        if (stage !== filter) return false;
+      }
+      if (filterDate) {
+        const orderDate = ord.fechaEntregaPrometida || ord.creadoEn.split('T')[0];
+        if (!orderDate.startsWith(filterDate)) {
+          return false;
+        }
       }
       if (q) {
         const folioMatch = ord.folio.toLowerCase().includes(q);
@@ -1263,152 +1310,129 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
         const veh = vehiculoMap.get(ord.vehiculoId);
         const clientMatch = client?.nombre.toLowerCase().includes(q);
         const plateMatch = veh?.placas.toLowerCase().includes(q);
-        return Boolean(folioMatch || clientMatch || plateMatch);
+        const techMatch = (ord.mecanicoNombre || '').toLowerCase().includes(q);
+        const servMatch = (ord.servicio || '').toLowerCase().includes(q);
+        return Boolean(folioMatch || clientMatch || plateMatch || techMatch || servMatch);
       }
       return true;
     });
-  }, [assignedOrdenes, filter, searchQuery, clienteMap, vehiculoMap]);
+  }, [assignedOrdenes, filter, filterDate, searchQuery, clienteMap, vehiculoMap]);
 
   return (
-    <section className="space-y-6">
-      {/* Encabezado TUNNO para Órdenes */}
-      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
-            <ClipboardList className="w-6 h-6" />
+    <section className="space-y-5">
+      {/* Encabezado uniforme TUNNO */}
+      <SectionHeader
+        icon={<ClipboardList className="w-5 h-5 text-[#1497F2]" />}
+        title={isMecanico ? 'Órdenes asignadas' : 'Órdenes de trabajo'}
+        description={
+          isMecanico
+            ? 'Órdenes de trabajo asignadas a tu perfil técnico.'
+            : isControlCalidad
+            ? 'Inspección y validación de calidad de órdenes terminadas.'
+            : isCaja
+            ? 'Resumen de órdenes para liquidación y cobro.'
+            : 'Flujo operativo: recepción, diagnóstico, refacciones, calidad y entrega.'
+        }
+        primaryAction={
+          canCreateOrden
+            ? {
+                label: 'Nueva orden',
+                icon: <Plus className="w-4 h-4" />,
+                onClick: handleOpenAdd,
+              }
+            : undefined
+        }
+        secondaryActions={
+          onOpenCopiloto
+            ? [
+                {
+                  label: 'Ayudarme con IA',
+                  icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                  variant: 'ai',
+                  onClick: onOpenCopiloto,
+                },
+              ]
+            : []
+        }
+      />
+
+      {/* Barra uniforme de búsqueda y filtros */}
+      <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4 shadow-xs space-y-3 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por folio, cliente, vehículo o técnico..."
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
+            />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
-                {isMecanico ? 'Órdenes asignadas' : 'Órdenes de trabajo'}
-              </h2>
-              {isMecanico && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                  Técnico
-                </span>
-              )}
-              {isRecepcion && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
-                  Recepción/CRM
-                </span>
-              )}
-              {isControlCalidad && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
-                  Control de calidad
-                </span>
-              )}
-              {isCaja && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200">
-                  Caja
-                </span>
-              )}
-            </div>
-            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-              {isMecanico
-                ? `Órdenes asignadas a ${currentUser?.nombre}. Registra diagnóstico, observaciones, refacciones y finaliza trabajos.`
-                : isControlCalidad
-                ? 'Revisión y validación de trabajos terminados.'
-                : isCaja
-                ? 'Consulta del resumen de órdenes para facturación y cobro.'
-                : 'Control de recepción, diagnóstico, progreso y entrega de vehículos.'}
-            </p>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] focus:outline-none focus:border-[#1497F2]"
+              title="Filtrar por fecha"
+            />
+
+            {(searchQuery.trim() || filter !== 'todas' || filterDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilter('todas');
+                  setFilterDate('');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold border border-rose-200 transition-colors cursor-pointer shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Limpiar filtros</span>
+              </button>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {onOpenCopiloto && (
-            <button
-              type="button"
-              onClick={onOpenCopiloto}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
-              title="Abrir Copiloto de Órdenes de Trabajo"
-            >
-              <Sparkles className="w-4 h-4 text-[#1497F2]" />
-              <span>Ayudarme con IA</span>
-            </button>
-          )}
 
-          {canCreateOrden && (
-            <button
-              type="button"
-              onClick={handleOpenAdd}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nueva orden</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Controls: Search & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por folio, cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
-          />
+        {/* Pestañas del flujo operativo */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-t border-slate-100 pt-3 no-scrollbar">
+          {FLOW_STAGES.map((stg) => {
+            const count =
+              stg.id === 'todas'
+                ? assignedOrdenes.length
+                : assignedOrdenes.filter((o) => getOrdenFlowStage(o) === stg.id).length;
+            const isSelected = filter === stg.id;
+            return (
+              <button
+                key={stg.id}
+                type="button"
+                onClick={() => setFilter(stg.id)}
+                className={`px-3 py-1.5 rounded-lg font-medium transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
+                    : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
+                }`}
+              >
+                <span>{stg.label}</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex flex-wrap gap-1 rounded-lg border border-[#E5E7EB] bg-white p-1 text-xs sm:text-sm font-medium">
-          <button
-            type="button"
-            onClick={() => setFilter('todas')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'todas'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Todas
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('Por autorizar')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'Por autorizar'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Por autorizar
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('Pendiente')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'Pendiente'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Pendiente
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('En proceso')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'En proceso'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            En proceso
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('Terminado')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'Terminado'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Terminado
-          </button>
+        <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1 border-t border-slate-100">
+          <span>
+            Mostrando <strong className="text-[#06345A] font-semibold">{filteredOrdenes.length}</strong>{' '}
+            {filteredOrdenes.length === 1 ? 'orden' : 'órdenes'}
+          </span>
         </div>
       </div>
 
@@ -1418,23 +1442,30 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-4">Folio</th>
-                <th className="py-3.5 px-4">Cliente y vehículo</th>
-                <th className="py-3.5 px-4">Trabajo solicitado</th>
-                <th className="py-3.5 px-4 text-center">Costeo y rentabilidad</th>
-                <th className="py-3.5 px-4 text-center">Estado</th>
-                <th className="py-3.5 px-4 text-center">Entrega</th>
-                <th className="py-3.5 px-4 text-right">Acciones</th>
+              <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#06345A] font-semibold text-xs uppercase tracking-wider font-heading">
+                <th className="py-3 px-4">Folio</th>
+                <th className="py-3 px-4">Cliente</th>
+                <th className="py-3 px-4">Vehículo</th>
+                <th className="py-3 px-4">Técnico</th>
+                <th className="py-3 px-4">Servicio</th>
+                <th className="py-3 px-4">Fecha prometida</th>
+                <th className="py-3 px-4 text-center">Estado</th>
+                <th className="py-3 px-4 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#E5E7EB]">
               {filteredOrdenes.length > 0 ? (
                 filteredOrdenes.map((ord) => {
                   const client = clienteMap.get(ord.clienteId);
                   const veh = vehiculoMap.get(ord.vehiculoId);
                   const linkedCot = ord.cotizacionId ? cotizacionMap.get(ord.cotizacionId) : undefined;
-                  const rent = getRentabilidadOrden(ord);
+                  const stage = getOrdenFlowStage(ord);
+                  const isAtrasada = Boolean(
+                    ord.fechaEntregaPrometida &&
+                    !ord.entregado &&
+                    stage !== 'Terminada' &&
+                    new Date(ord.fechaEntregaPrometida + 'T23:59:59') < new Date()
+                  );
 
                   return (
                     <tr key={ord.id} className="hover:bg-slate-50/70 transition-colors">
@@ -1451,186 +1482,113 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                         )}
                       </td>
 
-                      {/* Cliente y vehículo */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-medium text-slate-900">
-                          {client ? client.nombre : 'Cliente no encontrado'}
-                        </div>
-                        <div className="text-xs text-slate-500 mt-0.5">
-                          {veh ? (
-                            <span>
-                              {veh.marca} {veh.modelo}{' '}
-                              <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">
-                                {veh.placas}
-                              </strong>
-                            </span>
-                          ) : (
-                            'Vehículo no registrado'
-                          )}
-                        </div>
+                      {/* Cliente */}
+                      <td className="py-3.5 px-4 font-semibold text-[#06345A]">
+                        {client ? client.nombre : 'Cliente no encontrado'}
                       </td>
 
-                      {/* Trabajo solicitado y Mecánico */}
-                      <td className="py-3.5 px-4 text-slate-700 max-w-xs">
-                        <span className="line-clamp-2">{ord.servicio}</span>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          {ord.kilometraje && (
-                            <span className="text-[11px] text-slate-400">
-                              Km: {ord.kilometraje}
+                      {/* Vehículo */}
+                      <td className="py-3.5 px-4 text-xs text-[#06345A]">
+                        {veh ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-slate-800">
+                              {veh.marca} {veh.modelo}
                             </span>
-                          )}
-                          {ord.mecanicoNombre ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">
-                              <Wrench className="w-3 h-3 text-amber-600" />
-                              <span>{ord.mecanicoNombre}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] border border-slate-200">
+                              {veh.placas}
                             </span>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 italic">
-                              Sin mecánico asignado
-                            </span>
-                          )}
-                        </div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Sin vehículo</span>
+                        )}
                       </td>
 
-                      {/* Costeo real y Semáforo discreto */}
+                      {/* Técnico */}
+                      <td className="py-3.5 px-4 text-xs text-slate-700">
+                        {ord.mecanicoNombre ? (
+                          <span className="inline-flex items-center gap-1 font-medium text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            <Wrench className="w-3 h-3 text-amber-600" />
+                            <span>{ord.mecanicoNombre}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic text-[11px]">Sin asignar</span>
+                        )}
+                      </td>
+
+                      {/* Servicio */}
+                      <td className="py-3.5 px-4 text-xs text-slate-800 max-w-xs">
+                        <span className="line-clamp-1 font-medium">{ord.servicio}</span>
+                      </td>
+
+                      {/* Fecha prometida (resalta únicamente retrasos reales) */}
+                      <td className="py-3.5 px-4 text-xs whitespace-nowrap">
+                        {isAtrasada ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                            <span>Atrasada ({ord.fechaEntregaPrometida})</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 font-mono">
+                            {ord.fechaEntregaPrometida
+                              ? new Date(ord.fechaEntregaPrometida + 'T00:00:00').toLocaleDateString('es-MX', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                              : new Date(ord.creadoEn).toLocaleDateString('es-MX', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                })}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Estado del flujo */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        {rent.semaforo === 'verde' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200" title={`Utilidad: +$${rent.utilidadReal.toLocaleString('es-MX')}`}>
-                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>Rentable ({rent.margenReal}%)</span>
-                          </span>
-                        )}
-                        {rent.semaforo === 'amarillo' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200" title={`Margen estrecho: +$${rent.utilidadReal.toLocaleString('es-MX')}`}>
-                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                            <span>Margen bajo ({rent.margenReal}%)</span>
-                          </span>
-                        )}
-                        {rent.semaforo === 'rojo' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-800 border border-rose-200" title={`Pérdida estimada: -$${Math.abs(rent.utilidadReal).toLocaleString('es-MX')}`}>
-                            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                            <span>Pérdida ({rent.margenReal}%)</span>
-                          </span>
-                        )}
-                        {rent.semaforo === 'neutro' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-50 text-slate-600 border border-slate-200">
-                            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                            <span>Sin cotización</span>
-                          </span>
-                        )}
-                        <div className="text-[10px] text-slate-400 font-mono mt-1">
-                          Costo ${rent.costoTotalReal.toFixed(2)} / Aprob ${rent.precioAprobado.toFixed(2)}
-                        </div>
+                        <span
+                          className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${
+                            stage === 'Por autorizar'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : stage === 'Pendiente'
+                              ? 'bg-slate-100 text-slate-700 border-slate-200'
+                              : stage === 'En proceso'
+                              ? 'bg-sky-50 text-sky-800 border-sky-200'
+                              : stage === 'Control de calidad'
+                              ? 'bg-purple-50 text-purple-800 border-purple-200'
+                              : stage === 'Terminada'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-blue-50 text-blue-800 border-blue-200'
+                          }`}
+                        >
+                          {stage}
+                        </span>
                       </td>
 
-                      {/* Estado */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        <div className="flex flex-col gap-1 items-center">
-                          {ord.estado === 'Por autorizar' && (
-                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                              Por autorizar
-                            </span>
-                          )}
-                          {ord.estado === 'Pendiente' && (
-                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                              Pendiente
-                            </span>
-                          )}
-                          {ord.estado === 'En proceso' && (
-                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                              En proceso
-                            </span>
-                          )}
-                          {ord.estado === 'Terminado' && (
-                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              Terminado
-                            </span>
-                          )}
-
-                          {ord.entregado && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle className="w-3 h-3 text-emerald-600" />
-                              <span>Entregado</span>
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Semáforo de entrega */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        {(() => {
-                          const sem = getIndicadorEntrega(ord);
-                          return (
-                            <div className="flex flex-col items-center gap-1">
-                              {sem.color === 'verde' && (
-                                <span
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                  title={sem.detalle}
-                                >
-                                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                  <span>{sem.texto}</span>
-                                </span>
-                              )}
-                              {sem.color === 'amarillo' && (
-                                <span
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200"
-                                  title={sem.detalle}
-                                >
-                                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                                  <span>{sem.texto}</span>
-                                </span>
-                              )}
-                              {sem.color === 'rojo' && (
-                                <span
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200"
-                                  title={sem.detalle}
-                                >
-                                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                                  <span>{sem.texto}</span>
-                                </span>
-                              )}
-                              {sem.color === 'gris' && (
-                                <span
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"
-                                  title={sem.detalle}
-                                >
-                                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                                  <span>{sem.texto}</span>
-                                </span>
-                              )}
-                              <span className="text-[10px] text-slate-500 font-mono">
-                                {ord.fechaEntregaPrometida ? `Prom: ${ord.fechaEntregaPrometida}` : 'Sin fecha prometida'}
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </td>
-
-                      {/* Acciones: Visible Ver + Menú de tres puntos */}
+                      {/* Acciones: Ver detalle + menú de tres puntos */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-2">
+                        <div className="inline-flex items-center gap-1.5 justify-end">
                           <button
                             type="button"
-                            onClick={() => (isCaja ? setPrintingOrden(ord) : handleOpenContinuar(ord))}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                            title={`Ver detalle formal de ${ord.folio}`}
+                            onClick={() => {
+                              setContinuarOrden(ord);
+                              setOrdenDetailTab('resumen');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-sky-50 hover:bg-[#1497F2] hover:text-white border border-[#73C7FF]/40 rounded-lg transition-colors cursor-pointer min-h-[34px]"
+                            title={`Ver detalle de ${ord.folio}`}
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
-                            <span>Ver</span>
+                            <span>Ver detalle</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={(e) => handleToggleMenu(e, ord)}
-                            className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               activeMenuOrden?.orden.id === ord.id
                                 ? 'bg-slate-200 text-slate-900'
                                 : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
                             }`}
                             title="Más opciones"
                             aria-label={`Más opciones para ${ord.folio}`}
-                            aria-haspopup="menu"
-                            aria-expanded={activeMenuOrden?.orden.id === ord.id}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
@@ -1641,12 +1599,35 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
-                    {searchQuery
-                      ? 'No se encontraron órdenes que coincidan con la búsqueda.'
-                      : filter !== 'todas'
-                      ? `No hay órdenes con estado "${filter}".`
-                      : 'No hay órdenes de trabajo registradas.'}
+                  <td colSpan={8} className="p-0">
+                    <EmptyState
+                      icon={<ClipboardList className="w-8 h-8 text-slate-400" />}
+                      title={searchQuery || filter !== 'todas' || filterDate ? 'Sin resultados' : 'No hay órdenes de trabajo'}
+                      description={
+                        searchQuery || filter !== 'todas' || filterDate
+                          ? 'No se encontraron órdenes con los filtros actuales. Limpia los filtros para ver todas las órdenes.'
+                          : 'Crea tu primera orden de trabajo para iniciar el control operativo en el taller.'
+                      }
+                      action={
+                        searchQuery || filter !== 'todas' || filterDate
+                          ? {
+                              label: 'Limpiar filtros',
+                              icon: <RotateCcw className="w-4 h-4" />,
+                              onClick: () => {
+                                setSearchQuery('');
+                                setFilter('todas');
+                                setFilterDate('');
+                              },
+                            }
+                          : canCreateOrden
+                          ? {
+                              label: 'Crear primera orden',
+                              icon: <Plus className="w-4 h-4" />,
+                              onClick: handleOpenAdd,
+                            }
+                          : undefined
+                      }
+                    />
                   </td>
                 </tr>
               )}
@@ -2012,411 +1993,142 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto no-print"
           onClick={continuarModalDismiss.handleBackdropClick}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-150 my-6 flex flex-col">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-150 my-6 flex flex-col">
             {/* Header: Folio, Cliente, Vehículo */}
-            <div className="px-6 py-4 bg-white border-b border-[#E5E7EB] text-[#06345A] flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[#1497F2] font-bold text-sm bg-[#73C7FF]/20 border border-[#73C7FF]/40 px-2 py-0.5 rounded">
-                    {continuarOrden.folio}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-[#6B7280] border border-[#E5E7EB]">
-                    Estado: {continuarOrden.estado}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenRevisionServicio(continuarOrden)}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 rounded-md border border-[#73C7FF]/60 hover:border-[#1497F2] transition-colors cursor-pointer"
-                    title="Revisión inteligente del servicio"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-                    <span>Revisar con IA</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenAsistenciaTecnica(continuarOrden)}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold text-[#1497F2] bg-[#1497F2]/10 hover:bg-[#1497F2]/20 rounded-md border border-[#1497F2]/20 transition-colors cursor-pointer"
-                    title="Asistencia técnica con IA"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
-                    <span>Asistencia técnica con IA</span>
-                  </button>
+            <div className="px-6 py-4 bg-white border-b border-[#E5E7EB] text-[#06345A] flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-sky-50 text-[#1497F2] border border-[#73C7FF]/40 flex items-center justify-center shrink-0">
+                  <ClipboardList className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-[#06345A] mt-1">
-                  {clienteMap.get(continuarOrden.clienteId)?.nombre} — {vehiculoMap.get(continuarOrden.vehiculoId)?.marca}{' '}
-                  {vehiculoMap.get(continuarOrden.vehiculoId)?.modelo} ({vehiculoMap.get(continuarOrden.vehiculoId)?.placas})
-                </h3>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[#1497F2] font-bold text-sm bg-sky-50 border border-[#73C7FF]/40 px-2 py-0.5 rounded">
+                      {continuarOrden.folio}
+                    </span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-slate-100 text-[#06345A] border border-[#E5E7EB]">
+                      {getOrdenFlowStage(continuarOrden)}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-[#06345A] mt-0.5">
+                    {clienteMap.get(continuarOrden.clienteId)?.nombre} · {vehiculoMap.get(continuarOrden.vehiculoId)?.marca}{' '}
+                    {vehiculoMap.get(continuarOrden.vehiculoId)?.modelo} ({vehiculoMap.get(continuarOrden.vehiculoId)?.placas})
+                  </h3>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={continuarModalDismiss.handleClose}
-                className="p-1 text-slate-400 hover:text-[#06345A] transition-colors cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-[#06345A] transition-colors cursor-pointer rounded-lg hover:bg-slate-100"
                 aria-label="Cerrar ventana"
+                title="Cerrar (Esc)"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Pestañas del detalle de orden requeridas */}
+            <div className="bg-slate-50 border-b border-[#E5E7EB] px-6 py-2 flex items-center gap-1 overflow-x-auto shrink-0 no-scrollbar">
+              {[
+                { id: 'resumen', label: 'Resumen', icon: <FileText className="w-3.5 h-3.5" /> },
+                { id: 'diagnostico', label: 'Diagnóstico', icon: <Wrench className="w-3.5 h-3.5" /> },
+                { id: 'refacciones', label: 'Refacciones', icon: <Package className="w-3.5 h-3.5" /> },
+                { id: 'evidencias', label: 'Evidencias', icon: <Camera className="w-3.5 h-3.5" /> },
+                { id: 'calidad', label: 'Calidad', icon: <ShieldCheck className="w-3.5 h-3.5" /> },
+                { id: 'cobro', label: 'Cobro', icon: <Receipt className="w-3.5 h-3.5" /> },
+              ].map((tab) => {
+                const isAct = ordenDetailTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setOrdenDetailTab(tab.id as any)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
+                      isAct
+                        ? 'bg-[#1497F2] text-white shadow-xs'
+                        : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-200/60'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="p-6 space-y-5 flex-1 overflow-y-auto">
-              {/* Apartado desplegable: Diagnóstico, presupuesto y autorización */}
-              <div className="border border-slate-200 rounded-lg overflow-hidden text-xs">
-                <button
-                  type="button"
-                  onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                  className="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between font-semibold text-slate-700 transition-colors"
-                >
-                  <span>Diagnóstico, presupuesto y autorización</span>
-                  {isAccordionOpen ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                </button>
-
-                {isAccordionOpen && (
-                  <div className="p-4 bg-white space-y-3 border-t border-slate-200">
-                    {/* Diagnóstico */}
+              {/* ======================================================== */}
+              {/* PESTAÑA: RESUMEN (FICHA RÁPIDA + FLUJO OPERATIVO)         */}
+              {/* ======================================================== */}
+              {ordenDetailTab === 'resumen' && (
+                <div className="space-y-5">
+                  {/* Ficha rápida de la orden */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-slate-600">Diagnóstico y Trabajo:</span>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenAsistenciaTecnica(continuarOrden)}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1497F2] hover:underline cursor-pointer"
-                        >
-                          <Sparkles className="w-3 h-3 text-[#1497F2]" />
-                          <span>Asistencia técnica con IA</span>
-                        </button>
-                      </div>
-                      <p className="text-slate-800 bg-slate-50 p-2.5 rounded border border-slate-200">
-                        {continuarOrden.diagnostico || continuarOrden.servicio}
-                      </p>
+                      <span className="text-slate-400 block text-[11px] uppercase font-medium">Folio</span>
+                      <span className="font-mono font-bold text-[#1497F2] text-sm">{continuarOrden.folio}</span>
                     </div>
-
-                    {/* Presupuesto */}
                     <div>
-                      <span className="font-semibold text-slate-600 block mb-0.5">Cotización / Presupuesto:</span>
-                      {activeLinkedCotizacion ? (
-                        <div className="bg-slate-50 p-2.5 rounded border border-slate-200 space-y-1">
-                          <div className="flex justify-between">
-                            <span>Folio: <strong>{activeLinkedCotizacion.folio}</strong></span>
-                            <span className="capitalize font-semibold text-purple-700">
-                              {activeLinkedCotizacion.estado}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-slate-600">
-                            <span>Refacciones: ${activeLinkedCotizacion.importeRefacciones.toFixed(2)}</span>
-                            <span>Mano de obra: ${activeLinkedCotizacion.importeManoObra.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between font-bold text-slate-900 border-t pt-1">
-                            <span>Total:</span>
-                            <span>${activeLinkedCotizacion.total.toFixed(2)} MXN</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-slate-400 italic">No hay cotización vinculada todavía.</p>
-                      )}
+                      <span className="text-slate-400 block text-[11px] uppercase font-medium">Estado de flujo</span>
+                      <span className="font-bold text-[#06345A]">{getOrdenFlowStage(continuarOrden)}</span>
                     </div>
-
-                    {/* Autorización */}
                     <div>
-                      <span className="font-semibold text-slate-600 block mb-0.5">Autorización:</span>
-                      {activeLinkedCotizacion?.autorizacion ? (
-                        <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded text-emerald-900">
-                          <p>
-                            Autorizado por: <strong>{activeLinkedCotizacion.autorizacion.autorizadoPor}</strong>
-                          </p>
-                          <p className="text-[11px] text-emerald-700 mt-0.5">
-                            Fecha y hora: {activeLinkedCotizacion.autorizacion.fechaHora}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-slate-400 italic">Sin autorización registrada.</p>
-                      )}
+                      <span className="text-slate-400 block text-[11px] uppercase font-medium">Técnico</span>
+                      <span className="font-semibold text-slate-800 truncate block">
+                        {continuarOrden.mecanicoNombre || 'Sin asignar'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px] uppercase font-medium">Fecha prometida</span>
+                      <span className="font-semibold text-slate-800">
+                        {continuarOrden.fechaEntregaPrometida || 'No definida'}
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Apartado desplegable: Refacciones utilizadas (ETAPA 9) */}
-              <div className="border border-slate-200 rounded-lg overflow-hidden text-xs">
-                <button
-                  type="button"
-                  onClick={() => setIsRefaccionesAccordionOpen(!isRefaccionesAccordionOpen)}
-                  className="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between font-semibold text-slate-700 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-emerald-600" />
-                    <span>Refacciones utilizadas</span>
-                    {continuarOrden.refaccionesUtilizadas && continuarOrden.refaccionesUtilizadas.length > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                        {continuarOrden.refaccionesUtilizadas.reduce(
-                          (sum, u) => sum + (u.cantidad - (u.devueltas || 0)),
-                          0
-                        )}{' '}
-                        piezas
-                      </span>
-                    )}
-                    <ContextualHelp tema="utilizar-devolver-refaccion" />
-                  </div>
-                  {isRefaccionesAccordionOpen ? (
-                    <ChevronUp className="w-4 h-4 text-slate-500" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-500" />
-                  )}
-                </button>
+                  {/* Stepper visual del flujo operativo de 6 etapas */}
+                  <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 space-y-2">
+                    <span className="text-xs font-semibold text-slate-700 block">Progreso en el flujo del taller:</span>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-center text-[11px]">
+                      {[
+                        { id: 'Por autorizar', label: 'Por autorizar' },
+                        { id: 'Pendiente', label: 'Pendiente' },
+                        { id: 'En proceso', label: 'En proceso' },
+                        { id: 'Control de calidad', label: 'Calidad' },
+                        { id: 'Terminada', label: 'Terminada' },
+                        { id: 'Entregada', label: 'Entregada' },
+                      ].map((step, idx) => {
+                        const currentStage = getOrdenFlowStage(continuarOrden);
+                        const stagesList = ['Por autorizar', 'Pendiente', 'En proceso', 'Control de calidad', 'Terminada', 'Entregada'];
+                        const currentIdx = stagesList.indexOf(currentStage);
+                        const isDone = currentIdx > idx;
+                        const isCurrent = currentIdx === idx;
 
-                {isRefaccionesAccordionOpen && (
-                  <div className="p-4 bg-white space-y-4 border-t border-slate-200">
-                    {/* Lista de refacciones registradas en esta orden */}
-                    <div>
-                      <span className="font-semibold text-slate-700 block mb-2">
-                        Refacciones registradas en esta orden:
-                      </span>
-                      {continuarOrden.refaccionesUtilizadas && continuarOrden.refaccionesUtilizadas.length > 0 ? (
-                        <div className="space-y-2">
-                          {continuarOrden.refaccionesUtilizadas.map((item) => {
-                            const ref = refaccionMap.get(item.refaccionId);
-                            const netQuantity = item.cantidad - (item.devueltas || 0);
-                            const isReturning = returningItemId === item.id;
-
-                            return (
-                              <div
-                                key={item.id}
-                                className="p-3 rounded-lg border border-slate-200 bg-slate-50/70 space-y-2"
-                              >
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                  <div>
-                                    <div className="font-medium text-slate-900 flex items-center gap-2 flex-wrap">
-                                      <span className="font-mono text-[11px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-200">
-                                        {ref ? ref.codigo : 'REF'}
-                                      </span>
-                                      <span>{ref ? ref.nombre : 'Refacción'}</span>
-                                    </div>
-                                    <div className="text-[11px] text-slate-500 mt-1">
-                                      Registrada: {item.fechaHora} • Asignadas: <strong>{item.cantidad}</strong> pzs
-                                      {item.devueltas > 0 && (
-                                        <span className="text-amber-700 ml-1.5 font-medium">
-                                          (Devueltas al inventario: {item.devueltas} pzs)
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-2 self-end sm:self-center">
-                                    <span className="font-semibold text-slate-800 text-xs bg-white px-2 py-1 rounded border border-slate-200">
-                                      {netQuantity} en orden
-                                    </span>
-                                    {netQuantity > 0 && !isReturning && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setReturningItemId(item.id);
-                                          setReturningCantidad('1');
-                                          setReturningError('');
-                                        }}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors"
-                                      >
-                                        <RotateCcw className="w-3.5 h-3.5" />
-                                        <span>Devolver</span>
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Formulario de devolución */}
-                                {isReturning && (
-                                  <div className="p-3 bg-white border border-rose-200 rounded-lg space-y-2 mt-2">
-                                    <div className="flex justify-between items-center text-slate-700 font-semibold text-xs">
-                                      <span>Devolución a inventario:</span>
-                                      <span className="text-[11px] text-slate-500 font-normal">
-                                        Disponible a devolver: {netQuantity} pzs
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 items-center">
-                                      <div className="flex items-center gap-1.5">
-                                        <input
-                                          type="number"
-                                          min="1"
-                                          max={netQuantity}
-                                          step="1"
-                                          value={returningCantidad}
-                                          onChange={(e) => setReturningCantidad(e.target.value)}
-                                          className="w-20 p-1.5 border border-[#E5E7EB] rounded text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
-                                        />
-                                        <span className="text-slate-500 text-xs">pzs</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        disabled={isActionProcessing}
-                                        onClick={() => handleConfirmReturnRefaccion(continuarOrden, item)}
-                                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded text-xs font-semibold shadow-xs transition-colors"
-                                      >
-                                        Confirmar devolución
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => setReturningItemId(null)}
-                                        className="px-2.5 py-1.5 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 text-xs font-medium"
-                                      >
-                                        Cancelar
-                                      </button>
-                                    </div>
-                                    {returningError && (
-                                      <p className="text-rose-600 text-[11px] bg-rose-50 p-1.5 rounded border border-rose-200">
-                                        {returningError}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-slate-400 italic py-1">
-                          No se han registrado refacciones utilizadas en esta orden todavía.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Formulario para registrar uso de refacción */}
-                    <div className="pt-3 border-t border-slate-200 space-y-2.5">
-                      <span className="font-semibold text-slate-700 block">
-                        Registrar refacción utilizada:
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                        <div className="sm:col-span-8">
-                          <label className="block text-[11px] text-slate-600 font-medium mb-1">
-                            Seleccionar refacción
-                          </label>
-                          <select
-                            value={selectedRefaccionId}
-                            onChange={(e) => {
-                              setSelectedRefaccionId(e.target.value);
-                              setRefaccionError('');
-                            }}
-                            className="w-full p-2 border border-[#E5E7EB] rounded text-[#06345A] bg-white text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
-                          >
-                            <option value="">Seleccionar refacción del catálogo...</option>
-                            {refacciones.map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.codigo} — {r.nombre} (Disponibles: {r.existencias} pzs)
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="sm:col-span-4">
-                          <label className="block text-[11px] text-slate-600 font-medium mb-1">
-                            Cantidad (pzs)
-                          </label>
-                          <div className="flex gap-1.5">
-                            <input
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={selectedRefaccionCantidad}
-                              onChange={(e) => {
-                                setSelectedRefaccionCantidad(e.target.value);
-                                setRefaccionError('');
-                              }}
-                              className="w-20 p-2 border border-[#E5E7EB] rounded text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
-                            />
-                            <button
-                              type="button"
-                              disabled={!selectedRefaccionId || isActionProcessing}
-                              onClick={() => handleConfirmUseRefaccion(continuarOrden)}
-                              className="flex-1 py-2 px-3 bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white rounded text-xs font-semibold transition-colors shadow-xs cursor-pointer"
-                            >
-                              Confirmar uso
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {selectedRefaccionId && (() => {
-                        const sel = refaccionMap.get(selectedRefaccionId);
-                        if (!sel) return null;
                         return (
-                          <div className="text-[11px] text-slate-500 flex items-center justify-between">
-                            <span>
-                              Existencias disponibles en almacén: <strong>{sel.existencias} pzs</strong>
-                            </span>
-                            {sel.existencias === 0 && (
-                              <span className="text-rose-600 font-semibold">
-                                Sin existencias disponibles para registrar salidas.
-                              </span>
-                            )}
+                          <div
+                            key={step.id}
+                            className={`p-2 rounded-lg border font-medium transition-colors ${
+                              isCurrent
+                                ? 'bg-sky-50 border-[#1497F2] text-[#1497F2] font-bold shadow-xs'
+                                : isDone
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                : 'bg-slate-50 border-slate-200 text-slate-400'
+                            }`}
+                          >
+                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                              {isDone ? (
+                                <CheckCircle className="w-3 h-3 text-emerald-600" />
+                              ) : isCurrent ? (
+                                <div className="w-2 h-2 rounded-full bg-[#1497F2] animate-pulse" />
+                              ) : (
+                                <span className="text-[10px] text-slate-400">{idx + 1}</span>
+                              )}
+                            </div>
+                            <span className="block truncate">{step.label}</span>
                           </div>
                         );
-                      })()}
-
-                      {refaccionError && (
-                        <p className="text-rose-600 text-xs mt-1 bg-rose-50 p-2 rounded border border-rose-200">
-                          {refaccionError}
-                        </p>
-                      )}
+                      })}
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Costeo real y rentabilidad en Continuar Workflow */}
-              {(() => {
-                const rent = getRentabilidadOrden(continuarOrden);
-                return (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs space-y-2">
-                    <div className="flex items-center justify-between flex-wrap gap-1">
-                      <span className="font-semibold text-slate-700">Costeo real y margen de la orden:</span>
-                      {rent.semaforo === 'verde' && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          Rentable ({rent.margenReal}%)
-                        </span>
-                      )}
-                      {rent.semaforo === 'amarillo' && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-                          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                          Margen bajo ({rent.margenReal}%)
-                        </span>
-                      )}
-                      {rent.semaforo === 'rojo' && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
-                          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                          Pérdida ({rent.margenReal}%)
-                        </span>
-                      )}
-                      {rent.semaforo === 'neutro' && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-200 text-slate-700">
-                          <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                          Sin cotización aprobada
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5 text-center pt-1.5 border-t border-slate-200">
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Costo refacc</span>
-                        <span className="font-bold text-slate-700">${rent.costoRefReal.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Costo MO</span>
-                        <span className="font-bold text-slate-700">${rent.costoMoReal.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Cotizado</span>
-                        <span className="font-bold text-[#1497F2]">${rent.precioAprobado.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase">Utilidad</span>
-                        <span className={`font-bold ${rent.utilidadReal >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                          ${rent.utilidadReal.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* ======================================================== */}
-              {/* UN SOLO SIGUIENTE PASO VISIBLE (ETAPA 7) */}
-              {/* ======================================================== */}
 
               {/* 1. Sin cotización: preparar una cotización o vincular una existente del mismo vehículo */}
               {currentWorkflowStep === 'sin-cotizacion' && (
@@ -2905,6 +2617,533 @@ export const OrdenesSection: React.FC<OrdenesSectionProps> = ({
                 </div>
               )}
             </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* PESTAÑA: DIAGNÓSTICO                                    */}
+          {/* ======================================================== */}
+          {ordenDetailTab === 'diagnostico' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#06345A] text-sm flex items-center gap-2">
+                    <Wrench className="w-4 h-4 text-[#1497F2]" />
+                    <span>Diagnóstico técnico del taller</span>
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAsistenciaTecnica(continuarOrden)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#06345A] rounded-lg border border-[#73C7FF]/60 hover:border-[#1497F2] font-semibold text-xs transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#1497F2]" />
+                    <span>Asistencia técnica con IA</span>
+                  </button>
+                </div>
+
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-slate-800">
+                  <span className="text-[11px] font-semibold text-slate-500 block mb-1">
+                    Trabajo solicitado / Diagnóstico asentado:
+                  </span>
+                  <p className="text-xs leading-relaxed font-medium">
+                    {continuarOrden.diagnostico || continuarOrden.servicio || 'Sin diagnóstico detallado registrado.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Síntomas reportados por cliente */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                <span className="font-bold text-[#06345A] block">Síntomas reportados por el cliente:</span>
+                <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  {continuarOrden.sintomasCliente || 'El cliente no especificó síntomas adicionales en la recepción.'}
+                </p>
+              </div>
+
+              {/* Daños visibles en recepción */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                <span className="font-bold text-[#06345A] block">Daños visibles al ingreso:</span>
+                <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  {continuarOrden.dañosVisibles || 'Sin daños visibles o abolladuras registradas al ingreso.'}
+                </p>
+              </div>
+
+              {/* Observaciones del mecánico */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                <span className="font-bold text-[#06345A] block">Observaciones del mecánico:</span>
+                <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  {continuarOrden.observacionesMecanico || continuarOrden.observaciones || 'Sin observaciones técnicas complementarias registradas.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* PESTAÑA: REFACCIONES                                    */}
+          {/* ======================================================== */}
+          {ordenDetailTab === 'refacciones' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#06345A] text-sm flex items-center gap-2">
+                    <Package className="w-4 h-4 text-emerald-600" />
+                    <span>Refacciones registradas en esta orden</span>
+                  </h4>
+                  {continuarOrden.refaccionesUtilizadas && continuarOrden.refaccionesUtilizadas.length > 0 && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                      {continuarOrden.refaccionesUtilizadas.reduce(
+                        (sum, u) => sum + (u.cantidad - (u.devueltas || 0)),
+                        0
+                      )}{' '}
+                      piezas
+                    </span>
+                  )}
+                </div>
+
+                {continuarOrden.refaccionesUtilizadas && continuarOrden.refaccionesUtilizadas.length > 0 ? (
+                  <div className="space-y-2.5 pt-1">
+                    {continuarOrden.refaccionesUtilizadas.map((item) => {
+                      const ref = refaccionMap.get(item.refaccionId);
+                      const netQuantity = item.cantidad - (item.devueltas || 0);
+                      const isReturning = returningItemId === item.id;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-3 rounded-lg border border-slate-200 bg-slate-50/70 space-y-2"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                              <div className="font-medium text-slate-900 flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-[11px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-200">
+                                  {ref ? ref.codigo : 'REF'}
+                                </span>
+                                <span>{ref ? ref.nombre : 'Refacción'}</span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 mt-1">
+                                Registrada: {item.fechaHora} • Asignadas: <strong>{item.cantidad}</strong> pzs
+                                {item.devueltas > 0 && (
+                                  <span className="text-amber-700 ml-1.5 font-medium">
+                                    (Devueltas al almacén: {item.devueltas} pzs)
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-end sm:self-center">
+                              <span className="font-semibold text-slate-800 text-xs bg-white px-2 py-1 rounded border border-slate-200">
+                                {netQuantity} en orden
+                              </span>
+                              {netQuantity > 0 && !isReturning && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setReturningItemId(item.id);
+                                    setReturningCantidad('1');
+                                    setReturningError('');
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors cursor-pointer"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  <span>Devolver</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Formulario de devolución */}
+                          {isReturning && (
+                            <div className="p-3 bg-white border border-rose-200 rounded-lg space-y-2 mt-2">
+                              <div className="flex justify-between items-center text-slate-700 font-semibold text-xs">
+                                <span>Devolución a inventario:</span>
+                                <span className="text-[11px] text-slate-500 font-normal">
+                                  Disponible a devolver: {netQuantity} pzs
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 items-center">
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max={netQuantity}
+                                    step="1"
+                                    value={returningCantidad}
+                                    onChange={(e) => setReturningCantidad(e.target.value)}
+                                    className="w-20 p-1.5 border border-[#E5E7EB] rounded text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
+                                  />
+                                  <span className="text-slate-500 text-xs">pzs</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={isActionProcessing}
+                                  onClick={() => handleConfirmReturnRefaccion(continuarOrden, item)}
+                                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                                >
+                                  Confirmar devolución
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setReturningItemId(null)}
+                                  className="px-2.5 py-1.5 border border-slate-200 rounded text-slate-600 hover:bg-slate-50 text-xs font-medium cursor-pointer"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                              {returningError && (
+                                <p className="text-rose-600 text-[11px] bg-rose-50 p-1.5 rounded border border-rose-200">
+                                  {returningError}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 italic py-2">
+                    No se han registrado refacciones utilizadas en esta orden todavía.
+                  </p>
+                )}
+              </div>
+
+              {/* Formulario para registrar uso de refacción */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <span className="font-semibold text-slate-700 block">
+                  Registrar salida de refacción para esta orden:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                  <div className="sm:col-span-8">
+                    <label className="block text-[11px] text-slate-600 font-medium mb-1">
+                      Seleccionar refacción del almacén
+                    </label>
+                    <select
+                      value={selectedRefaccionId}
+                      onChange={(e) => {
+                        setSelectedRefaccionId(e.target.value);
+                        setRefaccionError('');
+                      }}
+                      className="w-full p-2 border border-[#E5E7EB] rounded text-[#06345A] bg-white text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
+                    >
+                      <option value="">Seleccionar refacción del catálogo...</option>
+                      {refacciones.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.codigo} — {r.nombre} (Disponibles: {r.existencias} pzs)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-4">
+                    <label className="block text-[11px] text-slate-600 font-medium mb-1">
+                      Cantidad (pzs)
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={selectedRefaccionCantidad}
+                        onChange={(e) => {
+                          setSelectedRefaccionCantidad(e.target.value);
+                          setRefaccionError('');
+                        }}
+                        className="w-20 p-2 border border-[#E5E7EB] rounded text-[#06345A] text-xs focus:outline-none focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2]"
+                      />
+                      <button
+                        type="button"
+                        disabled={!selectedRefaccionId || isActionProcessing}
+                        onClick={() => handleConfirmUseRefaccion(continuarOrden)}
+                        className="flex-1 py-2 px-3 bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white rounded text-xs font-semibold transition-colors shadow-xs cursor-pointer"
+                      >
+                        Registrar uso
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedRefaccionId && (() => {
+                  const sel = refaccionMap.get(selectedRefaccionId);
+                  if (!sel) return null;
+                  return (
+                    <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                      <span>
+                        Existencias disponibles en almacén: <strong>{sel.existencias} pzs</strong>
+                      </span>
+                      {sel.existencias === 0 && (
+                        <span className="text-rose-600 font-semibold">
+                          Sin existencias disponibles en almacén.
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {refaccionError && (
+                  <p className="text-rose-600 text-xs mt-1 bg-rose-50 p-2 rounded border border-rose-200">
+                    {refaccionError}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* PESTAÑA: EVIDENCIAS                                     */}
+          {/* ======================================================== */}
+          {ordenDetailTab === 'evidencias' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#06345A] text-sm flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-[#1497F2]" />
+                    <span>Evidencias y registro de inspección</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-500 font-mono bg-slate-100 px-2 py-0.5 rounded">
+                    Folio: {continuarOrden.folio}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600">
+                  Registro de evidencias visuales del estado del vehículo al ingreso, durante la intervención mecánica y al momento de la entrega.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <span className="font-bold text-slate-700 block text-xs">1. Recepción inicial</span>
+                    <p className="text-[11px] text-slate-500">
+                      {continuarOrden.dañosVisibles || 'Sin daños visibles o abolladuras registradas al ingreso.'}
+                    </p>
+                    <span className="inline-block text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Inspección completada
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <span className="font-bold text-slate-700 block text-xs">2. Reparación y refacciones</span>
+                    <p className="text-[11px] text-slate-500">
+                      {continuarOrden.refaccionesUtilizadas && continuarOrden.refaccionesUtilizadas.length > 0
+                        ? `${continuarOrden.refaccionesUtilizadas.length} refacciones aplicadas al vehículo.`
+                        : 'Pendiente de registrar sustitución de partes.'}
+                    </p>
+                    <span className="inline-block text-[10px] text-sky-700 font-semibold bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                      Proceso operativo
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <span className="font-bold text-slate-700 block text-xs">3. Inspección y entrega</span>
+                    <p className="text-[11px] text-slate-500">
+                      {continuarOrden.revisionFinal
+                        ? 'Revisión final completada satisfactoriamente.'
+                        : 'Pendiente de inspección de calidad antes de entrega.'}
+                    </p>
+                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                      continuarOrden.entregado
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}>
+                      {continuarOrden.entregado ? 'Entregado al cliente' : 'Pendiente de entrega'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-sky-50/50 border border-sky-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-[#1497F2] shrink-0" />
+                  <span className="text-slate-700 font-medium">
+                    Audita la coherencia entre evidencias, piezas utilizadas y cotización con el Copiloto de IA.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRevisionFinalOrden(continuarOrden)}
+                  className="px-3 py-1.5 bg-[#1497F2] hover:bg-[#06345A] text-white rounded-lg font-semibold text-xs transition-colors shrink-0 cursor-pointer shadow-xs"
+                >
+                  Auditar con IA
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* PESTAÑA: CALIDAD                                        */}
+          {/* ======================================================== */}
+          {ordenDetailTab === 'calidad' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#06345A] text-sm flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Control de calidad y validación operativa</span>
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setRevisionFinalOrden(continuarOrden)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1497F2] hover:bg-[#06345A] text-white rounded-lg font-semibold text-xs shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Revisión final con IA</span>
+                  </button>
+                </div>
+
+                <p className="text-slate-600">
+                  Verificación de puntos críticos de seguridad y terminación antes de autorizar la salida del vehículo.
+                </p>
+
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="font-semibold text-slate-800">Trabajo mecánico completado</span>
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                      continuarOrden.trabajoTerminado
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {continuarOrden.trabajoTerminado ? 'Verificado' : 'En proceso'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="font-semibold text-slate-800">Inspección de calidad final</span>
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                      continuarOrden.revisionFinal
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {continuarOrden.revisionFinal ? 'Aprobada' : 'Pendiente'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="font-semibold text-slate-800">Entrega satisfactoria al cliente</span>
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                      continuarOrden.entregado
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {continuarOrden.entregado ? 'Entregado' : 'No entregado'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* PESTAÑA: COBRO                                          */}
+          {/* ======================================================== */}
+          {ordenDetailTab === 'cobro' && (
+            <div className="space-y-4 text-xs">
+              {/* Presupuesto vinculado */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#06345A] text-sm flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-[#1497F2]" />
+                    <span>Presupuesto y cobro</span>
+                  </h4>
+                  {activeLinkedCotizacion && (
+                    <span className="font-mono font-bold text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded">
+                      {activeLinkedCotizacion.folio}
+                    </span>
+                  )}
+                </div>
+
+                {activeLinkedCotizacion ? (
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Estado de la cotización:</span>
+                      <span className={`font-semibold capitalize px-2 py-0.5 rounded text-[11px] ${
+                        activeLinkedCotizacion.estado === 'Aprobada'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : activeLinkedCotizacion.estado === 'Rechazada'
+                          ? 'bg-rose-100 text-rose-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {activeLinkedCotizacion.estado}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-slate-600">
+                      <span>Refacciones presupuestadas:</span>
+                      <span>${activeLinkedCotizacion.importeRefacciones.toFixed(2)} MXN</span>
+                    </div>
+                    <div className="flex justify-between text-slate-600">
+                      <span>Mano de obra presupuestada:</span>
+                      <span>${activeLinkedCotizacion.importeManoObra.toFixed(2)} MXN</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-900 border-t border-slate-200 pt-2 text-sm">
+                      <span>Total cotizado:</span>
+                      <span className="text-[#06345A]">${activeLinkedCotizacion.total.toFixed(2)} MXN</span>
+                    </div>
+
+                    {activeLinkedCotizacion.autorizacion && (
+                      <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 text-[11px]">
+                        Autorizado por: <strong>{activeLinkedCotizacion.autorizacion.autorizadoPor}</strong> ({activeLinkedCotizacion.autorizacion.fechaHora})
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 italic py-2">
+                    Esta orden no tiene un presupuesto vinculado todavía.
+                  </p>
+                )}
+              </div>
+
+              {/* Costeo real y rentabilidad */}
+              {(() => {
+                const rent = getRentabilidadOrden(continuarOrden);
+                return (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <span className="font-semibold text-slate-700">Costeo real y margen de la orden:</span>
+                      {rent.semaforo === 'verde' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          Rentable ({rent.margenReal}%)
+                        </span>
+                      )}
+                      {rent.semaforo === 'amarillo' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+                          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                          Margen bajo ({rent.margenReal}%)
+                        </span>
+                      )}
+                      {rent.semaforo === 'rojo' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                          <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                          Pérdida ({rent.margenReal}%)
+                        </span>
+                      )}
+                      {rent.semaforo === 'neutro' && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-200 text-slate-700">
+                          <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                          Sin cotización aprobada
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 text-center pt-2 border-t border-slate-200">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Costo refacc</span>
+                        <span className="font-bold text-slate-700">${rent.costoRefReal.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Costo MO</span>
+                        <span className="font-bold text-slate-700">${rent.costoMoReal.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Cotizado</span>
+                        <span className="font-bold text-[#1497F2]">${rent.precioAprobado.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase">Utilidad</span>
+                        <span className={`font-bold ${rent.utilidadReal >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                          ${rent.utilidadReal.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
 
             <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
               <button

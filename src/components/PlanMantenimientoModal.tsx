@@ -359,10 +359,19 @@ export const PlanMantenimientoModal: React.FC<PlanMantenimientoModalProps> = ({
                 </div>
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-800">Analizando historial vehicular con IA...</p>
+                <p className="text-sm font-bold text-slate-800">Analizando información…</p>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                   Revisando kilometraje, órdenes registradas, fechas de visitas anteriores y componentes inspeccionados.
                 </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar análisis
+                </button>
               </div>
             </div>
           ) : errorMensaje ? (
@@ -379,6 +388,15 @@ export const PlanMantenimientoModal: React.FC<PlanMantenimientoModalProps> = ({
             </div>
           ) : resultado ? (
             <>
+              {/* Aviso si Gemini no responde y se usa el análisis local */}
+              {resultado.esAnalisisLocal && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    El servicio en la nube de Gemini no estuvo disponible temporalmente. Se utilizó el <strong>plan de mantenimiento local de TUNNO</strong> para proyectar las recomendaciones preventivas del vehículo.
+                  </p>
+                </div>
+              )}
               {/* Membrete para impresión oficial */}
               <div className="hidden print:block border-b border-slate-300 pb-4 mb-4">
                 <div className="flex justify-between items-center">

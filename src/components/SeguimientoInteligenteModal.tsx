@@ -587,12 +587,19 @@ export const SeguimientoInteligenteModal: React.FC<SeguimientoInteligenteModalPr
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800">
-                  Analizando historial y datos registrados con IA...
+                  Analizando información…
                 </p>
                 <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
                   Cruzando órdenes de trabajo, fechas de entrega, cotizaciones, facturas pendientes, garantías vigentes y comentarios del cliente.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-2 px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+              >
+                Cancelar análisis
+              </button>
             </div>
           ) : errorMensaje ? (
             <div className="p-6 text-center bg-rose-50 rounded-xl border border-rose-200 space-y-3">
@@ -608,6 +615,16 @@ export const SeguimientoInteligenteModal: React.FC<SeguimientoInteligenteModalPr
             </div>
           ) : resultado ? (
             <>
+              {resultado.esAnalisisLocal && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-xs text-amber-900 animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block">Generado con motor heurístico local</span>
+                    <span>El servicio de IA en la nube no estuvo disponible temporalmente. Se aplicaron reglas y plantillas locales de seguimiento garantizando continuidad operativa sin interrupciones.</span>
+                  </div>
+                </div>
+              )}
+
               {/* ======================================================== */}
               {/* ALERTA DE GARANTÍA (SI EL COMENTARIO LO SUGIERE)          */}
               {/* ======================================================== */}

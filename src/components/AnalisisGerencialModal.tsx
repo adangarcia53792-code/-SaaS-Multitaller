@@ -10,6 +10,7 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   DollarSign,
   Briefcase,
@@ -470,12 +471,21 @@ export const AnalisisGerencialModal: React.FC<AnalisisGerencialModalProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-slate-800">
-                  Consolidando indicadores y analizando resultados con IA...
+                  Analizando información…
                 </p>
                 <p className="text-xs text-slate-500 max-w-md mx-auto">
                   Revisando ingresos, costos de mano de obra y refacciones, tasa de conversión,
                   desempeño de técnicos y tiempos de entrega del periodo.
                 </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar análisis
+                </button>
               </div>
             </div>
           )}
@@ -501,6 +511,15 @@ export const AnalisisGerencialModal: React.FC<AnalisisGerencialModalProps> = ({
           {/* RESULTADO COMPLETO */}
           {!isLoading && resultado && (
             <div className="space-y-6">
+              {/* Aviso si Gemini no responde y se usa el análisis local */}
+              {resultado.esAnalisisLocal && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    El servicio en la nube de Gemini no estuvo disponible temporalmente. Se utilizó el <strong>análisis gerencial local de TUNNO</strong> para calcular los indicadores y recomendaciones del periodo.
+                  </p>
+                </div>
+              )}
               {/* ======================================================== */}
               {/* VISTA 1: RESUMEN EJECUTIVO & BALANCE DEL PERIODO */}
               {/* ======================================================== */}

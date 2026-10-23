@@ -15,6 +15,7 @@ import {
   Copy,
   Check,
   AlertTriangle,
+  AlertCircle,
   ShoppingCart,
   TrendingDown,
   Building2,
@@ -348,11 +349,21 @@ export const AnalisisInventarioModal: React.FC<AnalisisInventarioModalProps> = (
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800">
-                  Analizando existencias, consumo y órdenes de trabajo...
+                  Analizando información…
                 </p>
                 <p className="text-xs text-slate-500 mt-1 max-w-md">
-                  Verificando niveles de seguridad, tiempos de entrega de proveedores, rotación y alertas de margen.
+                  Verificando existencias, niveles de seguridad, consumo en órdenes y alertas de inventario.
                 </p>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar análisis
+                </button>
               </div>
             </div>
           ) : !analisis ? (
@@ -361,13 +372,23 @@ export const AnalisisInventarioModal: React.FC<AnalisisInventarioModalProps> = (
               <button
                 type="button"
                 onClick={() => ejecutarAnalisis(versionCounter)}
-                className="mt-3 px-4 py-2 bg-[#1497F2] text-white text-xs font-semibold rounded-lg hover:bg-[#06345A]"
+                className="mt-3 px-4 py-2 bg-[#1497F2] text-white text-xs font-semibold rounded-lg hover:bg-[#06345A] cursor-pointer"
               >
                 Reintentar análisis
               </button>
             </div>
           ) : (
             <>
+              {/* Aviso si Gemini no responde y se usa el análisis local */}
+              {analisis.esAnalisisLocal && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    El servicio en la nube de Gemini no estuvo disponible temporalmente. Se utilizó el <strong>análisis local de TUNNO</strong> para calcular los niveles de stock y órdenes de compra recomendadas.
+                  </p>
+                </div>
+              )}
+
               {/* RESUMEN SUPERIOR KPI */}
               <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 border border-slate-200 rounded-xl p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

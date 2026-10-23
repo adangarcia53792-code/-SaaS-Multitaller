@@ -1273,7 +1273,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                   {/* PASO 1: SELECCIONAR COTIZACIÓN APROBADA */}
                   <div className="bg-slate-50/80 p-4 rounded-xl border border-[#E5E7EB] space-y-3">
                     <div className="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider">
-                      <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px]">
+                      <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px] font-bold">
                         1
                       </span>
                       <span>Seleccionar cotización aprobada</span>
@@ -1306,7 +1306,7 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block">Concepto:</span>
+                          <span className="text-slate-400 block">Trabajo presupuestado:</span>
                           <span className="font-semibold text-slate-800 line-clamp-1">
                             {selectedQuoteForCreate.descripcion}
                           </span>
@@ -1315,21 +1315,21 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                     )}
                   </div>
 
-                  {/* PASO 2: FOLIO AUTOMÁTICO */}
-                  <div className="bg-slate-50/80 p-4 rounded-xl border border-[#E5E7EB] space-y-2">
+                  {/* PASO 2: REVISAR DATOS FISCALES Y CONCEPTOS */}
+                  <div className="bg-slate-50/80 p-4 rounded-xl border border-[#E5E7EB] space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider">
-                        <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px]">
+                        <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px] font-bold">
                           2
                         </span>
-                        <span>Folio automático de comprobante</span>
+                        <span>Revisar datos fiscales y conceptos</span>
                       </div>
-                      <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        Consecutivo asignado
+                      <span className="text-[10px] text-[#1497F2] font-semibold bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                        Folio {folioManual || 'FAC'}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                           Folio de emisión
@@ -1349,22 +1349,10 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                           {new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* PASO 3: CAPTURAR RAZÓN SOCIAL, RFC, USO DE CFDI Y FORMA DE PAGO */}
-                  <div className="bg-slate-50/80 p-4 rounded-xl border border-[#E5E7EB] space-y-3">
-                    <div className="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider">
-                      <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px]">
-                        3
-                      </span>
-                      <span>Datos fiscales del receptor</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="sm:col-span-2">
                         <label className="block text-[11px] font-semibold text-[#06345A] mb-1">
-                          Razón social / Nombre fiscal <span className="text-red-500">*</span>
+                          Razón social / Nombre fiscal receptor <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1408,48 +1396,17 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                           ))}
                         </select>
                       </div>
-
-                      <div>
-                        <label className="block text-[11px] font-semibold text-[#06345A] mb-1">
-                          Forma de pago SAT <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={formFormaPago}
-                          onChange={(e) => setFormFormaPago(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] focus:outline-none focus:border-[#1497F2]"
-                        >
-                          {CATALOGO_FORMA_PAGO.map((fp) => (
-                            <option key={fp.codigo} value={fp.descripcion}>
-                              {fp.descripcion}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-semibold text-[#06345A] mb-1">
-                          Método de pago
-                        </label>
-                        <select
-                          value={formMetodoPagoSat}
-                          onChange={(e) => setFormMetodoPagoSat(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] focus:outline-none focus:border-[#1497F2]"
-                        >
-                          <option value="PUE - Pago en una sola exhibición">PUE - Pago en una sola exhibición</option>
-                          <option value="PPD - Pago en parcialidades o diferido">PPD - Pago en parcialidades o diferido</option>
-                        </select>
-                      </div>
                     </div>
                   </div>
 
-                  {/* PASO 4: MOSTRAR SUBTOTAL, IVA DEL 16% Y TOTAL */}
+                  {/* PASO 3: CONFIRMAR IMPORTES Y MÉTODO DE PAGO */}
                   <div className="bg-white p-4 rounded-xl border-2 border-[#1497F2]/30 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider">
-                        <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px]">
-                          4
+                        <span className="w-5 h-5 rounded-full bg-[#1497F2] text-white flex items-center justify-center text-[10px] font-bold">
+                          3
                         </span>
-                        <span>Desglose de Subtotal, IVA (16 %) y Total</span>
+                        <span>Confirmar importes y método de pago</span>
                       </div>
 
                       <div className="flex items-center gap-2 text-[11px]">
@@ -1465,6 +1422,40 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#06345A] mb-1">
+                          Forma de pago SAT <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={formFormaPago}
+                          onChange={(e) => setFormFormaPago(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] focus:outline-none focus:border-[#1497F2]"
+                        >
+                          {CATALOGO_FORMA_PAGO.map((fp) => (
+                            <option key={fp.codigo} value={fp.descripcion}>
+                              {fp.descripcion}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#06345A] mb-1">
+                          Método de pago SAT
+                        </label>
+                        <select
+                          value={formMetodoPagoSat}
+                          onChange={(e) => setFormMetodoPagoSat(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] focus:outline-none focus:border-[#1497F2]"
+                        >
+                          <option value="PUE - Pago en una sola exhibición">PUE - Pago en una sola exhibición</option>
+                          <option value="PPD - Pago en parcialidades o diferido">PPD - Pago en parcialidades o diferido</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Desglose numérico */}
                     <div className="p-3 bg-slate-50 rounded-lg space-y-2 border border-slate-200 font-mono text-xs">
                       <div className="flex justify-between text-slate-600">
                         <span>Subtotal gravable (Base):</span>
@@ -1485,29 +1476,46 @@ export const FacturacionSection: React.FC<FacturacionSectionProps> = ({
                     </div>
                   </div>
 
-                  {createError && (
-                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                      <span>{createError}</span>
+                  {/* PASO 4: GENERAR COMPROBANTE DE DEMOSTRACIÓN */}
+                  <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
+                      <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">
+                        4
+                      </span>
+                      <span>Generar comprobante de demostración</span>
                     </div>
-                  )}
 
-                  {/* Acciones */}
-                  <div className="flex items-center justify-end gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={createModalDismiss.handleClose}
-                      className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Receipt className="w-4 h-4" />
-                      <span>Emitir comprobante ({folioManual || 'FAC'})</span>
-                    </button>
+                    <div className="flex items-start gap-2.5 text-xs text-amber-800 bg-white/80 p-3 rounded-lg border border-amber-200/70">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p>
+                        <strong>Aviso importante:</strong> Este comprobante es exclusivamente para control administrativo interno del taller y fines de <strong>demostración sin validez fiscal ante el SAT</strong>.
+                      </p>
+                    </div>
+
+                    {createError && (
+                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                        <span>{createError}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={createModalDismiss.handleClose}
+                        className="px-4 py-2.5 border border-[#E5E7EB] bg-white rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!selectedCotizacionId}
+                        className="px-5 py-2.5 bg-[#1497F2] hover:bg-[#06345A] disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Receipt className="w-4 h-4" />
+                        <span>Generar comprobante de demostración</span>
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : (

@@ -73,6 +73,21 @@ export const CrearCotizacionIAModal: React.FC<CrearCotizacionIAModalProps> = ({
   const [isGenerado, setIsGenerado] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showConfirmModal) {
+          setShowConfirmModal(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, showConfirmModal, onClose]);
+
   // Vehículos correspondientes al cliente seleccionado
   const vehiculosCliente = useMemo(() => {
     const list = vehiculos.filter((v) => v.clienteId === clienteId);
@@ -352,8 +367,16 @@ export const CrearCotizacionIAModal: React.FC<CrearCotizacionIAModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#06345A]/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print">
-      <div className="bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] w-full max-w-4xl max-h-[92vh] flex flex-col font-body animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 bg-[#06345A]/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-print"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] w-full max-w-4xl max-h-[92vh] flex flex-col font-body animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Cabecera */}
         <div className="px-5 py-4 bg-[#06345A] text-white rounded-t-2xl flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">

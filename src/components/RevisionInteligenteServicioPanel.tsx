@@ -1093,11 +1093,20 @@ export const RevisionInteligenteServicioPanel: React.FC<RevisionInteligenteServi
         </div>
 
         {/* PIE DEL PANEL: AVISO INSTITUCIONAL DE CONTROL HUMANO (REGLA DE SEGURIDAD) */}
-        <div className="px-5 py-3 bg-[#F4F6F8] border-t border-[#E5E7EB] shrink-0 text-[10px] text-[#6B7280] flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#06345A] shrink-0" />
-          <p className="leading-snug">
-            La IA diagnostica y redacta mensajes de apoyo; no modifica datos, no autoriza servicios, no descuenta inventario ni cobra automáticamente.
-          </p>
+        <div className="px-5 py-3 bg-[#F4F6F8] border-t border-[#E5E7EB] shrink-0 text-[10px] text-[#6B7280] flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#06345A] shrink-0" />
+            <p className="leading-snug">
+              La IA diagnostica y redacta mensajes de apoyo; no modifica datos, no autoriza servicios, no descuenta inventario ni cobra automáticamente.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-lg bg-white border border-[#E5E7EB] hover:bg-slate-100 text-[#06345A] text-xs font-semibold shrink-0 cursor-pointer transition-colors"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

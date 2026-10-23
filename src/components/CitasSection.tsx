@@ -1,7 +1,24 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Cliente, Vehiculo, Cita, ServicioCatalogo } from '../types';
-import { Search, Plus, Pencil, X, Calendar as CalendarIcon, Clock, AlertTriangle, MoreVertical, ChevronDown, Ban, Sparkles } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Pencil,
+  X,
+  Calendar as CalendarIcon,
+  Clock,
+  AlertTriangle,
+  MoreVertical,
+  ChevronDown,
+  Ban,
+  Sparkles,
+  CheckCircle2,
+  RotateCcw,
+  Filter,
+} from 'lucide-react';
 import { useModalDismiss } from '../hooks/useModalDismiss';
+import { SectionHeader } from './SectionHeader';
+import { EmptyState } from './EmptyState';
 
 interface CitasSectionProps {
   citas: Cita[];
@@ -13,7 +30,7 @@ interface CitasSectionProps {
   onOpenCopiloto?: () => void;
 }
 
-type CitaFilter = 'proximas' | 'todas' | 'canceladas';
+export type CitaFilter = 'hoy' | 'proximas' | 'anteriores' | 'canceladas';
 
 export const CitasSection: React.FC<CitasSectionProps> = ({
   citas,
@@ -24,8 +41,9 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
   onCancelCita,
   onOpenCopiloto,
 }) => {
-  const [filter, setFilter] = useState<CitaFilter>('proximas');
+  const [filter, setFilter] = useState<CitaFilter>('hoy');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -247,31 +265,65 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
     setIsModalOpen(false);
   };
 
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+
+  // Counts for each tab
+  const citasCounts = useMemo(() => {
+    let hoy = 0;
+    let proximas = 0;
+    let anteriores = 0;
+    let canceladas = 0;
+
+    citas.forEach((c) => {
+      if (c.estado === 'Cancelada') {
+        canceladas++;
+      } else if (c.fecha === todayStr) {
+        hoy++;
+      } else if (c.fecha > todayStr) {
+        proximas++;
+      } else {
+        anteriores++;
+      }
+    });
+
+    return { hoy, proximas, anteriores, canceladas };
+  }, [citas, todayStr]);
+
   // Filter & Search Logic
   const filteredCitas = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const now = new Date();
 
     return citas
       .filter((cita) => {
-        // Filter by tab
+        // Tab separation: hoy, proximas, anteriores, canceladas
         if (filter === 'canceladas') {
           if (cita.estado !== 'Cancelada') return false;
+        } else if (cita.estado === 'Cancelada') {
+          return false;
+        } else if (filter === 'hoy') {
+          if (cita.fecha !== todayStr) return false;
         } else if (filter === 'proximas') {
-          if (cita.estado !== 'Programada') return false;
-          const citaDate = new Date(`${cita.fecha}T${cita.hora}`);
-          if (isNaN(citaDate.getTime()) || citaDate.getTime() < now.getTime()) {
-            return false;
-          }
+          if (cita.fecha <= todayStr) return false;
+        } else if (filter === 'anteriores') {
+          if (cita.fecha >= todayStr) return false;
         }
 
-        // Filter by search
+        // Date filter
+        if (filterDate && cita.fecha !== filterDate) {
+          return false;
+        }
+
+        // Search filter
         if (q) {
           const client = clienteMap.get(cita.clienteId);
           const veh = vehiculoMap.get(cita.vehiculoId);
           const clientMatch = client?.nombre.toLowerCase().includes(q);
           const plateMatch = veh?.placas.toLowerCase().includes(q);
-          return Boolean(clientMatch || plateMatch);
+          const serviceMatch = cita.servicio.toLowerCase().includes(q);
+          return Boolean(clientMatch || plateMatch || serviceMatch);
         }
 
         return true;
@@ -279,343 +331,463 @@ export const CitasSection: React.FC<CitasSectionProps> = ({
       .sort((a, b) => {
         const timeA = new Date(`${a.fecha}T${a.hora}`).getTime();
         const timeB = new Date(`${b.fecha}T${b.hora}`).getTime();
-        if (filter === 'proximas') {
+        if (filter === 'hoy' || filter === 'proximas') {
           return timeA - timeB; // Nearest first
         }
-        return timeB - timeA; // Most recent first for 'todas' and 'canceladas'
+        return timeB - timeA; // Most recent first
       });
-  }, [citas, filter, searchQuery, clienteMap, vehiculoMap]);
+  }, [citas, filter, searchQuery, filterDate, todayStr, clienteMap, vehiculoMap]);
+
+  const isAnyFilterActive = Boolean(searchQuery.trim() || filterDate);
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setFilterDate('');
+  };
+
+  const handleConfirmarCita = (cita: Cita) => {
+    onSaveCita({
+      ...cita,
+      estado: 'Confirmada',
+    });
+  };
 
   return (
-    <section className="space-y-6">
-      {/* Encabezado TUNNO */}
-      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
-            <CalendarIcon className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
-              Citas
-            </h2>
-            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-              Gestión y seguimiento de citas programadas en el taller.
-            </p>
-          </div>
-        </div>
+    <section className="space-y-5">
+      {/* Encabezado uniforme TUNNO */}
+      <SectionHeader
+        icon={<CalendarIcon className="w-5 h-5 text-[#1497F2]" />}
+        title="Citas"
+        description="Agenda y programa las citas de servicio del taller."
+        primaryAction={{
+          label: 'Agendar cita',
+          icon: <Plus className="w-4 h-4" />,
+          onClick: handleOpenAdd,
+        }}
+        secondaryActions={
+          onOpenCopiloto
+            ? [
+                {
+                  label: 'Ayudarme con IA',
+                  icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                  variant: 'ai',
+                  onClick: onOpenCopiloto,
+                },
+              ]
+            : undefined
+        }
+      />
 
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {onOpenCopiloto && (
+      {/* Barra uniforme de búsqueda y filtros */}
+      <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4 shadow-xs space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Pestañas de estado (Hoy, Próximas, Anteriores, Canceladas) */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs font-semibold">
             <button
               type="button"
-              onClick={onOpenCopiloto}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
-              title="Abrir Copiloto de Citas"
+              onClick={() => setFilter('hoy')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                filter === 'hoy'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
             >
-              <Sparkles className="w-4 h-4 text-[#1497F2]" />
-              <span>Ayudarme con IA</span>
+              <span>Hoy</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  filter === 'hoy' ? 'bg-sky-100 text-[#1497F2]' : 'bg-slate-200 text-slate-600'
+                }`}
+              >
+                {citasCounts.hoy}
+              </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setFilter('proximas')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                filter === 'proximas'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <span>Próximas</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  filter === 'proximas' ? 'bg-sky-100 text-[#1497F2]' : 'bg-slate-200 text-slate-600'
+                }`}
+              >
+                {citasCounts.proximas}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilter('anteriores')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                filter === 'anteriores'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <span>Anteriores</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  filter === 'anteriores' ? 'bg-sky-100 text-[#1497F2]' : 'bg-slate-200 text-slate-600'
+                }`}
+              >
+                {citasCounts.anteriores}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFilter('canceladas')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                filter === 'canceladas'
+                  ? 'bg-white text-rose-700 shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <span>Canceladas</span>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  filter === 'canceladas' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'
+                }`}
+              >
+                {citasCounts.canceladas}
+              </span>
+            </button>
+          </div>
+
+          {/* Buscador + Selector de fecha + Limpiar filtros */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[220px] flex-1 sm:flex-initial">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por cliente, placas o servicio..."
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
+              />
+            </div>
+
+            <div className="relative">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
+                title="Filtrar por fecha específica"
+              />
+            </div>
+
+            {isAnyFilterActive && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold border border-rose-200 transition-colors cursor-pointer"
+                title="Limpiar filtros activos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Limpiar filtros</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Contador de resultados */}
+        <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1 border-t border-slate-100">
+          <span>
+            Mostrando <strong className="text-[#06345A] font-semibold">{filteredCitas.length}</strong>{' '}
+            {filteredCitas.length === 1 ? 'cita' : 'citas'}{' '}
+            {filter === 'hoy'
+              ? 'programadas para hoy'
+              : filter === 'proximas'
+              ? 'próximas'
+              : filter === 'anteriores'
+              ? 'anteriores'
+              : 'canceladas'}
+          </span>
+          {filterDate && (
+            <span className="text-[11px] text-slate-500">
+              Fecha seleccionada: <strong className="text-[#06345A]">{filterDate}</strong>
+            </span>
           )}
-
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Agendar cita</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Controls: Search & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {/* Search */}
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
-          />
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex rounded-lg border border-[#E5E7EB] bg-white p-1 text-xs sm:text-sm font-medium">
-          <button
-            type="button"
-            onClick={() => setFilter('proximas')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'proximas'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Próximas
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('todas')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'todas'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Todas
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('canceladas')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'canceladas'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Canceladas
-          </button>
         </div>
       </div>
 
       {/* Citas Table & Mobile View */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
-        {/* Desktop View */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#6B7280] font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-5">Fecha y hora</th>
-                <th className="py-3.5 px-5">Cliente y vehículo</th>
-                <th className="py-3.5 px-5">Servicio solicitado</th>
-                <th className="py-3.5 px-5">Estado</th>
-                <th className="py-3.5 px-5 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E7EB]">
-              {filteredCitas.length > 0 ? (
-                filteredCitas.map((cita) => {
-                  const client = clienteMap.get(cita.clienteId);
-                  const veh = vehiculoMap.get(cita.vehiculoId);
-                  const isMenuOpen = openMenuId === cita.id;
+        {filteredCitas.length > 0 ? (
+          <>
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#6B7280] font-semibold text-xs uppercase tracking-wider">
+                    <th className="py-3 px-5">Hora y fecha</th>
+                    <th className="py-3 px-5">Cliente</th>
+                    <th className="py-3 px-5">Vehículo</th>
+                    <th className="py-3 px-5">Servicio</th>
+                    <th className="py-3 px-5">Estado</th>
+                    <th className="py-3 px-5 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E7EB]">
+                  {filteredCitas.map((cita) => {
+                    const client = clienteMap.get(cita.clienteId);
+                    const veh = vehiculoMap.get(cita.vehiculoId);
+                    const isMenuOpen = openMenuId === cita.id;
 
-                  return (
-                    <tr key={cita.id} className="hover:bg-[#F4F6F8]/80 transition-colors">
-                      {/* Fecha y hora */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        <div className="font-semibold text-[#06345A] flex items-center gap-1.5">
-                          <CalendarIcon className="w-4 h-4 text-blue-600" />
-                          <span>{cita.fecha}</span>
-                        </div>
-                        <div className="text-xs text-[#6B7280] flex items-center gap-1.5 mt-0.5">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{cita.hora}</span>
-                        </div>
-                      </td>
+                    return (
+                      <tr key={cita.id} className="hover:bg-[#F4F6F8]/80 transition-colors">
+                        {/* Hora y fecha */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-50 text-[#1497F2] font-mono font-bold text-xs border border-sky-200">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{cita.hora}</span>
+                          </div>
+                          <div className="text-xs text-[#6B7280] flex items-center gap-1 mt-1">
+                            <CalendarIcon className="w-3 h-3 text-slate-400" />
+                            <span>{cita.fecha}</span>
+                          </div>
+                        </td>
 
-                      {/* Cliente y vehículo */}
-                      <td className="py-3.5 px-5">
-                        <div className="font-semibold text-[#06345A]">
-                          {client ? client.nombre : 'Cliente no encontrado'}
-                        </div>
-                        <div className="text-xs text-[#6B7280] mt-0.5">
+                        {/* Cliente */}
+                        <td className="py-3.5 px-5">
+                          <div className="font-semibold text-[#06345A]">
+                            {client ? client.nombre : 'Cliente no encontrado'}
+                          </div>
+                          {client?.telefono && (
+                            <div className="text-xs text-[#6B7280] mt-0.5">{client.telefono}</div>
+                          )}
+                        </td>
+
+                        {/* Vehículo */}
+                        <td className="py-3.5 px-5">
                           {veh ? (
-                            <span>
-                              {veh.marca} {veh.modelo}{' '}
-                              <strong className="font-mono text-[#06345A] bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#E5E7EB]">
+                            <div>
+                              <div className="font-medium text-[#06345A] text-xs sm:text-sm">
+                                {veh.marca} {veh.modelo}
+                              </div>
+                              <span className="inline-block font-mono text-[#06345A] bg-slate-100 px-1.5 py-0.5 rounded text-[11px] font-semibold border border-[#E5E7EB] mt-0.5">
                                 {veh.placas}
-                              </strong>
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">No registrado</span>
+                          )}
+                        </td>
+
+                        {/* Servicio solicitado */}
+                        <td className="py-3.5 px-5 text-[#374151] max-w-xs">
+                          <span className="line-clamp-2 font-medium">{cita.servicio}</span>
+                        </td>
+
+                        {/* Estado */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          {cita.estado === 'Confirmada' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Confirmada
+                            </span>
+                          ) : cita.estado === 'Programada' ? (
+                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                              Programada
                             </span>
                           ) : (
-                            'Vehículo no registrado'
+                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              Cancelada
+                            </span>
                           )}
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Servicio solicitado */}
-                      <td className="py-3.5 px-5 text-[#6B7280] max-w-xs">
-                        <span className="line-clamp-2">{cita.servicio}</span>
-                      </td>
+                        {/* Acciones */}
+                        <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
+                          <div className="inline-flex items-center gap-1.5">
+                            {/* Acción rápida: Confirmar */}
+                            {cita.estado === 'Programada' && (
+                              <button
+                                type="button"
+                                onClick={() => handleConfirmarCita(cita)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                                title="Confirmar cita con el cliente"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Confirmar</span>
+                              </button>
+                            )}
 
-                      {/* Estado */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        {cita.estado === 'Programada' ? (
-                          <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                            Programada
-                          </span>
-                        ) : (
-                          <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                            Cancelada
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Acciones */}
-                      <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
-                        <div className="inline-flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(cita)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer min-h-[36px]"
-                          >
-                            <Pencil className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Editar</span>
-                          </button>
-
-                          <div className="relative">
+                            {/* Acción rápida: Reprogramar */}
                             <button
                               type="button"
-                              onClick={() => setOpenMenuId(isMenuOpen ? null : cita.id)}
-                              className="p-1.5 text-slate-400 hover:text-[#06345A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                              title="Más opciones"
-                              aria-label="Más opciones"
+                              onClick={() => handleOpenEdit(cita)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer"
+                              title="Reprogramar fecha y hora"
                             >
-                              <MoreVertical className="w-4 h-4" />
+                              <Pencil className="w-3.5 h-3.5 text-[#1497F2]" />
+                              <span>Reprogramar</span>
                             </button>
 
-                            {isMenuOpen && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-20"
-                                  onClick={() => setOpenMenuId(null)}
-                                />
-                                <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
-                                  {cita.estado === 'Programada' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenMenuId(null);
-                                        setCitaToCancel(cita);
-                                      }}
-                                      className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
-                                    >
-                                      <Ban className="w-3.5 h-3.5 text-rose-600" />
-                                      <span>Cancelar cita</span>
-                                    </button>
-                                  )}
-                                </div>
-                              </>
+                            {/* Menú de opciones secundarias (Cancelar) */}
+                            {cita.estado !== 'Cancelada' && (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenMenuId(isMenuOpen ? null : cita.id)}
+                                  className="p-1.5 text-slate-400 hover:text-[#06345A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                                  title="Más opciones"
+                                  aria-label="Más opciones"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+
+                                {isMenuOpen && (
+                                  <>
+                                    <div
+                                      className="fixed inset-0 z-20"
+                                      onClick={() => setOpenMenuId(null)}
+                                    />
+                                    <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenMenuId(null);
+                                          setCitaToCancel(cita);
+                                        }}
+                                        className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                      >
+                                        <Ban className="w-3.5 h-3.5 text-rose-600" />
+                                        <span>Cancelar cita</span>
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View: Bloques legibles sin scroll horizontal */}
+            <div className="md:hidden divide-y divide-[#E5E7EB]">
+              {filteredCitas.map((cita) => {
+                const client = clienteMap.get(cita.clienteId);
+                const veh = vehiculoMap.get(cita.vehiculoId);
+                const isMenuOpen = openMenuId === cita.id;
+
+                return (
+                  <div key={cita.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-sky-50 text-[#1497F2] font-mono font-bold text-xs border border-sky-200">
+                            <Clock className="w-3 h-3" />
+                            {cita.hora}
+                          </span>
+                          <span className="text-xs text-slate-500 font-medium">
+                            {cita.fecha}
+                          </span>
+                          {cita.estado === 'Confirmada' ? (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Confirmada
+                            </span>
+                          ) : cita.estado === 'Programada' ? (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                              Programada
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              Cancelada
+                            </span>
+                          )}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-[#6B7280]">
-                    {searchQuery
-                      ? 'No se encontraron citas que coincidan con la búsqueda.'
-                      : filter === 'proximas'
-                      ? 'No hay citas próximas programadas.'
-                      : filter === 'canceladas'
-                      ? 'No hay citas canceladas.'
-                      : 'No hay citas registradas.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile View: Bloques legibles sin scroll horizontal */}
-        <div className="md:hidden divide-y divide-[#E5E7EB]">
-          {filteredCitas.length > 0 ? (
-            filteredCitas.map((cita) => {
-              const client = clienteMap.get(cita.clienteId);
-              const veh = vehiculoMap.get(cita.vehiculoId);
-              const isMenuOpen = openMenuId === cita.id;
-
-              return (
-                <div key={cita.id} className="p-4 space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-[#06345A] text-sm flex items-center gap-1.5">
-                          <CalendarIcon className="w-3.5 h-3.5 text-blue-600" />
-                          <span>{cita.fecha}</span> {cita.hora}
-                        </span>
-                        {cita.estado === 'Programada' ? (
-                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                            Programada
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                            Cancelada
-                          </span>
-                        )}
+                        <p className="font-semibold text-[#06345A] text-sm">{client?.nombre || 'Cliente'}</p>
+                        <p className="text-xs text-[#6B7280] mt-0.5">
+                          {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo sin asignar'}
+                        </p>
+                        <p className="text-xs text-[#374151] mt-1 font-medium">{cita.servicio}</p>
                       </div>
-                      <p className="font-semibold text-[#06345A] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
-                      <p className="text-xs text-[#6B7280] mt-0.5">
-                        {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
-                      </p>
-                      <p className="text-xs text-[#6B7280] mt-1 line-clamp-2">{cita.servicio}</p>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      {cita.estado === 'Programada' && (
+                        <button
+                          type="button"
+                          onClick={() => handleConfirmarCita(cita)}
+                          className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Confirmar</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => handleOpenEdit(cita)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#06345A] bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                        className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-[#06345A] bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
                       >
-                        <Pencil className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Editar</span>
+                        <Pencil className="w-3.5 h-3.5 text-[#1497F2]" />
+                        <span>Reprogramar</span>
                       </button>
 
-                      {cita.estado === 'Programada' && (
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setOpenMenuId(isMenuOpen ? null : cita.id)}
-                            className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#06345A] rounded-lg cursor-pointer"
-                            aria-label="Más opciones"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-
-                          {isMenuOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-20"
-                                onClick={() => setOpenMenuId(null)}
-                              />
-                              <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenMenuId(null);
-                                    setCitaToCancel(cita);
-                                  }}
-                                  className="w-full px-3 py-2.5 text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <Ban className="w-4 h-4 text-rose-600" />
-                                  <span>Cancelar cita</span>
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                      {cita.estado !== 'Cancelada' && (
+                        <button
+                          type="button"
+                          onClick={() => setCitaToCancel(cita)}
+                          className="px-3 py-2 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                          title="Cancelar cita"
+                        >
+                          <Ban className="w-3.5 h-3.5" />
+                        </button>
                       )}
                     </div>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="p-6 text-center text-xs text-[#6B7280]">
-              {searchQuery
-                ? 'No se encontraron citas que coincidan con la búsqueda.'
-                : filter === 'proximas'
-                ? 'No hay citas próximas programadas.'
-                : filter === 'canceladas'
-                ? 'No hay citas canceladas.'
-                : 'No hay citas registradas.'}
+                );
+              })}
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <EmptyState
+            icon={<CalendarIcon className="w-6 h-6 text-slate-400" />}
+            title={
+              isAnyFilterActive
+                ? 'No se encontraron citas con los filtros aplicados'
+                : filter === 'hoy'
+                ? 'No hay citas programadas para hoy'
+                : filter === 'proximas'
+                ? 'No hay citas próximas registradas'
+                : filter === 'anteriores'
+                ? 'No hay citas anteriores'
+                : 'No hay citas canceladas'
+            }
+            description={
+              isAnyFilterActive
+                ? 'Intenta cambiar los términos de búsqueda o restablecer la fecha.'
+                : 'Puedes agendar una nueva cita con el cliente para registrar el servicio.'
+            }
+            action={
+              isAnyFilterActive
+                ? {
+                    label: 'Limpiar filtros',
+                    icon: <RotateCcw className="w-3.5 h-3.5" />,
+                    onClick: handleClearFilters,
+                  }
+                : {
+                    label: 'Agendar cita',
+                    icon: <Plus className="w-3.5 h-3.5" />,
+                    onClick: handleOpenAdd,
+                  }
+            }
+          />
+        )}
       </div>
 
       {/* MODAL: AGENDAR / EDITAR CITA */}

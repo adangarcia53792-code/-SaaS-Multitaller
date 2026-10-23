@@ -361,6 +361,7 @@ export interface Refaccion {
   telefonoProveedor?: string;
   fechaUltimaCompra?: string; // YYYY-MM-DD
   diasEntregaEstimados?: number;
+  diasEntrega?: number;
   compatibilidad?: string; // Marcas, modelos y años compatibles
   creadoEn: string;
 }
@@ -429,6 +430,10 @@ export interface Cliente {
   telefono: string;
   correo?: string;
   rfc?: string;
+  direccion?: string;
+  razonSocial?: string;
+  regimenFiscal?: string;
+  usoCfdi?: string;
 }
 
 export interface Vehiculo {
@@ -440,6 +445,8 @@ export interface Vehiculo {
   año?: string;
   kilometraje?: number | string;
   color?: string;
+  vin?: string;
+  transmision?: string;
   recomendacionesMantenimiento?: string[];
   proximoServicioFecha?: string; // YYYY-MM-DD
   proximoServicioKm?: number | string;
@@ -453,7 +460,7 @@ export interface Cita {
   servicio: string;
   fecha: string;
   hora: string;
-  estado: 'Programada' | 'Cancelada';
+  estado: 'Programada' | 'Confirmada' | 'Cancelada';
   creadoEn: string;
 }
 

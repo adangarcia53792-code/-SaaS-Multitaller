@@ -224,7 +224,7 @@ export const AnalisisCotizacionModal: React.FC<AnalisisCotizacionModalProps> = (
               </div>
               <div>
                 <h4 className="text-sm font-bold text-[#06345A]">
-                  Analizando cotización {cotizacion.folio}…
+                  Analizando información…
                 </h4>
                 <p className="text-xs text-[#6B7280] mt-1 max-w-sm mx-auto">
                   Revisando datos del cliente, vehículo, precios, consistencia aritmética, margen de utilidad y claridad de la propuesta.
@@ -244,6 +244,16 @@ export const AnalisisCotizacionModal: React.FC<AnalisisCotizacionModalProps> = (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                   <span>Generando sugerencia para WhatsApp</span>
                 </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar análisis
+                </button>
               </div>
             </div>
           )}
@@ -311,6 +321,16 @@ export const AnalisisCotizacionModal: React.FC<AnalisisCotizacionModalProps> = (
                   )}
                 </div>
               </div>
+
+              {/* Aviso si Gemini no responde y se usa motor local */}
+              {analisis.esAnalisisLocal && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    El servicio en la nube de Gemini no estuvo disponible temporalmente. Se utilizó el <strong>análisis local de TUNNO</strong> para verificar tu cotización de manera segura y sin interrupciones.
+                  </p>
+                </div>
+              )}
 
               {/* 1. ESTADO GENERAL */}
               <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#E5E7EB] shadow-2xs space-y-2">

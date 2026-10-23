@@ -38,6 +38,13 @@ import {
   Truck,
   Compass,
   HelpCircle,
+  RotateCcw,
+  Phone,
+  Mail,
+  MapPin,
+  CalendarPlus,
+  Info,
+  ExternalLink,
 } from 'lucide-react';
 import {
   SectionId,
@@ -96,6 +103,9 @@ import { GuiaMenuDropdown } from './components/GuiaMenuDropdown';
 import { GuiaBienvenidaModal } from './components/GuiaBienvenidaModal';
 import { AsistenteInteligente } from './components/AsistenteInteligente';
 import { CrearCotizacionIAModal } from './components/CrearCotizacionIAModal';
+import { SectionHeader } from './components/SectionHeader';
+import { EmptyState } from './components/EmptyState';
+import { SeguimientoInteligenteModal } from './components/SeguimientoInteligenteModal';
 import { TipoGuia, guardarPreferenciasGuia, obtenerPreferenciasGuia } from './data/guiaData';
 import { TunnoLogo } from './components/TunnoLogo';
 import { PlanMantenimientoModal } from './components/PlanMantenimientoModal';
@@ -2041,6 +2051,23 @@ export default function App() {
   const [openVehiculoMenuId, setOpenVehiculoMenuId] = useState<string | null>(null);
   const [planMantenimientoVehiculo, setPlanMantenimientoVehiculo] = useState<Vehiculo | null>(null);
 
+  // Estados para "Ver detalle" modal de Clientes y Vehículos (ETAPA 24)
+  const [selectedClienteDetail, setSelectedClienteDetail] = useState<Cliente | null>(null);
+  const [selectedVehiculoDetail, setSelectedVehiculoDetail] = useState<Vehiculo | null>(null);
+  const [seguimientoTargetCliente, setSeguimientoTargetCliente] = useState<Cliente | null>(null);
+
+  const clienteDetailModalDismiss = useModalDismiss({
+    isOpen: !!selectedClienteDetail,
+    onClose: () => setSelectedClienteDetail(null),
+    closeOnBackdrop: true,
+  });
+
+  const vehiculoDetailModalDismiss = useModalDismiss({
+    isOpen: !!selectedVehiculoDetail,
+    onClose: () => setSelectedVehiculoDetail(null),
+    closeOnBackdrop: true,
+  });
+
   const clienteModalDismiss = useModalDismiss({
     isOpen: isClienteModalOpen,
     onClose: () => {
@@ -3923,265 +3950,324 @@ export default function App() {
 
           {/* CLIENTES */}
           {activeSection === 'clientes' && (
-            <section className="space-y-6">
-              {/* Encabezado TUNNO para Clientes */}
-              <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
-                    <Users className="w-6 h-6" />
+            <section className="space-y-5">
+              {/* Encabezado uniforme TUNNO */}
+              <SectionHeader
+                icon={<Users className="w-5 h-5 text-[#1497F2]" />}
+                title="Clientes"
+                description="Directorio y expedientes de clientes registrados en el taller."
+                primaryAction={{
+                  label: 'Agregar cliente',
+                  icon: <Plus className="w-4 h-4" />,
+                  onClick: handleOpenAddCliente,
+                }}
+                secondaryActions={[
+                  {
+                    label: 'Ayudarme con IA',
+                    icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                    variant: 'ai',
+                    onClick: () => setIsCopilotoOpen(true),
+                  },
+                ]}
+              />
+
+              {/* Barra uniforme de búsqueda y filtros */}
+              <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4 shadow-xs space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchCliente}
+                      onChange={(e) => setSearchCliente(e.target.value)}
+                      placeholder="Buscar por nombre o teléfono..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
+                    />
                   </div>
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
-                      Clientes
-                    </h2>
-                    <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-                      Consulta y administra los clientes registrados.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsCopilotoOpen(true)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
-                    title="Abrir Copiloto de Clientes"
-                  >
-                    <Sparkles className="w-4 h-4 text-[#1497F2]" />
-                    <span>Ayudarme con IA</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenAddCliente}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Agregar cliente</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="relative max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchCliente}
-                  onChange={(e) => setSearchCliente(e.target.value)}
-                  placeholder="Buscar por nombre o teléfono..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
-                />
-              </div>
-
-              <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
-                {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#06345A] font-semibold text-xs uppercase tracking-wider font-heading">
-                        <th className="py-3.5 px-5">Nombre</th>
-                        <th className="py-3.5 px-5">Teléfono</th>
-                        <th className="py-3.5 px-5">Correo</th>
-                        <th className="py-3.5 px-5 text-right">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E5E7EB]">
-                      {filteredClientes.length > 0 ? (
-                        filteredClientes.map((cliente) => (
-                          <tr key={cliente.id} className="hover:bg-[#73C7FF]/10 transition-colors">
-                            <td className="py-3.5 px-5 font-semibold text-[#374151] font-heading">{cliente.nombre}</td>
-                            <td className="py-3.5 px-5 text-[#6B7280]">{cliente.telefono}</td>
-                            <td className="py-3.5 px-5 text-[#6B7280]">
-                              {cliente.correo || <span className="text-slate-400 italic">No registrado</span>}
-                            </td>
-                            <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
-                              <div className="inline-flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setHistorialTarget({ tipo: 'cliente', id: cliente.id })}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#374151] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer min-h-[36px]"
-                                >
-                                  <History className="w-3.5 h-3.5 text-[#1497F2]" />
-                                  <span>Historial</span>
-                                </button>
-
-                                <div className="relative">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setOpenClienteMenuId(
-                                        openClienteMenuId === cliente.id ? null : cliente.id
-                                      )
-                                    }
-                                    className="p-2 text-slate-400 hover:text-[#374151] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
-                                    title="Más opciones"
-                                    aria-label="Más opciones"
-                                  >
-                                    <MoreVertical className="w-4 h-4" />
-                                  </button>
-
-                                  {openClienteMenuId === cliente.id && (
-                                    <>
-                                      <div
-                                        className="fixed inset-0 z-20"
-                                        onClick={() => setOpenClienteMenuId(null)}
-                                      />
-                                      <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setOpenClienteMenuId(null);
-                                            handleOpenEditCliente(cliente);
-                                          }}
-                                          className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
-                                        >
-                                          <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                                          <span>Editar cliente</span>
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={4} className="py-8 text-center text-[#6B7280]">
-                            {searchCliente
-                              ? 'No se encontraron clientes que coincidan con la búsqueda.'
-                              : 'No hay clientes registrados.'}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Block View */}
-                <div className="md:hidden divide-y divide-[#E5E7EB]">
-                  {filteredClientes.length > 0 ? (
-                    filteredClientes.map((cliente) => (
-                      <div key={cliente.id} className="p-4 space-y-2.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-[#374151] text-sm font-heading">{cliente.nombre}</h4>
-                            <p className="text-xs text-[#6B7280] mt-0.5">{cliente.telefono}</p>
-                            {cliente.correo && (
-                              <p className="text-xs text-slate-400 truncate">{cliente.correo}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => setHistorialTarget({ tipo: 'cliente', id: cliente.id })}
-                              className="inline-flex items-center gap-1 px-3 py-2 min-h-[42px] text-xs font-semibold text-[#374151] bg-white border border-[#E5E7EB] hover:bg-slate-50 rounded-lg transition-colors"
-                            >
-                              <History className="w-3.5 h-3.5 text-[#1497F2]" />
-                              <span>Historial</span>
-                            </button>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOpenClienteMenuId(
-                                    openClienteMenuId === cliente.id ? null : cliente.id
-                                  )
-                                }
-                                className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-slate-400 hover:text-[#374151] rounded-lg"
-                                aria-label="Más opciones"
-                              >
-                                <MoreVertical className="w-4 h-4" />
-                              </button>
-                              {openClienteMenuId === cliente.id && (
-                                <>
-                                  <div
-                                    className="fixed inset-0 z-20"
-                                    onClick={() => setOpenClienteMenuId(null)}
-                                  />
-                                  <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenClienteMenuId(null);
-                                        handleOpenEditCliente(cliente);
-                                      }}
-                                      className="w-full px-3 py-2.5 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2"
-                                    >
-                                      <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                                      <span>Editar cliente</span>
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-6 text-center text-xs text-[#5F6B73]">
-                      {searchCliente
-                        ? 'No se encontraron clientes que coincidan con la búsqueda.'
-                        : 'No hay clientes registrados.'}
-                    </div>
+                  {searchCliente.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchCliente('')}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold border border-rose-200 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Limpiar filtros</span>
+                    </button>
                   )}
                 </div>
+
+                <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1 border-t border-slate-100">
+                  <span>
+                    Mostrando <strong className="text-[#06345A] font-semibold">{filteredClientes.length}</strong>{' '}
+                    {filteredClientes.length === 1 ? 'cliente' : 'clientes'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tabla y Tarjetas de Clientes */}
+              <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
+                {filteredClientes.length > 0 ? (
+                  <>
+                    {/* Desktop View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="bg-[#F4F6F8] border-b border-[#E5E7EB] text-[#06345A] font-semibold text-xs uppercase tracking-wider font-heading">
+                            <th className="py-3 px-5">Nombre</th>
+                            <th className="py-3 px-5">Teléfono</th>
+                            <th className="py-3 px-5">Vehículo principal</th>
+                            <th className="py-3 px-5">Último servicio</th>
+                            <th className="py-3 px-5 text-right">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E5E7EB]">
+                          {filteredClientes.map((cliente) => {
+                            const clientVehs = vehiculos.filter((v) => v.clienteId === cliente.id);
+                            const primaryVeh = clientVehs[0];
+                            const clientOrders = ordenes
+                              .filter((o) => o.clienteId === cliente.id)
+                              .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+                            const lastOrder = clientOrders[0];
+
+                            return (
+                              <tr key={cliente.id} className="hover:bg-slate-50/70 transition-colors">
+                                <td className="py-3.5 px-5 font-semibold text-[#06345A] font-heading">
+                                  {cliente.nombre}
+                                </td>
+                                <td className="py-3.5 px-5 text-[#6B7280] font-mono text-xs">
+                                  {cliente.telefono || <span className="text-slate-400 italic">Sin teléfono</span>}
+                                </td>
+                                <td className="py-3.5 px-5 text-xs text-[#06345A]">
+                                  {primaryVeh ? (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-semibold text-slate-800">
+                                        {primaryVeh.marca} {primaryVeh.modelo}
+                                      </span>
+                                      <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] border border-slate-200">
+                                        {primaryVeh.placas}
+                                      </span>
+                                      {clientVehs.length > 1 && (
+                                        <span className="text-[10px] text-slate-400 font-medium">
+                                          (+{clientVehs.length - 1})
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400 italic">Sin vehículo</span>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-5 text-xs text-[#6B7280]">
+                                  {lastOrder ? (
+                                    <div className="line-clamp-1 max-w-xs">
+                                      <span className="font-medium text-slate-800">{lastOrder.servicio}</span>
+                                      <span className="text-slate-400 text-[11px] block">
+                                        {new Date(lastOrder.creadoEn).toLocaleDateString('es-MX', {
+                                          day: '2-digit',
+                                          month: 'short',
+                                          year: 'numeric',
+                                        })}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400 italic">Sin servicios registrados</span>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                                  <div className="inline-flex items-center gap-1.5 justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedClienteDetail(cliente)}
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-sky-50 hover:bg-[#1497F2] hover:text-white border border-[#73C7FF]/40 rounded-lg transition-colors cursor-pointer min-h-[34px]"
+                                    >
+                                      <span>Ver detalle</span>
+                                    </button>
+
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setOpenClienteMenuId(
+                                            openClienteMenuId === cliente.id ? null : cliente.id
+                                          )
+                                        }
+                                        className="p-1.5 text-slate-400 hover:text-[#06345A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                                        title="Más opciones"
+                                        aria-label="Más opciones"
+                                      >
+                                        <MoreVertical className="w-4 h-4" />
+                                      </button>
+
+                                      {openClienteMenuId === cliente.id && (
+                                        <>
+                                          <div
+                                            className="fixed inset-0 z-20"
+                                            onClick={() => setOpenClienteMenuId(null)}
+                                          />
+                                          <div className="absolute right-0 mt-1 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setOpenClienteMenuId(null);
+                                                handleOpenEditCliente(cliente);
+                                              }}
+                                              className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
+                                            >
+                                              <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                                              <span>Editar cliente</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setOpenClienteMenuId(null);
+                                                setHistorialTarget({ tipo: 'cliente', id: cliente.id });
+                                              }}
+                                              className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
+                                            >
+                                              <History className="w-3.5 h-3.5 text-slate-400" />
+                                              <span>Historial</span>
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Block View */}
+                    <div className="md:hidden divide-y divide-[#E5E7EB]">
+                      {filteredClientes.map((cliente) => {
+                        const clientVehs = vehiculos.filter((v) => v.clienteId === cliente.id);
+                        const primaryVeh = clientVehs[0];
+                        const clientOrders = ordenes
+                          .filter((o) => o.clienteId === cliente.id)
+                          .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+                        const lastOrder = clientOrders[0];
+
+                        return (
+                          <div key={cliente.id} className="p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-[#06345A] text-sm font-heading">{cliente.nombre}</h4>
+                                <p className="text-xs text-[#6B7280] font-mono mt-0.5">{cliente.telefono || 'Sin teléfono'}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedClienteDetail(cliente)}
+                                className="px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-sky-50 rounded-lg border border-[#73C7FF]/40 cursor-pointer"
+                              >
+                                Ver detalle
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                              <div>
+                                <span className="text-[10px] text-slate-400 block font-semibold uppercase">Vehículo</span>
+                                <span className="font-medium text-slate-800">
+                                  {primaryVeh ? `${primaryVeh.marca} ${primaryVeh.modelo}` : 'Sin vehículo'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-400 block font-semibold uppercase">Último servicio</span>
+                                <span className="font-medium text-slate-800 line-clamp-1">
+                                  {lastOrder ? lastOrder.servicio : 'Sin servicios'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <EmptyState
+                    icon={<Users className="w-8 h-8 text-slate-400" />}
+                    title={searchCliente ? 'Sin coincidencias' : 'No hay clientes registrados'}
+                    description={
+                      searchCliente
+                        ? 'No se encontraron clientes con el término ingresado. Limpia el buscador o intenta con otro nombre.'
+                        : 'Comienza registrando al primer cliente para llevar su historial, vehículos, citas y cotizaciones.'
+                    }
+                    action={
+                      searchCliente
+                        ? {
+                            label: 'Limpiar filtros',
+                            icon: <RotateCcw className="w-4 h-4" />,
+                            onClick: () => setSearchCliente(''),
+                          }
+                        : {
+                            label: 'Agregar primer cliente',
+                            icon: <Plus className="w-4 h-4" />,
+                            onClick: handleOpenAddCliente,
+                          }
+                    }
+                  />
+                )}
               </div>
             </section>
           )}
 
           {/* VEHÍCULOS */}
           {activeSection === 'vehiculos' && (
-            <section className="space-y-6">
-              {/* Encabezado TUNNO para Vehículos */}
-              <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
-                    <Car className="w-6 h-6" />
+            <section className="space-y-5">
+              {/* Encabezado uniforme TUNNO */}
+              <SectionHeader
+                icon={<Car className="w-5 h-5 text-[#1497F2]" />}
+                title="Vehículos"
+                description="Padrón vehicular, especificaciones y expedientes técnicos vinculados."
+                primaryAction={{
+                  label: 'Agregar vehículo',
+                  icon: <Plus className="w-4 h-4" />,
+                  onClick: handleOpenAddVehiculo,
+                }}
+                secondaryActions={[
+                  {
+                    label: 'Ayudarme con IA',
+                    icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                    variant: 'ai',
+                    onClick: () => setIsCopilotoOpen(true),
+                  },
+                ]}
+              />
+
+              {/* Barra uniforme de búsqueda y filtros */}
+              <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4 shadow-xs space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchVehiculo}
+                      onChange={(e) => setSearchVehiculo(e.target.value)}
+                      placeholder="Buscar por placas o propietario..."
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
+                    />
                   </div>
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
-                      Vehículos
-                    </h2>
-                    <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-                      Consulta y administra los vehículos vinculados a sus propietarios.
-                    </p>
-                  </div>
+
+                  {searchVehiculo.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchVehiculo('')}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold border border-rose-200 transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Limpiar filtros</span>
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsCopilotoOpen(true)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer"
-                    title="Abrir Copiloto de Vehículos"
-                  >
-                    <Sparkles className="w-4 h-4 text-[#1497F2]" />
-                    <span>Ayudarme con IA</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenAddVehiculo}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold font-heading shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]/20"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Agregar vehículo</span>
-                  </button>
+                <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1 border-t border-slate-100">
+                  <span>
+                    Mostrando <strong className="text-[#06345A] font-semibold">{filteredVehiculos.length}</strong>{' '}
+                    {filteredVehiculos.length === 1 ? 'vehículo' : 'vehículos'}
+                  </span>
                 </div>
-              </div>
-
-              <div className="relative max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchVehiculo}
-                  onChange={(e) => setSearchVehiculo(e.target.value)}
-                  placeholder="Buscar por placas o propietario..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#374151] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
-                />
               </div>
 
               <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
@@ -4193,6 +4279,7 @@ export default function App() {
                         <th className="py-3.5 px-5">Vehículo</th>
                         <th className="py-3.5 px-5">Placas</th>
                         <th className="py-3.5 px-5">Propietario</th>
+                        <th className="py-3.5 px-5">Último servicio</th>
                         <th className="py-3.5 px-5 text-right">Acciones</th>
                       </tr>
                     </thead>
@@ -4200,46 +4287,55 @@ export default function App() {
                       {filteredVehiculos.length > 0 ? (
                         filteredVehiculos.map((v) => {
                           const owner = clienteMap.get(v.clienteId);
+                          const vehOrders = ordenes
+                            .filter((o) => o.vehiculoId === v.id)
+                            .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+                          const lastOrder = vehOrders[0];
+
                           return (
-                            <tr key={v.id} className="hover:bg-[#73C7FF]/10 transition-colors">
+                            <tr key={v.id} className="hover:bg-slate-50/70 transition-colors">
                               <td className="py-3.5 px-5">
-                                 <div className="font-semibold text-[#374151] font-heading">{v.marca} {v.modelo}</div>
-                                 {v.año && <div className="text-xs text-[#6B7280]">Año: {v.año}</div>}
+                                <div className="font-semibold text-[#06345A] font-heading">{v.marca} {v.modelo}</div>
+                                {v.año && <div className="text-xs text-[#6B7280]">Año: {v.año}</div>}
                               </td>
                               <td className="py-3.5 px-5">
-                                <span className="inline-block px-2.5 py-1 bg-slate-100 border border-[#E5E7EB] rounded text-xs font-mono font-bold text-[#374151] tracking-wider">
+                                <span className="inline-block px-2.5 py-1 bg-slate-100 border border-[#E5E7EB] rounded text-xs font-mono font-bold text-[#06345A] tracking-wider">
                                   {v.placas}
                                 </span>
                               </td>
-                              <td className="py-3.5 px-5 text-[#374151]">
+                              <td className="py-3.5 px-5 text-xs text-[#374151]">
                                 {owner ? (
                                   <div>
-                                    <div className="font-semibold text-[#374151]">{owner.nombre}</div>
-                                    <div className="text-xs text-[#6B7280]">{owner.telefono}</div>
+                                    <div className="font-semibold text-[#06345A]">{owner.nombre}</div>
+                                    <div className="text-[#6B7280] font-mono">{owner.telefono}</div>
                                   </div>
                                 ) : (
-                                  <span className="text-rose-500 text-xs italic">Cliente no encontrado</span>
+                                  <span className="text-rose-500 italic">Cliente no encontrado</span>
                                 )}
                               </td>
-                              <td className="py-3.5 px-5 text-right whitespace-nowrap relative">
-                                <div className="inline-flex items-center gap-2">
+                              <td className="py-3.5 px-5 text-xs text-[#6B7280]">
+                                {lastOrder ? (
+                                  <div className="line-clamp-1 max-w-xs">
+                                    <span className="font-medium text-slate-800">{lastOrder.servicio}</span>
+                                    <span className="text-slate-400 text-[11px] block">
+                                      {new Date(lastOrder.creadoEn).toLocaleDateString('es-MX', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                      })}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400 italic">Sin servicios</span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center gap-1.5 justify-end">
                                   <button
                                     type="button"
-                                    onClick={() => setPlanMantenimientoVehiculo(v)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition-colors cursor-pointer min-h-[36px]"
-                                    title="Generar plan de mantenimiento con IA"
+                                    onClick={() => setSelectedVehiculoDetail(v)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-sky-50 hover:bg-[#1497F2] hover:text-white border border-[#73C7FF]/40 rounded-lg transition-colors cursor-pointer min-h-[34px]"
                                   >
-                                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                    <span>Plan IA</span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => setHistorialTarget({ tipo: 'vehiculo', id: v.id })}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#374151] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer min-h-[36px]"
-                                  >
-                                    <History className="w-3.5 h-3.5 text-[#1497F2]" />
-                                    <span>Historial</span>
+                                    <span>Ver detalle</span>
                                   </button>
 
                                   <div className="relative">
@@ -4250,7 +4346,7 @@ export default function App() {
                                           openVehiculoMenuId === v.id ? null : v.id
                                         )
                                       }
-                                      className="p-2 text-slate-400 hover:text-[#374151] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
+                                      className="p-1.5 text-slate-400 hover:text-[#06345A] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                                       title="Más opciones"
                                       aria-label="Más opciones"
                                     >
@@ -4270,10 +4366,21 @@ export default function App() {
                                               setOpenVehiculoMenuId(null);
                                               setPlanMantenimientoVehiculo(v);
                                             }}
-                                            className="w-full px-3 py-2 text-[#374151] hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
+                                            className="w-full px-3 py-2 text-[#374151] hover:bg-sky-50 hover:text-[#1497F2] flex items-center gap-2 cursor-pointer"
                                           >
                                             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                            <span>Plan de mantenimiento IA</span>
+                                            <span>Plan IA</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setOpenVehiculoMenuId(null);
+                                              setHistorialTarget({ tipo: 'vehiculo', id: v.id });
+                                            }}
+                                            className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 cursor-pointer"
+                                          >
+                                            <History className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>Historial</span>
                                           </button>
                                           <button
                                             type="button"
@@ -4281,7 +4388,7 @@ export default function App() {
                                               setOpenVehiculoMenuId(null);
                                               handleOpenEditVehiculo(v);
                                             }}
-                                            className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 transition-colors cursor-pointer"
+                                            className="w-full px-3 py-2 text-[#374151] hover:bg-slate-50 hover:text-[#1497F2] flex items-center gap-2 cursor-pointer"
                                           >
                                             <Pencil className="w-3.5 h-3.5 text-slate-400" />
                                             <span>Editar vehículo</span>
@@ -4297,7 +4404,7 @@ export default function App() {
                         })
                       ) : (
                         <tr>
-                          <td colSpan={4} className="py-8 text-center text-[#5F6B73]">
+                          <td colSpan={5} className="py-8 text-center text-[#5F6B73]">
                             {searchVehiculo
                               ? 'No se encontraron vehículos que coincidan con la búsqueda.'
                               : 'No hay vehículos registrados.'}
@@ -5005,6 +5112,498 @@ export default function App() {
         onSaveSeguimiento={handleSaveSeguimiento}
         onUpdateVehiculoRecomendaciones={handleUpdateVehiculoRecomendaciones}
       />
+
+      {/* MODAL: VER DETALLE DE CLIENTE (ETAPA 24) */}
+      {selectedClienteDetail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50"
+          onClick={clienteDetailModalDismiss.handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="bg-white rounded-xl border border-[#E5E7EB] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 text-xs"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-slate-50/70 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#1497F2] border border-[#73C7FF]/40 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold font-heading text-[#06345A] leading-tight">
+                    {selectedClienteDetail.nombre}
+                  </h3>
+                  <p className="text-[11px] text-[#6B7280]">
+                    Expediente integral del cliente · ID: <span className="font-mono">{selectedClienteDetail.id}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={clienteDetailModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-slate-100"
+                aria-label="Cerrar detalle de cliente"
+                title="Cerrar (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 min-h-0 text-[#06345A]">
+              {/* Accesos rápidos requeridos */}
+              <div className="p-3.5 bg-gradient-to-r from-sky-50/60 to-blue-50/40 rounded-xl border border-[#73C7FF]/30 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#06345A] block">
+                  Accesos rápidos
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cli = selectedClienteDetail;
+                      setSelectedClienteDetail(null);
+                      handleSelectSection('citas');
+                      mostrarMensaje(`Navegando a Citas para agendar a ${cli.nombre}`);
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#1497F2] hover:bg-sky-50/50 text-[#06345A] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <CalendarPlus className="w-4 h-4 text-[#1497F2] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Agendar cita</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cli = selectedClienteDetail;
+                      setSelectedClienteDetail(null);
+                      handleSelectSection('cotizaciones');
+                      mostrarMensaje(`Navegando a Cotizaciones para ${cli.nombre}`);
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#1497F2] hover:bg-sky-50/50 text-[#06345A] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <FileText className="w-4 h-4 text-[#1497F2] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Crear cotización</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cli = selectedClienteDetail;
+                      setSelectedClienteDetail(null);
+                      setHistorialTarget({ tipo: 'cliente', id: cli.id });
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#1497F2] hover:bg-sky-50/50 text-[#06345A] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <History className="w-4 h-4 text-[#1497F2] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Abrir historial</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cli = selectedClienteDetail;
+                      setSelectedClienteDetail(null);
+                      setSeguimientoTargetCliente(cli);
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 text-purple-900 transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <Sparkles className="w-4 h-4 text-purple-600 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Seguimiento con IA</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Información de contacto */}
+              <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  Información de contacto
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Teléfono</span>
+                    <span className="font-mono font-medium text-slate-800 text-xs">
+                      {selectedClienteDetail.telefono || 'Sin teléfono'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Correo electrónico</span>
+                    <span className="font-medium text-slate-800 text-xs truncate block">
+                      {selectedClienteDetail.correo || 'Sin correo registrado'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Dirección</span>
+                    <span className="font-medium text-slate-800 text-xs">
+                      {selectedClienteDetail.direccion || 'Sin dirección registrada'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Datos fiscales */}
+              <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  Datos fiscales
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">RFC</span>
+                    <span className="font-mono font-bold text-[#06345A] bg-slate-50 px-2 py-1 rounded border border-slate-200 inline-block">
+                      {selectedClienteDetail.rfc || 'XAXX010101000 (Público en general)'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Razón social</span>
+                    <span className="font-semibold text-slate-800">
+                      {selectedClienteDetail.razonSocial || selectedClienteDetail.nombre}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Régimen fiscal</span>
+                    <span className="text-slate-700">
+                      {selectedClienteDetail.regimenFiscal || '612 - Personas Físicas con Actividades Empresariales'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Uso de CFDI preferente</span>
+                    <span className="text-slate-700">
+                      {selectedClienteDetail.usoCfdi || 'G03 - Gastos en general'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehículos del cliente */}
+              <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                    Vehículos registrados
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedClienteDetail(null);
+                      handleOpenAddVehiculo();
+                    }}
+                    className="text-[11px] font-semibold text-[#1497F2] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Añadir vehículo</span>
+                  </button>
+                </div>
+
+                {vehiculos.filter((v) => v.clienteId === selectedClienteDetail.id).length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {vehiculos
+                      .filter((v) => v.clienteId === selectedClienteDetail.id)
+                      .map((veh) => (
+                        <div
+                          key={veh.id}
+                          className="p-3 rounded-lg border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-2 hover:bg-slate-50 transition-colors"
+                        >
+                          <div>
+                            <span className="font-bold text-[#06345A] block">
+                              {veh.marca} {veh.modelo} {veh.año && `(${veh.año})`}
+                            </span>
+                            <span className="font-mono text-[11px] text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 inline-block mt-0.5">
+                              {veh.placas}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedClienteDetail(null);
+                              setSelectedVehiculoDetail(veh);
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-semibold text-[#1497F2] bg-white border border-[#73C7FF]/40 rounded hover:bg-sky-50 transition-colors cursor-pointer"
+                          >
+                            Ver vehículo
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 italic text-xs">No hay vehículos registrados para este cliente.</p>
+                )}
+              </div>
+
+              {/* Historial reciente de órdenes */}
+              <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  Historial de órdenes recientes
+                </h4>
+                {ordenes.filter((o) => o.clienteId === selectedClienteDetail.id).length > 0 ? (
+                  <div className="space-y-2">
+                    {ordenes
+                      .filter((o) => o.clienteId === selectedClienteDetail.id)
+                      .slice(0, 3)
+                      .map((ord) => (
+                        <div
+                          key={ord.id}
+                          className="p-2.5 rounded-lg border border-slate-100 bg-slate-50 flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <span className="font-mono font-bold text-[#06345A] mr-2">{ord.folio}</span>
+                            <span className="font-medium text-slate-800">{ord.servicio}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400 text-[11px]">
+                              {new Date(ord.creadoEn).toLocaleDateString('es-MX', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 text-[#06345A]">
+                              {ord.estado}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 italic text-xs">Sin órdenes de trabajo registradas.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3.5 border-t border-[#E5E7EB] bg-slate-50 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-slate-400">
+                Presiona <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Esc</kbd> o haz clic fuera para cerrar
+              </span>
+              <button
+                type="button"
+                onClick={clienteDetailModalDismiss.handleClose}
+                className="px-4 py-2 bg-white hover:bg-slate-100 text-[#06345A] font-semibold text-xs rounded-lg border border-[#E5E7EB] transition-colors cursor-pointer"
+              >
+                Cerrar detalle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: VER DETALLE DE VEHÍCULO (ETAPA 24) */}
+      {selectedVehiculoDetail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50"
+          onClick={vehiculoDetailModalDismiss.handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="bg-white rounded-xl border border-[#E5E7EB] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 text-xs"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-slate-50/70 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#1497F2] border border-[#73C7FF]/40 flex items-center justify-center shrink-0">
+                  <Car className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold font-heading text-[#06345A] leading-tight">
+                      {selectedVehiculoDetail.marca} {selectedVehiculoDetail.modelo}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-300 font-mono font-bold text-[#06345A] text-xs">
+                      {selectedVehiculoDetail.placas}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#6B7280]">
+                    Expediente técnico vehicular · Año: {selectedVehiculoDetail.año || 'N/D'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={vehiculoDetailModalDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-slate-100"
+                aria-label="Cerrar detalle de vehículo"
+                title="Cerrar (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 min-h-0 text-[#06345A]">
+              {/* Accesos rápidos */}
+              <div className="p-3.5 bg-gradient-to-r from-sky-50/60 to-blue-50/40 rounded-xl border border-[#73C7FF]/30 space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#06345A] block">
+                  Accesos rápidos
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const veh = selectedVehiculoDetail;
+                      setSelectedVehiculoDetail(null);
+                      handleSelectSection('citas');
+                      mostrarMensaje(`Agendando cita para ${veh.marca} ${veh.modelo} (${veh.placas})`);
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#1497F2] hover:bg-sky-50/50 text-[#06345A] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <CalendarPlus className="w-4 h-4 text-[#1497F2] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Agendar cita</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const veh = selectedVehiculoDetail;
+                      setSelectedVehiculoDetail(null);
+                      handleSelectSection('cotizaciones');
+                      mostrarMensaje(`Nueva cotización para ${veh.marca} ${veh.modelo}`);
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#1497F2] hover:bg-sky-50/50 text-[#06345A] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <FileText className="w-4 h-4 text-[#1497F2] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Crear cotización</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const veh = selectedVehiculoDetail;
+                      setSelectedVehiculoDetail(null);
+                      setHistorialTarget({ tipo: 'vehiculo', id: veh.id });
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#1497F2] hover:bg-sky-50/50 text-[#06345A] transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <History className="w-4 h-4 text-[#1497F2] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Abrir historial</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const veh = selectedVehiculoDetail;
+                      setSelectedVehiculoDetail(null);
+                      setPlanMantenimientoVehiculo(veh);
+                    }}
+                    className="flex flex-col items-center justify-center p-2.5 bg-white rounded-lg border border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 text-purple-900 transition-all cursor-pointer group shadow-2xs"
+                  >
+                    <Sparkles className="w-4 h-4 text-purple-600 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-[11px]">Plan Mantenimiento</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Ficha técnica */}
+              <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  Especificaciones técnicas
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Placas</span>
+                    <span className="font-mono font-bold text-slate-800">{selectedVehiculoDetail.placas}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Año</span>
+                    <span className="font-medium text-slate-800">{selectedVehiculoDetail.año || 'No especificado'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Color</span>
+                    <span className="font-medium text-slate-800">{selectedVehiculoDetail.color || 'No especificado'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Kilometraje actual</span>
+                    <span className="font-mono font-medium text-slate-800">
+                      {selectedVehiculoDetail.kilometraje ? `${selectedVehiculoDetail.kilometraje} km` : 'No registrado'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">VIN / Número de serie</span>
+                    <span className="font-mono text-slate-700 truncate block">
+                      {selectedVehiculoDetail.vin || 'Sin registrar'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] mb-0.5">Transmisión</span>
+                    <span className="text-slate-700">
+                      {selectedVehiculoDetail.transmision || 'Manual / Automática'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Propietario */}
+              <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] space-y-3">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  Propietario asignado
+                </h4>
+                {clienteMap.get(selectedVehiculoDetail.clienteId) ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+                    <div>
+                      <span className="font-bold text-[#06345A] block">
+                        {clienteMap.get(selectedVehiculoDetail.clienteId)!.nombre}
+                      </span>
+                      <span className="text-slate-500 text-[11px] font-mono">
+                        {clienteMap.get(selectedVehiculoDetail.clienteId)!.telefono}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cli = clienteMap.get(selectedVehiculoDetail.clienteId)!;
+                        setSelectedVehiculoDetail(null);
+                        setSelectedClienteDetail(cli);
+                      }}
+                      className="px-3 py-1.5 text-xs font-semibold text-[#1497F2] bg-white border border-[#73C7FF]/40 rounded-lg hover:bg-sky-50 transition-colors cursor-pointer"
+                    >
+                      Ver cliente
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-rose-500 italic text-xs">Sin cliente asignado.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3.5 border-t border-[#E5E7EB] bg-slate-50 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-slate-400">
+                Presiona <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Esc</kbd> o haz clic fuera para cerrar
+              </span>
+              <button
+                type="button"
+                onClick={vehiculoDetailModalDismiss.handleClose}
+                className="px-4 py-2 bg-white hover:bg-slate-100 text-[#06345A] font-semibold text-xs rounded-lg border border-[#E5E7EB] transition-colors cursor-pointer"
+              >
+                Cerrar detalle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SEGUIMIENTO INTELIGENTE MODAL (CON IA) */}
+      {seguimientoTargetCliente && (
+        <SeguimientoInteligenteModal
+          isOpen={!!seguimientoTargetCliente}
+          onClose={() => setSeguimientoTargetCliente(null)}
+          clienteInicial={seguimientoTargetCliente}
+          vehiculoInicial={vehiculos.find((v) => v.clienteId === seguimientoTargetCliente.id)}
+          clientes={clientes}
+          vehiculos={vehiculos}
+          ordenes={ordenes}
+          cotizaciones={cotizaciones}
+          facturas={facturas}
+          garantias={garantias}
+          seguimientos={seguimientos}
+          configuracion={configuracion}
+          onSaveSeguimiento={(newSeg) => {
+            setSeguimientos((prev) => [newSeg, ...prev]);
+            mostrarMensaje('Seguimiento guardado exitosamente.');
+            setSeguimientoTargetCliente(null);
+          }}
+        />
+      )}
 
       {/* GUÍA INTERACTIVA DE TUNNO (CON RECORRIDO Y FLUJOS) */}
       <GuiaInteractiva

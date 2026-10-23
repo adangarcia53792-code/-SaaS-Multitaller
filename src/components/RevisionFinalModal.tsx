@@ -372,10 +372,19 @@ export const RevisionFinalModal: React.FC<RevisionFinalModalProps> = ({
                 </div>
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-800">Auditando orden y expediente con IA...</p>
+                <p className="text-sm font-bold text-slate-800">Analizando información…</p>
                 <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
                   Revisando servicio solicitado, cotización autorizada, refacciones utilizadas, control de calidad, pagos y garantías antes de la entrega.
                 </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar análisis
+                </button>
               </div>
             </div>
           ) : errorMensaje ? (
@@ -392,6 +401,15 @@ export const RevisionFinalModal: React.FC<RevisionFinalModalProps> = ({
             </div>
           ) : resultado ? (
             <>
+              {/* Aviso si Gemini no responde y se usa el análisis local */}
+              {resultado.esAnalisisLocal && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    El servicio en la nube de Gemini no estuvo disponible temporalmente. Se utilizó la <strong>auditoría local de TUNNO</strong> para verificar los puntos de entrega y control de calidad.
+                  </p>
+                </div>
+              )}
               {/* ---------------------------------------------------- */}
               {/* 1. TARJETA PRINCIPAL: ESTADO DE ENTREGA */}
               {/* ---------------------------------------------------- */}

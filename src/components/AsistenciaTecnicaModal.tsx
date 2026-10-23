@@ -366,12 +366,31 @@ export const AsistenciaTecnicaModal: React.FC<AsistenciaTecnicaModalProps> = ({
               <div className="w-12 h-12 rounded-full border-3 border-[#1497F2] border-t-transparent animate-spin" />
               <div>
                 <p className="font-semibold text-sm text-slate-800">
-                  Analizando orden y consultando catálogo técnico...
+                  Analizando información…
                 </p>
                 <p className="text-xs text-slate-500 mt-1 max-w-md">
                   Evaluando síntomas del cliente, daños visibles, kilometraje e historial previo del vehículo
                 </p>
               </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar análisis
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Aviso si Gemini no responde y se usa el análisis local */}
+          {!isLoading && resultado?.esAnalisisLocal && (
+            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p>
+                El servicio en la nube de Gemini no estuvo disponible temporalmente. Se utilizó el <strong>análisis técnico local de TUNNO</strong> para estructurar los puntos de revisión y el diagnóstico sin interrumpir tu trabajo.
+              </p>
             </div>
           )}
 

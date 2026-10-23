@@ -30,7 +30,11 @@ import {
   Tag,
   Car,
   Sparkles,
+  Eye,
+  RotateCcw,
 } from 'lucide-react';
+import { SectionHeader } from './SectionHeader';
+import { EmptyState } from './EmptyState';
 import { AnalisisInventarioModal } from './AnalisisInventarioModal';
 
 interface InventarioSectionProps {
@@ -60,10 +64,10 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
   onMarcarOrdenCompraRecibida,
   onOpenCopiloto,
 }) => {
-  const [activeMainTab, setActiveMainTab] = useState<'refacciones' | 'ordenes-compra'>('refacciones');
+  const [activeTab, setActiveTab] = useState<'existencias' | 'stock-bajo' | 'movimientos' | 'ordenes-compra'>('existencias');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStock, setFilterStock] = useState<FilterStock>('todas');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [selectedRefaccionDetail, setSelectedRefaccionDetail] = useState<Refaccion | null>(null);
 
   // Modal: Análisis de inventario con IA
   const [isAnalisisModalOpen, setIsAnalisisModalOpen] = useState(false);
@@ -143,6 +147,14 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     onClose: () => setViewingHistoryRefaccion(null),
     closeOnBackdrop: true,
   });
+
+  const detailDismiss = useModalDismiss({
+    isOpen: Boolean(selectedRefaccionDetail),
+    onClose: () => setSelectedRefaccionDetail(null),
+    closeOnBackdrop: true,
+  });
+
+  const refaccionMap = useMemo(() => new Map(refacciones.map((r) => [r.id, r])), [refacciones]);
 
   // Financial KPI calculations for Inventory Valuation
   const totalPiezasEnStock = useMemo(() => {
@@ -434,7 +446,7 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     }
 
     setIsOrdenCompraModalOpen(false);
-    setActiveMainTab('ordenes-compra');
+    setActiveTab('ordenes-compra');
   };
 
   // Movement modals
@@ -476,12 +488,19 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
     setMovementModal(null);
   };
 
+  const isAnyFilterActive = Boolean(searchQuery.trim() || activeTab !== 'existencias');
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setActiveTab('existencias');
+  };
+
   // Filtered refacciones
   const filteredRefacciones = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
     return refacciones.filter((r) => {
-      if (filterStock === 'stock-bajo' && r.existencias >= r.minimo) {
+      if (activeTab === 'stock-bajo' && r.existencias >= r.minimo) {
         return false;
       }
 
@@ -495,309 +514,316 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
 
       return true;
     });
-  }, [refacciones, searchQuery, filterStock]);
+  }, [refacciones, searchQuery, activeTab]);
+
+  const filteredMovimientos = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return movimientos.filter((m) => {
+      if (!q) return true;
+      const ref = refaccionMap.get(m.refaccionId);
+      const matchRef = ref ? (ref.nombre.toLowerCase().includes(q) || ref.codigo.toLowerCase().includes(q)) : false;
+      const matchMotivo = m.motivo ? m.motivo.toLowerCase().includes(q) : false;
+      return matchRef || matchMotivo || m.tipo.toLowerCase().includes(q);
+    });
+  }, [movimientos, searchQuery, refaccionMap]);
 
   return (
-    <section className="space-y-6">
-      {/* Encabezado TUNNO */}
-      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
-            <Package className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
-                Inventario y costeo de refacciones
-              </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-[#06345A] border border-[#73C7FF]/40">
-                {refacciones.length} items
-              </span>
-            </div>
-            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-              Control de existencias, precios de compra/venta, cálculo de ganancia y órdenes de compra.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-          {onOpenCopiloto && (
-            <button
-              type="button"
-              onClick={onOpenCopiloto}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-[#73C7FF]/50 bg-sky-50 hover:bg-sky-100/80 text-[#06345A] text-sm font-semibold transition-all min-h-[42px] cursor-pointer shadow-2xs"
-              title="Abrir Copiloto de Inventario"
-            >
-              <Sparkles className="w-4 h-4 text-[#1497F2]" />
-              <span>Ayudarme con IA</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setIsAnalisisModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#1497F2]/40 bg-[#1497F2]/10 hover:bg-[#1497F2]/20 text-[#06345A] text-sm font-semibold transition-all min-h-[42px] cursor-pointer shadow-2xs hover:shadow-xs"
-            title="Analizar existencias, consumo, márgenes y proveedores con IA"
-          >
-            <Sparkles className="w-4 h-4 text-[#1497F2]" />
-            <span>Analizar inventario con IA</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors min-h-[42px] cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Agregar refacción</span>
-          </button>
-        </div>
+    <section className="space-y-5">
+      {/* Encabezado uniforme TUNNO */}
+      <div className="no-print">
+        <SectionHeader
+          icon={<Package className="w-5 h-5 text-[#1497F2]" />}
+          title="Inventario"
+          description="Control de existencias, stock bajo, movimientos y órdenes de compra."
+          primaryAction={{
+            label: 'Agregar refacción',
+            icon: <Plus className="w-4 h-4" />,
+            onClick: handleOpenAdd,
+          }}
+          secondaryActions={[
+            {
+              label: 'Analizar inventario con IA',
+              icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+              variant: 'ai',
+              onClick: () => setIsAnalisisModalOpen(true),
+            },
+            ...(onOpenCopiloto
+              ? [
+                  {
+                    label: 'Ayudarme con IA',
+                    icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                    variant: 'ai' as const,
+                    onClick: onOpenCopiloto,
+                  },
+                ]
+              : []),
+            {
+              label: 'Nueva orden de compra',
+              icon: <ShoppingCart className="w-4 h-4" />,
+              onClick: () => {
+                if (refacciones.length > 0) {
+                  handleOpenOrdenCompra(refacciones[0]);
+                }
+              },
+            },
+          ]}
+        />
       </div>
 
-      {/* KPI Cards: Valuación e indicadores de rentabilidad */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+      {/* KPI Cards: Valuación discreta e indicadores */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 no-print">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
-            <span>Existencias totales</span>
-            <Package className="w-4 h-4 text-[#1497F2]" />
+            <span>Existencias</span>
+            <Package className="w-3.5 h-3.5 text-[#1497F2]" />
           </div>
-          <div className="text-xl font-bold text-[#06345A]">{totalPiezasEnStock} pzs</div>
-          <div className="text-[11px] text-[#6B7280] mt-0.5">En {refacciones.length} refacciones</div>
+          <div className="text-lg sm:text-xl font-bold text-[#06345A] font-mono">{totalPiezasEnStock} pzs</div>
+          <div className="text-[11px] text-[#6B7280] mt-0.5">{refacciones.length} refacciones</div>
         </div>
 
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Valor al costo</span>
-            <DollarSign className="w-4 h-4 text-slate-500" />
+            <DollarSign className="w-3.5 h-3.5 text-slate-400" />
           </div>
-          <div className="text-xl font-bold text-[#06345A]">
+          <div className="text-lg sm:text-xl font-bold text-[#06345A] font-mono">
             ${valorTotalCosto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">Inversión en almacén</div>
         </div>
 
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
-            <span>Valor a la venta</span>
-            <Tag className="w-4 h-4 text-blue-600" />
+            <span>Valor de venta</span>
+            <Tag className="w-3.5 h-3.5 text-blue-600" />
           </div>
-          <div className="text-xl font-bold text-[#1497F2]">
+          <div className="text-lg sm:text-xl font-bold text-[#1497F2] font-mono">
             ${valorTotalVenta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[11px] text-blue-600 font-medium mt-0.5">Precio de mostrador</div>
+          <div className="text-[11px] text-blue-600 font-medium mt-0.5">+${gananciaPotencialTotal.toLocaleString('es-MX', { minimumFractionDigits: 0 })} margen</div>
         </div>
 
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
-          <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
-            <span>Ganancia estimada</span>
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-xl font-bold text-emerald-600">
-            ${gananciaPotencialTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-          </div>
-          <div className="text-[11px] text-emerald-700 font-medium mt-0.5">Utilidad potencial</div>
-        </div>
-
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-2xs">
+        <div className={`bg-white border ${lowStockCount > 0 ? 'border-amber-200' : 'border-[#E5E7EB]'} rounded-xl p-3.5 shadow-xs`}>
           <div className="flex items-center justify-between text-[#6B7280] text-xs font-medium mb-1">
             <span>Stock bajo</span>
-            <AlertTriangle className={`w-4 h-4 ${lowStockCount > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+            <AlertTriangle className={`w-3.5 h-3.5 ${lowStockCount > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
           </div>
-          <div className={`text-xl font-bold ${lowStockCount > 0 ? 'text-amber-600' : 'text-[#06345A]'}`}>
-            {lowStockCount}
+          <div className={`text-lg sm:text-xl font-bold font-mono ${lowStockCount > 0 ? 'text-amber-700' : 'text-[#06345A]'}`}>
+            {lowStockCount} items
           </div>
           <div className="text-[11px] text-[#6B7280] mt-0.5">Por debajo del mínimo</div>
         </div>
       </div>
 
-      {/* Tabs: Refacciones vs Órdenes de compra */}
-      <div className="flex border-b border-[#E5E7EB] text-sm font-semibold gap-2">
-        <button
-          type="button"
-          onClick={() => setActiveMainTab('refacciones')}
-          className={`px-4 py-2.5 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
-            activeMainTab === 'refacciones'
-              ? 'border-[#1497F2] text-[#1497F2]'
-              : 'border-transparent text-[#6B7280] hover:text-[#06345A]'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>Catálogo de refacciones ({refacciones.length})</span>
-        </button>
+      {/* Barra uniforme de pestañas y búsqueda */}
+      <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4 shadow-xs space-y-3 no-print">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Pestañas: Existencias, Stock bajo, Movimientos, Órdenes de compra */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setActiveTab('existencias')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'existencias'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>Existencias</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">
+                {refacciones.length}
+              </span>
+            </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveMainTab('ordenes-compra')}
-          className={`px-4 py-2.5 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
-            activeMainTab === 'ordenes-compra'
-              ? 'border-[#1497F2] text-[#1497F2]'
-              : 'border-transparent text-[#6B7280] hover:text-[#06345A]'
-          }`}
-        >
-          <ShoppingCart className="w-4 h-4" />
-          <span>Órdenes de compra ({ordenesCompra.length})</span>
-          {ordenesCompra.filter((o) => o.estado === 'Pendiente').length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white">
-              {ordenesCompra.filter((o) => o.estado === 'Pendiente').length}
-            </span>
-          )}
-        </button>
-      </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('stock-bajo')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'stock-bajo'
+                  ? 'bg-white text-amber-800 shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Stock bajo</span>
+              {lowStockCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
+                  {lowStockCount}
+                </span>
+              )}
+            </button>
 
-      {/* ======================================================== */}
-      {/* VISTA 1: CATÁLOGO DE REFACCIONES */}
-      {/* ======================================================== */}
-      {activeMainTab === 'refacciones' && (
-        <div className="space-y-4">
-          {/* Controls: Search & Stock Filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-            <div className="relative w-full sm:max-w-xs">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <button
+              type="button"
+              onClick={() => setActiveTab('movimientos')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'movimientos'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <History className="w-3.5 h-3.5 text-slate-500" />
+              <span>Movimientos</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">
+                {movimientos.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('ordenes-compra')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'ordenes-compra'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5 text-slate-500" />
+              <span>Órdenes de compra</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">
+                {ordenesCompra.length}
+              </span>
+            </button>
+          </div>
+
+          {/* Buscador + Limpiar filtros */}
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-[220px] flex-1 sm:flex-initial">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por código, nombre, proveedor o modelo..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
+                placeholder={
+                  activeTab === 'movimientos'
+                    ? 'Buscar movimiento...'
+                    : activeTab === 'ordenes-compra'
+                    ? 'Buscar orden de compra...'
+                    : 'Buscar código o refacción...'
+                }
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs text-[#06345A] placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#1497F2] focus:ring-1 focus:ring-[#1497F2] transition-all"
               />
             </div>
 
-            <div className="flex gap-1 bg-white p-1 rounded-lg border border-[#E5E7EB] text-xs font-medium">
+            {isAnyFilterActive && (
               <button
                 type="button"
-                onClick={() => setFilterStock('todas')}
-                className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-                  filterStock === 'todas'
-                    ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                    : 'text-[#6B7280] hover:text-[#06345A]'
-                }`}
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer shrink-0"
               >
-                Todas ({refacciones.length})
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Limpiar filtros</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setFilterStock('stock-bajo')}
-                className={`px-3.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-                  filterStock === 'stock-bajo'
-                    ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                    : 'text-[#6B7280] hover:text-[#06345A]'
-                }`}
-              >
-                Stock bajo ({lowStockCount})
-              </button>
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* Table / Cards */}
-          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden no-print">
-            {/* Desktop View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="py-3 px-4">Código / Refacción</th>
-                    <th className="py-3 px-3 text-center">Stock</th>
-                    <th className="py-3 px-4 text-right">Compra / Venta</th>
-                    <th className="py-3 px-4 text-right">Ganancia / Pza</th>
-                    <th className="py-3 px-4">Proveedor / Entrega</th>
-                    <th className="py-3 px-4">Compatibilidad</th>
-                    <th className="py-3 px-4 text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredRefacciones.length > 0 ? (
-                    filteredRefacciones.map((ref) => {
+        {/* Resumen de conteo */}
+        <div className="text-[11px] text-[#6B7280] pt-1 border-t border-slate-100 flex items-center justify-between">
+          <span>
+            {activeTab === 'movimientos'
+              ? `Mostrando ${filteredMovimientos.length} de ${movimientos.length} movimientos`
+              : activeTab === 'ordenes-compra'
+              ? `Mostrando ${ordenesCompra.length} órdenes de compra`
+              : `Mostrando ${filteredRefacciones.length} de ${refacciones.length} refacciones`}
+          </span>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* VISTA 1 Y 2: EXISTENCIAS Y STOCK BAJO */}
+      {/* ======================================================== */}
+      {(activeTab === 'existencias' || activeTab === 'stock-bajo') && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden no-print">
+          {filteredRefacciones.length > 0 ? (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                      <th className="py-3.5 px-4">Código</th>
+                      <th className="py-3.5 px-4">Nombre</th>
+                      <th className="py-3.5 px-3 text-center">Existencia actual</th>
+                      <th className="py-3.5 px-3 text-center">Mínimo</th>
+                      <th className="py-3.5 px-4 text-right">Precio</th>
+                      <th className="py-3.5 px-4 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredRefacciones.map((ref) => {
                       const isLowStock = ref.existencias < ref.minimo;
                       const compra = ref.precioCompra || ref.costoUnitario || 0;
                       const venta = ref.precioVenta || compra * 1.4;
-                      const ganancia = Math.max(0, venta - compra);
                       const isMenuOpen = openMenuId === ref.id;
 
                       return (
                         <tr key={ref.id} className="hover:bg-slate-50/70 transition-colors">
+                          {/* Código */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded text-xs border border-emerald-200">
+                              {ref.codigo}
+                            </span>
+                          </td>
+
+                          {/* Nombre */}
                           <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-200">
-                                {ref.codigo}
-                              </span>
-                              {isLowStock ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                                  <AlertTriangle className="w-3 h-3 text-amber-600" />
-                                  <span>Stock bajo</span>
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">
-                                  Normal
-                                </span>
-                              )}
-                            </div>
                             <div className="font-semibold text-slate-900 text-xs">{ref.nombre}</div>
-                          </td>
-
-                          <td className="py-3.5 px-3 text-center">
-                            <div className={`font-bold text-sm ${isLowStock ? 'text-amber-700' : 'text-slate-900'}`}>
-                              {ref.existencias} pzs
-                            </div>
-                            <div className="text-[10px] text-slate-400">Mín: {ref.minimo} pzs</div>
-                          </td>
-
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="font-mono text-slate-600">Compra: ${compra.toFixed(2)}</div>
-                            <div className="font-mono font-bold text-[#1497F2]">Venta: ${venta.toFixed(2)}</div>
-                          </td>
-
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="font-mono font-bold text-emerald-700">+${ganancia.toFixed(2)}</div>
-                            <div className="text-[10px] text-emerald-600">
-                              {compra > 0 ? `${Math.round((ganancia / compra) * 100)}% margen` : ''}
-                            </div>
-                          </td>
-
-                          <td className="py-3.5 px-4">
-                            <div className="font-medium text-slate-800">{ref.proveedor || 'Sin proveedor'}</div>
-                            <div className="text-[11px] text-slate-500">
-                              {ref.telefonoProveedor ? `${ref.telefonoProveedor} · ` : ''}
-                              Entrega: {ref.diasEntregaEstimados || 2} días
-                            </div>
-                          </td>
-
-                          <td className="py-3.5 px-4 max-w-[180px]">
-                            {ref.compatibilidad ? (
-                              <div className="truncate text-slate-700 font-medium" title={ref.compatibilidad}>
-                                <Car className="w-3 h-3 text-slate-400 inline mr-1" />
-                                <span>{ref.compatibilidad}</span>
+                            {ref.compatibilidad && (
+                              <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-xs" title={ref.compatibilidad}>
+                                {ref.compatibilidad}
                               </div>
-                            ) : (
-                              <span className="text-slate-400 italic">Universal / No especificada</span>
                             )}
                           </td>
 
+                          {/* Existencia actual */}
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5">
+                              <span className={`font-bold text-sm ${isLowStock ? 'text-amber-700' : 'text-slate-900'}`}>
+                                {ref.existencias} pzs
+                              </span>
+                              {isLowStock && (
+                                <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-800 border border-amber-200" title="Stock por debajo del mínimo">
+                                  Bajo
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Mínimo */}
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap text-slate-600 font-mono">
+                            {ref.minimo} pzs
+                          </td>
+
+                          {/* Precio */}
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <div className="font-mono font-bold text-[#1497F2] text-xs">
+                              ${venta.toFixed(2)}
+                            </div>
+                            <div className="font-mono text-[10px] text-slate-400">
+                              Costo: ${compra.toFixed(2)}
+                            </div>
+                          </td>
+
+                          {/* Acciones */}
                           <td className="py-3.5 px-4 text-right whitespace-nowrap">
                             <div className="inline-flex items-center gap-1.5">
                               <button
                                 type="button"
-                                onClick={() => handleOpenOrdenCompra(ref)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1497F2] font-semibold rounded-lg text-xs transition-colors cursor-pointer"
-                                title="Generar orden de compra"
+                                onClick={() => setSelectedRefaccionDetail(ref)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#06345A] border border-[#73C7FF]/60 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                                title="Ver detalle de refacción"
                               >
-                                <ShoppingCart className="w-3.5 h-3.5" />
-                                <span>Comprar</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEdit(ref)}
-                                className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                                title="Editar refacción"
-                              >
-                                <Pencil className="w-4 h-4" />
+                                <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
+                                <span>Ver detalle</span>
                               </button>
 
                               <div className="relative">
                                 <button
                                   type="button"
                                   onClick={() => setOpenMenuId(isMenuOpen ? null : ref.id)}
-                                  className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
                                   title="Más opciones"
                                 >
                                   <MoreVertical className="w-4 h-4" />
@@ -806,34 +832,51 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                                 {isMenuOpen && (
                                   <>
                                     <div className="fixed inset-0 z-20" onClick={() => setOpenMenuId(null)} />
-                                    <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium">
+                                    <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1 text-left text-xs font-medium animate-in fade-in duration-100">
                                       <button
                                         type="button"
-                                        onClick={() => handleOpenMovementModal(ref, 'Entrada')}
-                                        className="w-full px-3 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          setOpenMenuId(null);
+                                          handleOpenMovementModal(ref, 'Entrada');
+                                        }}
+                                        className="w-full px-3 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 cursor-pointer"
                                       >
                                         <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
                                         <span>Registrar entrada</span>
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => handleOpenMovementModal(ref, 'Salida')}
-                                        className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          setOpenMenuId(null);
+                                          handleOpenMovementModal(ref, 'Salida');
+                                        }}
+                                        className="w-full px-3 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
                                       >
                                         <ArrowUpRight className="w-4 h-4 text-rose-600" />
                                         <span>Registrar salida</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenMenuId(null);
+                                          handleOpenOrdenCompra(ref);
+                                        }}
+                                        className="w-full px-3 py-2 text-[#1497F2] hover:bg-sky-50 flex items-center gap-2 cursor-pointer"
+                                      >
+                                        <ShoppingCart className="w-4 h-4 text-[#1497F2]" />
+                                        <span>Pedir orden de compra</span>
                                       </button>
                                       <div className="border-t border-slate-100 my-1" />
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          setViewingHistoryRefaccion(ref);
                                           setOpenMenuId(null);
+                                          handleOpenEdit(ref);
                                         }}
-                                        className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                        className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                                       >
-                                        <History className="w-4 h-4 text-slate-500" />
-                                        <span>Ver movimientos</span>
+                                        <Pencil className="w-4 h-4 text-slate-400" />
+                                        <span>Editar refacción</span>
                                       </button>
                                     </div>
                                   </>
@@ -843,26 +886,17 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                           </td>
                         </tr>
                       );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400">
-                        No se encontraron refacciones.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Mobile View */}
-            <div className="lg:hidden divide-y divide-slate-100">
-              {filteredRefacciones.length > 0 ? (
-                filteredRefacciones.map((ref) => {
+              {/* Mobile View */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredRefacciones.map((ref) => {
                   const isLowStock = ref.existencias < ref.minimo;
                   const compra = ref.precioCompra || ref.costoUnitario || 0;
                   const venta = ref.precioVenta || compra * 1.4;
-                  const ganancia = Math.max(0, venta - compra);
 
                   return (
                     <div key={ref.id} className="p-4 space-y-3">
@@ -879,102 +913,143 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                             )}
                           </div>
                           <h4 className="font-bold text-slate-900 text-sm">{ref.nombre}</h4>
-                          {ref.compatibilidad && (
-                            <p className="text-xs text-slate-500 mt-0.5">
-                              <Car className="w-3 h-3 text-slate-400 inline mr-1" />
-                              {ref.compatibilidad}
-                            </p>
-                          )}
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => handleOpenOrdenCompra(ref)}
-                          className="px-3 py-1.5 bg-blue-50 text-[#1497F2] font-semibold rounded-lg text-xs shrink-0 flex items-center gap-1"
+                          onClick={() => setSelectedRefaccionDetail(ref)}
+                          className="px-3 py-1.5 bg-sky-50 text-[#1497F2] font-semibold rounded-lg text-xs shrink-0 flex items-center gap-1 cursor-pointer"
                         >
-                          <ShoppingCart className="w-3.5 h-3.5" />
-                          <span>Comprar</span>
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Detalle</span>
                         </button>
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs">
                         <div>
-                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Existencias</span>
+                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Existencia</span>
                           <span className={`font-bold ${isLowStock ? 'text-amber-700' : 'text-slate-800'}`}>
                             {ref.existencias} pzs
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Compra / Venta</span>
-                          <span className="font-mono text-slate-800">${compra.toFixed(0)} / ${venta.toFixed(0)}</span>
+                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Mínimo</span>
+                          <span className="text-slate-700 font-mono">{ref.minimo} pzs</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Ganancia</span>
-                          <span className="font-mono font-bold text-emerald-700">+${ganancia.toFixed(0)}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-                        <span>Proveedor: {ref.proveedor || 'Sin proveedor'}</span>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(ref)}
-                            className="text-[#1497F2] font-semibold"
-                          >
-                            Editar
-                          </button>
-                          <span>·</span>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenMovementModal(ref, 'Entrada')}
-                            className="text-emerald-700 font-semibold"
-                          >
-                            +Entrada
-                          </button>
+                          <span className="text-[10px] text-slate-400 block uppercase font-bold">Precio</span>
+                          <span className="font-mono font-bold text-[#1497F2]">${venta.toFixed(0)}</span>
                         </div>
                       </div>
                     </div>
                   );
-                })
-              ) : (
-                <div className="p-6 text-center text-xs text-slate-400">
-                  No se encontraron refacciones.
-                </div>
-              )}
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="p-8">
+              <EmptyState
+                icon={<Package className="w-8 h-8 text-[#1497F2]" />}
+                title={activeTab === 'stock-bajo' ? 'Niveles de stock óptimos' : 'No se encontraron refacciones'}
+                description={
+                  activeTab === 'stock-bajo'
+                    ? 'No hay piezas con existencias por debajo del mínimo en este momento.'
+                    : searchQuery
+                    ? 'No hay registros que coincidan con la búsqueda ingresada.'
+                    : 'Registra tus refacciones para controlar inventario, costos y compras.'
+                }
+                action={
+                  activeTab !== 'stock-bajo'
+                    ? {
+                        label: 'Agregar refacción',
+                        onClick: handleOpenAdd,
+                        icon: <Plus className="w-4 h-4" />,
+                      }
+                    : undefined
+                }
+              />
             </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* VISTA 2: ÓRDENES DE COMPRA */}
+      {/* VISTA 3: MOVIMIENTOS HISTÓRICOS */}
       {/* ======================================================== */}
-      {activeMainTab === 'ordenes-compra' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-bold text-[#06345A]">Órdenes de compra a proveedores</h3>
-              <p className="text-xs text-[#6B7280]">
-                Genera solicitudes de reabastecimiento y regístralas al inventario en un solo clic al recibirlas.
-              </p>
+      {activeTab === 'movimientos' && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden no-print">
+          {filteredMovimientos.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                    <th className="py-3.5 px-4">Tipo</th>
+                    <th className="py-3.5 px-4">Fecha y hora</th>
+                    <th className="py-3.5 px-4">Refacción</th>
+                    <th className="py-3.5 px-3 text-center">Cantidad</th>
+                    <th className="py-3.5 px-4">Motivo / Observación</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredMovimientos.map((m) => {
+                    const ref = refaccionMap.get(m.refaccionId);
+                    return (
+                      <tr key={m.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              m.tipo === 'Entrada'
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-800 border border-rose-200'
+                            }`}
+                          >
+                            {m.tipo === 'Entrada' ? (
+                              <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <ArrowUpRight className="w-3.5 h-3.5 text-rose-600" />
+                            )}
+                            <span>{m.tipo}</span>
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 whitespace-nowrap text-slate-500 font-mono">
+                          {m.fechaHora}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-slate-900">{ref ? ref.nombre : 'Refacción'}</div>
+                          {ref && (
+                            <span className="font-mono text-[10px] text-slate-400">{ref.codigo}</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-3 text-center font-bold text-slate-800 font-mono whitespace-nowrap">
+                          {m.tipo === 'Entrada' ? `+${m.cantidad}` : `-${m.cantidad}`} pzs
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600">
+                          {m.motivo || 'Movimiento de inventario'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+          ) : (
+            <div className="p-8">
+              <EmptyState
+                icon={<History className="w-8 h-8 text-slate-400" />}
+                title="Sin movimientos registrados"
+                description="Los registros de entrada y salida de refacciones aparecerán listados aquí."
+              />
+            </div>
+          )}
+        </div>
+      )}
 
-            <button
-              type="button"
-              onClick={() => {
-                if (refacciones.length > 0) {
-                  handleOpenOrdenCompra(refacciones[0]);
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1497F2] hover:bg-[#06345A] text-white rounded-lg text-xs font-semibold cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nueva orden de compra</span>
-            </button>
-          </div>
-
-          <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden">
+      {/* ======================================================== */}
+      {/* VISTA 4: ÓRDENES DE COMPRA */}
+      {/* ======================================================== */}
+      {activeTab === 'ordenes-compra' && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-xs overflow-hidden no-print">
+          {ordenesCompra.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-[#06345A]">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
@@ -990,74 +1065,270 @@ export const InventarioSection: React.FC<InventarioSectionProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {ordenesCompra.length > 0 ? (
-                    ordenesCompra.map((oc) => (
-                      <tr key={oc.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1497F2]">{oc.folio}</td>
-                        <td className="py-3.5 px-4">
-                          <div className="font-semibold text-slate-900">{oc.refaccionNombre}</div>
-                          {oc.refaccionCodigo && (
-                            <span className="font-mono text-[10px] text-slate-500">{oc.refaccionCodigo}</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-slate-800">
-                          {oc.cantidad} pzs
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="font-medium text-slate-800">{oc.proveedor}</div>
-                          {oc.telefonoProveedor && (
-                            <div className="text-[11px] text-slate-500">{oc.telefonoProveedor}</div>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-600">{oc.fecha}</td>
-                        <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
-                          ${oc.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                              oc.estado === 'Recibida'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                : 'bg-amber-50 text-amber-800 border-amber-200'
-                            }`}
-                          >
-                            {oc.estado === 'Recibida' ? (
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            ) : (
-                              <Clock className="w-3 h-3 text-amber-600" />
-                            )}
-                            <span>{oc.estado}</span>
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          {oc.estado === 'Pendiente' ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onMarcarOrdenCompraRecibida) {
-                                  onMarcarOrdenCompraRecibida(oc.id);
-                                }
-                              }}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Marcar recibida</span>
-                            </button>
+                  {ordenesCompra.map((oc) => (
+                    <tr key={oc.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#1497F2]">{oc.folio}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-slate-900">{oc.refaccionNombre}</div>
+                        {oc.refaccionCodigo && (
+                          <span className="font-mono text-[10px] text-slate-500">{oc.refaccionCodigo}</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-center font-bold text-slate-800">
+                        {oc.cantidad} pzs
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-medium text-slate-800">{oc.proveedor}</div>
+                        {oc.telefonoProveedor && (
+                          <div className="text-[11px] text-slate-500">{oc.telefonoProveedor}</div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-600">{oc.fecha}</td>
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900">
+                        ${oc.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                            oc.estado === 'Recibida'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-amber-50 text-amber-800 border-amber-200'
+                          }`}
+                        >
+                          {oc.estado === 'Recibida' ? (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           ) : (
-                            <span className="text-[11px] text-slate-400 italic">Ingresada a stock</span>
+                            <Clock className="w-3 h-3 text-amber-600" />
                           )}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="py-8 text-center text-slate-400">
-                        No hay órdenes de compra registradas. Puedes generar una orden desde cualquier refacción con el botón "Comprar".
+                          <span>{oc.estado}</span>
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        {oc.estado === 'Pendiente' ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onMarcarOrdenCompraRecibida) {
+                                onMarcarOrdenCompraRecibida(oc.id);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Marcar recibida</span>
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">Ingresada a stock</span>
+                        )}
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
+            </div>
+          ) : (
+            <div className="p-8">
+              <EmptyState
+                icon={<ShoppingCart className="w-8 h-8 text-[#1497F2]" />}
+                title="Sin órdenes de compra"
+                description="Genera órdenes de compra a tus proveedores para reabastecer refacciones con stock bajo."
+                action={{
+                  label: 'Nueva orden de compra',
+                  onClick: () => {
+                    if (refacciones.length > 0) {
+                      handleOpenOrdenCompra(refacciones[0]);
+                    }
+                  },
+                  icon: <Plus className="w-4 h-4" />,
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL: VER DETALLE DE REFACCIÓN */}
+      {/* ======================================================== */}
+      {selectedRefaccionDetail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 no-print"
+          onClick={detailDismiss.handleBackdropClick}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-sky-50 text-[#1497F2] border border-[#73C7FF]/40 flex items-center justify-center font-bold">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#06345A] font-heading">
+                    {selectedRefaccionDetail.nombre}
+                  </h3>
+                  <p className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mt-0.5">
+                    {selectedRefaccionDetail.codigo}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={detailDismiss.handleClose}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+              {/* Existencias y Stock */}
+              <div className="grid grid-cols-3 gap-2 text-center bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Existencias</span>
+                  <span className={`text-base font-bold ${selectedRefaccionDetail.existencias < selectedRefaccionDetail.minimo ? 'text-amber-700' : 'text-slate-800'}`}>
+                    {selectedRefaccionDetail.existencias} pzs
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Mínimo</span>
+                  <span className="text-base font-bold text-slate-800">{selectedRefaccionDetail.minimo} pzs</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Precio venta</span>
+                  <span className="text-base font-bold text-[#1497F2]">
+                    ${(selectedRefaccionDetail.precioVenta || (selectedRefaccionDetail.precioCompra || selectedRefaccionDetail.costoUnitario || 0) * 1.4).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Proveedor y entrega */}
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                <span className="font-semibold text-slate-800 block text-xs">Datos de proveedor y entrega:</span>
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                  <div>
+                    <span className="text-slate-400 block">Proveedor:</span>
+                    <strong className="text-slate-800">{selectedRefaccionDetail.proveedor || 'Sin proveedor'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block">Teléfono:</span>
+                    <span>{selectedRefaccionDetail.telefonoProveedor || 'No registrado'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block">Tiempo de entrega:</span>
+                    <span>{(selectedRefaccionDetail.diasEntregaEstimados || selectedRefaccionDetail.diasEntrega) ? `${selectedRefaccionDetail.diasEntregaEstimados || selectedRefaccionDetail.diasEntrega} días` : 'Inmediato'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block">Costo de compra:</span>
+                    <span className="font-mono">${(selectedRefaccionDetail.precioCompra || selectedRefaccionDetail.costoUnitario || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Compatibilidad vehicular */}
+              <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                <span className="font-semibold text-slate-800 block text-xs mb-1">Compatibilidad vehicular:</span>
+                <p className="text-slate-600 text-[11px]">
+                  {selectedRefaccionDetail.compatibilidad || 'Compatible con múltiples modelos genéricos.'}
+                </p>
+              </div>
+
+              {/* Historial reciente de movimientos */}
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-800 text-xs">Historial de movimientos:</span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {movimientos.filter((m) => m.refaccionId === selectedRefaccionDetail.id).length} movimientos
+                  </span>
+                </div>
+                {movimientos.filter((m) => m.refaccionId === selectedRefaccionDetail.id).length > 0 ? (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                    {movimientos
+                      .filter((m) => m.refaccionId === selectedRefaccionDetail.id)
+                      .slice(0, 5)
+                      .map((m) => (
+                        <div key={m.id} className="p-2 bg-slate-50 rounded border border-slate-100 flex items-center justify-between text-[11px]">
+                          <div className="flex items-center gap-1.5">
+                            {m.tipo === 'Entrada' ? (
+                              <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <ArrowUpRight className="w-3.5 h-3.5 text-rose-600" />
+                            )}
+                            <span className="font-medium text-slate-800">{m.tipo}: {m.cantidad} pzs</span>
+                            <span className="text-slate-400 text-[10px]">• {m.motivo}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">{m.fechaHora}</span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">Sin movimientos recientes registrados.</p>
+                )}
+              </div>
+
+              {/* Accesos rápidos */}
+              <div className="pt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOpenMovementModal(selectedRefaccionDetail, 'Entrada');
+                    setSelectedRefaccionDetail(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Registrar entrada</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOpenMovementModal(selectedRefaccionDetail, 'Salida');
+                    setSelectedRefaccionDetail(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Registrar salida</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOpenOrdenCompra(selectedRefaccionDetail);
+                    setSelectedRefaccionDetail(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-sky-50 hover:bg-sky-100 text-[#06345A] border border-[#73C7FF]/60 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5 text-[#1497F2]" />
+                  <span>Pedir a proveedor</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  const target = selectedRefaccionDetail;
+                  setSelectedRefaccionDetail(null);
+                  handleOpenEdit(target);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Editar refacción</span>
+              </button>
+              <button
+                type="button"
+                onClick={detailDismiss.handleClose}
+                className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

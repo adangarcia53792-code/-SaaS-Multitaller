@@ -24,7 +24,12 @@ import {
   Eye,
   ArrowLeft,
   ArrowRight,
+  RotateCcw,
+  Calendar,
 } from 'lucide-react';
+import { SectionHeader } from './SectionHeader';
+import { EmptyState } from './EmptyState';
+import { RolUsuario } from '../types';
 
 interface CotizacionesSectionProps {
   cotizaciones: Cotizacion[];
@@ -43,6 +48,7 @@ interface CotizacionesSectionProps {
   onNavigateToFacturacion?: (cotizacionId?: string) => void;
   onOpenCrearCotizacionIA?: () => void;
   onOpenCopiloto?: () => void;
+  userRol?: RolUsuario;
 }
 
 type EstadoFilter = 'todas' | 'Por autorizar' | 'Aprobada' | 'Rechazada';
@@ -64,6 +70,7 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
   onNavigateToFacturacion,
   onOpenCrearCotizacionIA,
   onOpenCopiloto,
+  userRol,
 }) => {
   const [filter, setFilter] = useState<EstadoFilter>('todas');
   const [searchQuery, setSearchQuery] = useState('');
@@ -566,383 +573,457 @@ export const CotizacionesSection: React.FC<CotizacionesSectionProps> = ({
     });
   }, [cotizaciones, filter, searchQuery, clienteMap, vehiculoMap]);
 
+  const showMargen = !userRol || userRol === 'Administrador' || userRol === 'Cotizador';
+
+  const isAnyFilterActive = Boolean(searchQuery.trim() || filter !== 'todas');
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setFilter('todas');
+  };
+
   return (
-    <section className="space-y-6">
-      {/* Encabezado TUNNO para Cotizaciones */}
-      <div className="bg-white border border-[#E5E7EB] border-t-4 border-t-[#1497F2] rounded-xl p-5 md:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#1497F2]/10 border border-[#73C7FF]/40 text-[#1497F2] flex items-center justify-center shrink-0">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[#06345A] font-heading tracking-tight">
-              Cotizaciones
-            </h2>
-            <p className="text-xs md:text-sm text-[#6B7280] mt-0.5">
-              Presupuestos y autorizaciones de servicios y refacciones.
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {onOpenCopiloto && (
-            <button
-              type="button"
-              onClick={onOpenCopiloto}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px] rounded-lg bg-sky-50 hover:bg-sky-100/80 text-[#06345A] border border-[#73C7FF]/50 text-xs md:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
-              title="Abrir Copiloto de Cotizaciones"
-            >
-              <Sparkles className="w-4 h-4 text-[#1497F2]" />
-              <span>Ayudarme con IA</span>
-            </button>
-          )}
-
-          {onOpenCrearCotizacionIA && (
-            <button
-              type="button"
-              onClick={onOpenCrearCotizacionIA}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[42px] rounded-lg bg-gradient-to-r from-[#06345A] to-[#1497F2] hover:opacity-95 text-white text-xs md:text-sm font-semibold shadow-xs transition-all cursor-pointer"
-              title="Crear cotización guiada por IA en 3 propuestas"
-            >
-              <Sparkles className="w-4 h-4 text-[#73C7FF]" />
-              <span>Crear con IA</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1497F2]"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nueva cotización</span>
-          </button>
-        </div>
+    <section className="space-y-5">
+      {/* Encabezado uniforme TUNNO */}
+      <div className="no-print">
+        <SectionHeader
+          icon={<FileText className="w-5 h-5 text-[#1497F2]" />}
+          title="Cotizaciones"
+          description="Presupuestos y autorizaciones de servicios y refacciones."
+          primaryAction={{
+            label: 'Nueva cotización',
+            icon: <Plus className="w-4 h-4" />,
+            onClick: handleOpenAdd,
+          }}
+          secondaryActions={[
+            ...(onOpenCrearCotizacionIA
+              ? [
+                  {
+                    label: 'Crear propuesta con IA',
+                    icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                    variant: 'ai' as const,
+                    onClick: onOpenCrearCotizacionIA,
+                  },
+                ]
+              : []),
+            ...(onOpenCopiloto
+              ? [
+                  {
+                    label: 'Ayudarme con IA',
+                    icon: <Sparkles className="w-4 h-4 text-[#1497F2]" />,
+                    variant: 'ai' as const,
+                    onClick: onOpenCopiloto,
+                  },
+                ]
+              : []),
+          ]}
+        />
       </div>
 
-      {/* Controls: Search & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por folio, cliente o placas..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:ring-2 focus:ring-[#1497F2]/20 transition-all"
-          />
+      {/* Barra uniforme de búsqueda y filtros */}
+      <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4 shadow-xs space-y-3 no-print">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Pestañas de estado */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setFilter('todas')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                filter === 'todas'
+                  ? 'bg-white text-[#06345A] shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              Todas ({cotizaciones.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('Por autorizar')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                filter === 'Por autorizar'
+                  ? 'bg-white text-amber-700 shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              Por autorizar ({cotizaciones.filter((c) => c.estado === 'Por autorizar').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('Aprobada')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                filter === 'Aprobada'
+                  ? 'bg-white text-emerald-700 shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              Aprobadas ({cotizaciones.filter((c) => c.estado === 'Aprobada').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('Rechazada')}
+              className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                filter === 'Rechazada'
+                  ? 'bg-white text-rose-700 shadow-xs font-bold'
+                  : 'text-[#6B7280] hover:text-[#06345A]'
+              }`}
+            >
+              Rechazadas ({cotizaciones.filter((c) => c.estado === 'Rechazada').length})
+            </button>
+          </div>
+
+          {/* Buscador + Limpiar filtros */}
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-[220px]">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por folio, cliente o placas..."
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-[#E5E7EB] rounded-lg text-xs sm:text-sm text-[#06345A] placeholder-slate-400 focus:outline-none focus:border-[#1497F2] focus:bg-white transition-all"
+              />
+            </div>
+
+            {isAnyFilterActive && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold border border-rose-200 transition-colors cursor-pointer"
+                title="Limpiar filtros activos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Limpiar</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-1 rounded-lg border border-[#E5E7EB] bg-white p-1 text-xs sm:text-sm font-medium">
-          <button
-            type="button"
-            onClick={() => setFilter('todas')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'todas'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Todas
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('Por autorizar')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'Por autorizar'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Por autorizar
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('Aprobada')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'Aprobada'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Aprobadas
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('Rechazada')}
-            className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
-              filter === 'Rechazada'
-                ? 'bg-[#1497F2] text-white shadow-xs font-semibold'
-                : 'text-[#6B7280] hover:text-[#06345A]'
-            }`}
-          >
-            Rechazadas
-          </button>
+        {/* Contador de resultados */}
+        <div className="flex items-center justify-between text-xs text-[#6B7280] pt-1 border-t border-slate-100">
+          <span>
+            Mostrando <strong className="text-[#06345A] font-semibold">{filteredCotizaciones.length}</strong>{' '}
+            {filteredCotizaciones.length === 1 ? 'cotización' : 'cotizaciones'}
+          </span>
         </div>
       </div>
 
       {/* Table & Mobile View */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden no-print">
-        {/* Desktop View */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-5">Folio</th>
-                <th className="py-3.5 px-5">Cliente y vehículo</th>
-                <th className="py-3.5 px-5">Trabajo solicitado</th>
-                <th className="py-3.5 px-5">Total en MXN</th>
-                <th className="py-3.5 px-5">Estado</th>
-                <th className="py-3.5 px-5 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredCotizaciones.length > 0 ? (
-                filteredCotizaciones.map((cot) => {
-                  const client = clienteMap.get(cot.clienteId);
-                  const veh = vehiculoMap.get(cot.vehiculoId);
-                  const linkedOrden = cot.ordenId
-                    ? ordenMap.get(cot.ordenId)
-                    : ordenes.find((o) => o.cotizacionId === cot.id);
-                  const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
+        {filteredCotizaciones.length > 0 ? (
+          <>
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                    <th className="py-3 px-5">Folio</th>
+                    <th className="py-3 px-5">Cliente y vehículo</th>
+                    <th className="py-3 px-5">Trabajo solicitado</th>
+                    <th className="py-3 px-5">Total</th>
+                    {showMargen && <th className="py-3 px-5">Margen</th>}
+                    <th className="py-3 px-5">Estado</th>
+                    <th className="py-3 px-5">Vigencia</th>
+                    <th className="py-3 px-5 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredCotizaciones.map((cot) => {
+                    const client = clienteMap.get(cot.clienteId);
+                    const veh = vehiculoMap.get(cot.vehiculoId);
+                    const linkedOrden = cot.ordenId
+                      ? ordenMap.get(cot.ordenId)
+                      : ordenes.find((o) => o.cotizacionId === cot.id);
+                    const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
 
-                  return (
-                    <tr key={cot.id} className="hover:bg-slate-50/70 transition-colors">
-                      {/* Folio */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
+                    // Margen estimado
+                    const margenPct = cot.margenEstimadoPorcentaje !== undefined
+                      ? `${cot.margenEstimadoPorcentaje.toFixed(0)}%`
+                      : cot.costoEstimadoCompra && cot.total > 0
+                      ? `${Math.round(((cot.total - cot.costoEstimadoCompra) / cot.total) * 100)}%`
+                      : '35%';
+
+                    // Vigencia: 15 días desde la fecha de creación
+                    const fechaCreacion = new Date(cot.creadoEn || Date.now());
+                    const fechaVigencia = new Date(fechaCreacion.getTime() + 15 * 24 * 60 * 60 * 1000);
+                    const esVencida = Date.now() > fechaVigencia.getTime() && cot.estado === 'Por autorizar';
+
+                    return (
+                      <tr key={cot.id} className="hover:bg-slate-50/70 transition-colors">
+                        {/* Folio */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
                           <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded text-xs border border-purple-200">
                             {cot.folio}
                           </span>
-                        </div>
-                        {linkedOrden && (
-                          <div className="text-[11px] text-amber-700 font-mono mt-1 flex items-center gap-1">
-                            <LinkIcon className="w-3 h-3 text-amber-600" />
-                            <span>{linkedOrden.folio}</span>
-                          </div>
-                        )}
-                      </td>
+                          {linkedOrden && (
+                            <div className="text-[11px] text-amber-700 font-mono mt-1 flex items-center gap-1">
+                              <LinkIcon className="w-3 h-3 text-amber-600" />
+                              <span>{linkedOrden.folio}</span>
+                            </div>
+                          )}
+                        </td>
 
-                      {/* Cliente y vehículo */}
-                      <td className="py-3.5 px-5">
-                        <div className="font-medium text-[#06345A]">
-                          {client ? client.nombre : 'Cliente no encontrado'}
-                        </div>
-                        <div className="text-xs text-[#6B7280] mt-0.5">
-                          {veh ? (
-                            <span>
-                              {veh.marca} {veh.modelo}{' '}
-                              <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#E5E7EB]">
-                                {veh.placas}
-                              </strong>
+                        {/* Cliente y vehículo */}
+                        <td className="py-3.5 px-5">
+                          <div className="font-semibold text-[#06345A]">
+                            {client ? client.nombre : 'Cliente no encontrado'}
+                          </div>
+                          <div className="text-xs text-[#6B7280] mt-0.5">
+                            {veh ? (
+                              <span>
+                                {veh.marca} {veh.modelo}{' '}
+                                <strong className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px] border border-[#E5E7EB]">
+                                  {veh.placas}
+                                </strong>
+                              </span>
+                            ) : (
+                              'Vehículo no registrado'
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Trabajo solicitado */}
+                        <td className="py-3.5 px-5 text-[#06345A] max-w-xs">
+                          <span className="line-clamp-2">{cot.descripcion}</span>
+                        </td>
+
+                        {/* Total */}
+                        <td className="py-3.5 px-5 whitespace-nowrap font-bold text-[#06345A]">
+                          ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+                        </td>
+
+                        {/* Margen (solo perfiles autorizados) */}
+                        {showMargen && (
+                          <td className="py-3.5 px-5 whitespace-nowrap">
+                            <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-sky-50 text-[#1497F2] border border-sky-200">
+                              {margenPct}
+                            </span>
+                          </td>
+                        )}
+
+                        {/* Estado */}
+                        <td className="py-3.5 px-5 whitespace-nowrap">
+                          {cot.estado === 'Por autorizar' && (
+                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                              Por autorizar
+                            </span>
+                          )}
+                          {cot.estado === 'Aprobada' && (
+                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Aprobada
+                            </span>
+                          )}
+                          {cot.estado === 'Rechazada' && (
+                            <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              Rechazada
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Vigencia */}
+                        <td className="py-3.5 px-5 whitespace-nowrap text-xs">
+                          {esVencida ? (
+                            <span className="text-rose-600 font-semibold flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                              Vencida
                             </span>
                           ) : (
-                            'Vehículo no registrado'
+                            <span className="text-[#6B7280]">
+                              15 días ({fechaVigencia.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })})
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Acciones */}
+                        <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            {/* Acción destacada cuando está aprobada */}
+                            {cot.estado === 'Aprobada' && (
+                              <>
+                                {!linkedOrden ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => onCreateOrdenFromCotizacion(cot)}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1497F2] hover:bg-[#06345A] text-white shadow-xs transition-colors cursor-pointer"
+                                    title="Generar orden de trabajo a partir de esta cotización"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>Generar orden</span>
+                                  </button>
+                                ) : !facturaVinculada ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => onNavigateToFacturacion?.(cot.id)}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
+                                    title="Generar comprobante administrativo para esta cotización aprobada"
+                                  >
+                                    <Receipt className="w-3.5 h-3.5" />
+                                    <span>Generar factura</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                                    Facturada ({facturaVinculada.folio})
+                                  </span>
+                                )}
+                              </>
+                            )}
+
+                            {/* Botón visible Ver */}
+                            <button
+                              type="button"
+                              onClick={() => setPrintingCotizacion(cot)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                              title={`Ver detalle formal de ${cot.folio}`}
+                            >
+                              <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
+                              <span>Ver</span>
+                            </button>
+
+                            {/* Menú de tres puntos */}
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleMenu(e, cot)}
+                              className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                                activeMenu?.cotizacion.id === cot.id
+                                  ? 'bg-slate-200 text-slate-900'
+                                  : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
+                              }`}
+                              title="Más opciones"
+                              aria-label={`Más opciones para ${cot.folio}`}
+                              aria-haspopup="menu"
+                              aria-expanded={activeMenu?.cotizacion.id === cot.id}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Block View: Bloques legibles sin scroll horizontal */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {filteredCotizaciones.map((cot) => {
+                const client = clienteMap.get(cot.clienteId);
+                const veh = vehiculoMap.get(cot.vehiculoId);
+                const linkedOrden = cot.ordenId
+                  ? ordenMap.get(cot.ordenId)
+                  : ordenes.find((o) => o.cotizacionId === cot.id);
+                const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
+
+                return (
+                  <div key={cot.id} className="p-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-xs border border-purple-200">
+                            {cot.folio}
+                          </span>
+                          {cot.estado === 'Por autorizar' && (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                              Por autorizar
+                            </span>
+                          )}
+                          {cot.estado === 'Aprobada' && (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Aprobada
+                            </span>
+                          )}
+                          {cot.estado === 'Rechazada' && (
+                            <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                              Rechazada
+                            </span>
                           )}
                         </div>
-                      </td>
-
-                      {/* Trabajo solicitado */}
-                      <td className="py-3.5 px-5 text-[#06345A] max-w-xs">
-                        <span className="line-clamp-2">{cot.descripcion}</span>
-                      </td>
-
-                      {/* Total */}
-                      <td className="py-3.5 px-5 whitespace-nowrap font-semibold text-[#06345A]">
-                        ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
-                      </td>
-
-                      {/* Estado */}
-                      <td className="py-3.5 px-5 whitespace-nowrap">
-                        {cot.estado === 'Por autorizar' && (
-                          <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                            Por autorizar
-                          </span>
-                        )}
-                        {cot.estado === 'Aprobada' && (
-                          <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Aprobada
-                          </span>
-                        )}
-                        {cot.estado === 'Rechazada' && (
-                          <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                            Rechazada
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Acciones */}
-                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-2">
-                          {/* Botón visible Ver detalle / imprimir */}
-                          <button
-                            type="button"
-                            onClick={() => setPrintingCotizacion(cot)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] text-xs font-semibold text-[#06345A] bg-sky-50 hover:bg-sky-100 border border-[#73C7FF]/50 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                            title={`Ver detalle formal de ${cot.folio}`}
-                          >
-                            <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
-                            <span>Ver</span>
-                          </button>
-
-                          {/* Menú de tres puntos (desplegable sobre los demás elementos) */}
-                          <button
-                            type="button"
-                            onClick={(e) => handleToggleMenu(e, cot)}
-                            className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                              activeMenu?.cotizacion.id === cot.id
-                                ? 'bg-slate-200 text-slate-900'
-                                : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
-                            }`}
-                            title="Más opciones"
-                            aria-label={`Más opciones para ${cot.folio}`}
-                            aria-haspopup="menu"
-                            aria-expanded={activeMenu?.cotizacion.id === cot.id}
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    {searchQuery
-                      ? 'No se encontraron cotizaciones que coincidan con la búsqueda.'
-                      : filter !== 'todas'
-                      ? `No hay cotizaciones con estado "${filter}".`
-                      : 'No hay cotizaciones registradas.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Block View: Bloques legibles sin scroll horizontal */}
-        <div className="md:hidden divide-y divide-slate-100">
-          {filteredCotizaciones.length > 0 ? (
-            filteredCotizaciones.map((cot) => {
-              const client = clienteMap.get(cot.clienteId);
-              const veh = vehiculoMap.get(cot.vehiculoId);
-              const linkedOrden = cot.ordenId
-                ? ordenMap.get(cot.ordenId)
-                : ordenes.find((o) => o.cotizacionId === cot.id);
-              const facturaVinculada = facturaPorCotizacionMap.get(cot.id);
-
-              return (
-                <div key={cot.id} className="p-4 space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-xs border border-purple-200">
-                          {cot.folio}
-                        </span>
-                        {cot.estado === 'Por autorizar' && (
-                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                            Por autorizar
-                          </span>
-                        )}
-                        {cot.estado === 'Aprobada' && (
-                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Aprobada
-                          </span>
-                        )}
-                        {cot.estado === 'Rechazada' && (
-                          <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                            Rechazada
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-medium text-[#06345A] text-sm">{client?.nombre || 'Cliente no encontrado'}</p>
-                      <p className="text-xs text-[#6B7280] mt-0.5">
-                        {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{cot.descripcion}</p>
-                      <p className="text-sm font-bold text-[#06345A] mt-1.5">
-                        ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
-                      </p>
-                      {linkedOrden && (
-                        <p className="text-xs text-amber-700 font-mono flex items-center gap-1 mt-1">
-                          <LinkIcon className="w-3 h-3 text-amber-600" />
-                          <span>Orden vinculada: {linkedOrden.folio}</span>
+                        <p className="font-semibold text-[#06345A] text-sm">{client?.nombre || 'Cliente'}</p>
+                        <p className="text-xs text-[#6B7280] mt-0.5">
+                          {veh ? `${veh.marca} ${veh.modelo} (${veh.placas})` : 'Vehículo no registrado'}
                         </p>
-                      )}
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2">{cot.descripcion}</p>
+                        <p className="text-sm font-bold text-[#06345A] mt-1.5">
+                          ${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                      {/* Botón Revisar con IA */}
-                      <button
-                        type="button"
-                        onClick={() => setAnalizandoCotizacion(cot)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors cursor-pointer shadow-xs"
-                        title={`Revisar cotización ${cot.folio} con IA`}
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                        <span>Revisar con IA</span>
-                      </button>
+                    {/* Acciones principales móviles */}
+                    <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 flex-wrap">
+                      {/* Destacar acción si está aprobada */}
+                      {cot.estado === 'Aprobada' && !linkedOrden && (
+                        <button
+                          type="button"
+                          onClick={() => onCreateOrdenFromCotizacion(cot)}
+                          className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-lg bg-[#1497F2] text-white shadow-xs"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Generar orden</span>
+                        </button>
+                      )}
 
-                      {cot.estado === 'Aprobada' && (
+                      {cot.estado === 'Aprobada' && linkedOrden && !facturaVinculada && (
                         <button
                           type="button"
                           onClick={() => onNavigateToFacturacion?.(cot.id)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs ${
-                            facturaVinculada
-                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                              : 'bg-[#1497F2] hover:bg-[#06345A] text-white'
-                          }`}
-                          title={
-                            facturaVinculada
-                              ? `Factura emitida ${facturaVinculada.folio}. Clic para ver comprobante.`
-                              : `Generar comprobante administrativo para ${cot.folio}`
-                          }
+                          className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow-xs"
                         >
                           <Receipt className="w-3.5 h-3.5" />
-                          <span>{facturaVinculada ? `Factura ${facturaVinculada.folio}` : 'Generar factura'}</span>
+                          <span>Generar factura</span>
                         </button>
                       )}
 
                       <button
                         type="button"
-                        onClick={() => handleOpenEdit(cot)}
-                        className="inline-flex items-center gap-1 px-3 py-2 min-h-[40px] text-xs font-semibold text-[#06345A] bg-white hover:bg-slate-50 border border-[#E5E7EB] rounded-lg transition-colors cursor-pointer shadow-xs"
+                        onClick={() => setPrintingCotizacion(cot)}
+                        className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-[#06345A] bg-sky-50 border border-sky-200 rounded-lg"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
-                        <span>Editar</span>
+                        <Eye className="w-3.5 h-3.5 text-[#1497F2]" />
+                        <span>Ver</span>
                       </button>
 
-                      {/* Botón trigger para menú de tres puntos móvil (Portal) */}
                       <button
                         type="button"
                         onClick={(e) => handleToggleMenu(e, cot)}
-                        className={`min-w-[40px] min-h-[40px] flex items-center justify-center p-2 rounded-lg transition-colors cursor-pointer ${
-                          activeMenu?.cotizacion.id === cot.id
-                            ? 'bg-slate-200 text-slate-900'
-                            : 'text-[#6B7280] hover:text-[#06345A] hover:bg-slate-100'
-                        }`}
+                        className="p-2 text-slate-500 hover:text-slate-700 bg-slate-50 border border-slate-200 rounded-lg"
                         title="Más opciones"
-                        aria-label={`Más opciones para ${cot.folio}`}
-                        aria-haspopup="menu"
-                        aria-expanded={activeMenu?.cotizacion.id === cot.id}
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="p-6 text-center text-xs text-slate-400">
-              {searchQuery
-                ? 'No se encontraron cotizaciones que coincidan con la búsqueda.'
-                : filter !== 'todas'
-                ? `No hay cotizaciones con estado "${filter}".`
-                : 'No hay cotizaciones registradas.'}
+                );
+              })}
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <EmptyState
+            icon={<FileText className="w-6 h-6 text-slate-400" />}
+            title={
+              isAnyFilterActive
+                ? 'No se encontraron cotizaciones con los filtros actuales'
+                : 'No hay cotizaciones registradas'
+            }
+            description={
+              isAnyFilterActive
+                ? 'Intenta restablecer la búsqueda o seleccionar otro estado.'
+                : 'Crea una nueva cotización para preparar servicios y costos.'
+            }
+            action={
+              isAnyFilterActive
+                ? {
+                    label: 'Limpiar filtros',
+                    icon: <RotateCcw className="w-3.5 h-3.5" />,
+                    onClick: handleClearFilters,
+                  }
+                : {
+                    label: 'Nueva cotización',
+                    icon: <Plus className="w-3.5 h-3.5" />,
+                    onClick: handleOpenAdd,
+                  }
+            }
+          />
+        )}
       </div>
 
       {/* PORTAL: MENÚ FLOTANTE DE OPCIONES (RENDERIZADO DIRECTAMENTE EN BODY) */}
